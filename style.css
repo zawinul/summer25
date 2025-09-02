@@ -1,0 +1,182 @@
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    background-color: #f0f2f5;
+    color: #333;
+    display: flex;
+	flex-flow: row;
+    min-height: 100vh;
+    margin: 0;
+
+}
+
+.container {
+    background: #fff;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    width: 280px;
+    max-width: 500px;
+    text-align: center;
+}
+
+h1 {
+    color: #1a1a1a;
+    margin-top: 0;
+}
+
+.controls {
+    margin: 20px 0;
+}
+
+button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    margin: 5px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.2s;
+}
+
+button:hover:not(:disabled) {
+    background-color: #0056b3;
+}
+
+button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+.sliders, .waves {
+    margin-top: 30px;
+}
+
+.slider-group {
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.slider-group label {
+    font-weight: bold;
+    margin-bottom: 10px;
+    /* width: 100px; */
+    /* max-width: 100px; */
+    min-width: 71px;
+    /* border: 1px solid red; */
+    text-align: right;
+    margin-right: 10px;
+}
+
+.slider-group input[type="range"] {
+    flex: 1;
+}
+
+.slider-group span {
+    background-color: #e9ecef;
+    padding: 2px 8px;
+	margin-left: 20px;
+    border-radius: 4px;
+    margin-top: 5px;
+    font-family: 'Courier New', Courier, monospace;
+}
+
+#status {
+    margin-top: 20px;
+    color: #666;
+    font-style: italic;
+}
+
+.panel {
+	background-color: #fffff0;
+	flex: 1;
+	height: 100vh;
+	display: flex;
+	flex-direction: column;
+}
+
+
+.panel .panel-controls {
+	height: 25px;
+}
+.panel .arena {
+    position: relative;
+    background-color: #f8f8f8;
+    overflow: hidden;
+    width: 100%;
+	flex: 1;
+}
+
+.panel canvas {
+	border: 1px solid black;
+	background-color: white;
+	width: 500px;
+	height: 500px;
+	position: absolute;
+	left:0;
+	top:0;
+	background: none;
+}
+
+.panel #mousepad0 {
+	z-index: 100;
+}
+
+.panel #mousepad1 {
+	z-index: 90;
+}
+
+.panel #mousepad2 {
+	z-index: 80;
+}
+
+.panel #mousepad3 {
+	z-index: 70;
+}
+
+/* Stili per i controlli del Worker Vocoder */
+.worker-controls {
+	margin-top: 20px;
+	padding: 15px;
+	border: 1px solid #ddd;
+	border-radius: 8px;
+	background-color: #f9f9f9;
+}
+
+.worker-controls h3 {
+	margin-top: 0;
+	margin-bottom: 15px;
+	color: #333;
+	font-size: 16px;
+}
+
+.worker-buttons {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	justify-content: center;
+}
+
+.worker-buttons button {
+	padding: 8px 12px;
+	font-size: 12px;
+	min-width: 80px;
+	background-color: #28a745;
+}
+
+.worker-buttons button:hover:not(:disabled) {
+	background-color: #218838;
+}
+
+.worker-buttons button:nth-child(2) {
+	background-color: #dc3545;
+}
+
+.worker-buttons button:nth-child(2):hover:not(:disabled) {
+	background-color: #c82333;
+}
+
+

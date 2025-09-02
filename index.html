@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Summer 2025</title>
+	<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+	<div class="container">
+		<h1>Summer 2025</h1>
+		<p>Ph Vocoder interpolation.</p>
+
+		<div class="controls">
+			<button id="btn-pause">Play</button>
+		</div>
+
+		
+		<div class="sliders">
+			<div class="slider-group">
+				<label for="slider-amp">Wave X</label>
+				<input type="text" class="waveurl" data-index="x" value="wav/t2.wav">
+			</div>
+			<div class="slider-group">
+				<label for="slider-amp">Wave Y</label>
+				<input type="text" class="waveurl" data-index="y" value="wav/t4.wav">
+			</div>
+
+			<div class="slider-group">
+				<label for="slider-amp">Ampl</label>
+				<input type="range" id="slider-amp" min="0" max="1" value="0.5" step="0.01">
+				<span id="amp-value">0.50</span>
+			</div>
+			<div class="slider-group">
+				<label for="slider-reverb">Rev Send</label>
+				<input type="range" id="slider-reverb" min="0" max="1" value="0" step="0.01">
+				<span id="reverb-value">0.00</span>
+			</div>
+		</div>
+		<div id="status">Status: Pronto. Clicca Start.</div>
+		
+	</div>
+
+	<div class="panel">
+		<div class="panel-controls">
+			<!-- <button id="btn-move-left">Move Left</button>
+			<button id="btn-move-right">Move Right</button> -->
+			<select id="move-mode">
+				<option value="xy">xy</option>
+				<option value="vxvy">vxvy</option>
+				<option value="polar">polar</option>
+			</select>
+		</div>
+		<div class="arena">
+			<canvas class="mousepad" id="mousepad0"></canvas>
+			<canvas class="mousepad" id="mousepad1"></canvas>
+			<canvas class="mousepad" id="mousepad2"></canvas>
+			<canvas class="mousepad" id="mousepad3"></canvas>
+		</div>
+	</div>
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+	<script src="main.js"></script>
+	<script src="mousepad.js"></script>
+
+</body>
+
+</html>
