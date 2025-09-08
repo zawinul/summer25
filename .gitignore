@@ -26,7 +26,6 @@ Thumbs.db
 *.swo
 *~
 
-# Node modules (se dovessi aggiungere npm in futuro)
 node_modules/
 package-lock.json
 yarn.lock

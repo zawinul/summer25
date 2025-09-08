@@ -12,6 +12,7 @@ function initCommon(fftSize, overlap, sampleRate) {
 	const hopSize = windowSize / overlap;
 
 	let lastPhases = new Float32Array(fftSize / 2 + 1).fill(0);
+	const resetPhases = ()=>lastPhases.fill(0);
 
 	const binCenterFreqHz = [];
 	let hopSizeSec = hopSize / sampleRate;
@@ -249,6 +250,7 @@ function initCommon(fftSize, overlap, sampleRate) {
 			// L'output della iFFT di fft.js è solo nella parte reale dell'array (indici pari)
 			outArea[j] += timeDomainFrame[j * 2] * window[j];
 	}
+	
 	let exp = {
 		createHammingWindow, normalize,
 		fft, fftSize, windowSize, overlap, hopSize,
@@ -257,6 +259,7 @@ function initCommon(fftSize, overlap, sampleRate) {
 		complexSpectrumToPhaseVocoder, phaseVocoderToComplexSpectrum,
 		simplified_complexSpectrumToPhaseVocoder, simplified_phaseVocoderToComplexSpectrum,
 		frequencyToPhaseDelta,
+		resetPhases,
 		debugdump
 
 	};

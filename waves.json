@@ -1,0 +1,1307 @@
+[
+	[
+		"",
+		".gitmodules",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/.gitmodules"
+	],
+	[
+		"",
+		"README.md",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/README.md"
+	],
+	[
+		"background/",
+		"NightVillage1@Pixus.flac",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/background/NightVillage1%40Pixus.flac"
+	],
+	[
+		"background/",
+		"NightVillage2@Pixus.flac",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/background/NightVillage2%40Pixus.flac"
+	],
+	[
+		"background/",
+		"NightVillage3@Pixus.flac",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/background/NightVillage3%40Pixus.flac"
+	],
+	[
+		"background/",
+		"NightVillage4@Pixus.flac",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/background/NightVillage4%40Pixus.flac"
+	],
+	[
+		"chords/",
+		"choir a 140bpm @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/chords/choir%20a%20140bpm%20%40TeaBoi.wav"
+	],
+	[
+		"chords/",
+		"keys am 80bpm @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/chords/keys%20am%2080bpm%20%40TeaBoi.wav"
+	],
+	[
+		"chords/",
+		"keys e 130bpm @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/chords/keys%20e%20130bpm%20%40TeaBoi.wav"
+	],
+	[
+		"chords/",
+		"pad f 140bpm @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/chords/pad%20f%20140bpm%20%40TeaBoi.wav"
+	],
+	[
+		"chords/",
+		"piano 1 f#m 60bpm @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/chords/piano%201%20f%23m%2060bpm%20%40TeaBoi.wav"
+	],
+	[
+		"chords/",
+		"piano am 80bpm @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/chords/piano%20am%2080bpm%20%40TeaBoi.wav"
+	],
+	[
+		"chords/",
+		"piano dm 140bpm @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/chords/piano%20dm%20140bpm%20%40TeaBoi.wav"
+	],
+	[
+		"chords/",
+		"rhodes e 65bpm @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/chords/rhodes%20e%2065bpm%20%40TeaBoi.wav"
+	],
+	[
+		"chords/",
+		"rhodes f#m 50bpm @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/chords/rhodes%20f%23m%2050bpm%20%40TeaBoi.wav"
+	],
+	[
+		"chords/",
+		"rhodes f#m 70bpm @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/chords/rhodes%20f%23m%2070bpm%20%40TeaBoi.wav"
+	],
+	[
+		"chords/",
+		"synth chords a 150bpm @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/chords/synth%20chords%20a%20150bpm%20%40TeaBoi.wav"
+	],
+	[
+		"chords/",
+		"synth chords c 140bpm @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/chords/synth%20chords%20c%20140bpm%20%40TeaBoi.wav"
+	],
+	[
+		"chords/",
+		"synth chords e 130bpm @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/chords/synth%20chords%20e%20130bpm%20%40TeaBoi.wav"
+	],
+	[
+		"drums/Moderncat 0.1/",
+		"Kick 1 @Lifeline.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/Moderncat%200.1/Kick%201%20%40Lifeline.wav"
+	],
+	[
+		"drums/Moderncat 0.1/",
+		"Kick 2 @Lifeline.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/Moderncat%200.1/Kick%202%20%40Lifeline.wav"
+	],
+	[
+		"drums/Moderncat 0.1/",
+		"Kick 3 @Lifeline.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/Moderncat%200.1/Kick%203%20%40Lifeline.wav"
+	],
+	[
+		"drums/Moderncat 0.1/",
+		"Snare 1 @Lifeline.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/Moderncat%200.1/Snare%201%20%40Lifeline.wav"
+	],
+	[
+		"drums/Moderncat 0.1/",
+		"Snare 10 @Lifeline.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/Moderncat%200.1/Snare%2010%20%40Lifeline.wav"
+	],
+	[
+		"drums/Moderncat 0.1/",
+		"Snare 11 @Lifeline.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/Moderncat%200.1/Snare%2011%20%40Lifeline.wav"
+	],
+	[
+		"drums/Moderncat 0.1/",
+		"Snare 12 @Lifeline.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/Moderncat%200.1/Snare%2012%20%40Lifeline.wav"
+	],
+	[
+		"drums/Moderncat 0.1/",
+		"Snare 2 @Lifeline.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/Moderncat%200.1/Snare%202%20%40Lifeline.wav"
+	],
+	[
+		"drums/Moderncat 0.1/",
+		"Snare 3 @Lifeline.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/Moderncat%200.1/Snare%203%20%40Lifeline.wav"
+	],
+	[
+		"drums/Moderncat 0.1/",
+		"Snare 4 @Lifeline.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/Moderncat%200.1/Snare%204%20%40Lifeline.wav"
+	],
+	[
+		"drums/Moderncat 0.1/",
+		"Snare 5 @Lifeline.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/Moderncat%200.1/Snare%205%20%40Lifeline.wav"
+	],
+	[
+		"drums/Moderncat 0.1/",
+		"Snare 6 @Lifeline.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/Moderncat%200.1/Snare%206%20%40Lifeline.wav"
+	],
+	[
+		"drums/Moderncat 0.1/",
+		"Snare 7 @Lifeline.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/Moderncat%200.1/Snare%207%20%40Lifeline.wav"
+	],
+	[
+		"drums/Moderncat 0.1/",
+		"Snare 8 @Lifeline.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/Moderncat%200.1/Snare%208%20%40Lifeline.wav"
+	],
+	[
+		"drums/Moderncat 0.1/",
+		"Snare 9 @Lifeline.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/Moderncat%200.1/Snare%209%20%40Lifeline.wav"
+	],
+	[
+		"drums/loops/full/",
+		"Acoustica 95bpm @amplifi.music.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/loops/full/Acoustica%2095bpm%20%40amplifi.music.wav"
+	],
+	[
+		"drums/loops/full/",
+		"Prophet 140bpm @amplifi.music.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/loops/full/Prophet%20140bpm%20%40amplifi.music.wav"
+	],
+	[
+		"drums/loops/full/",
+		"big 170bpm @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/loops/full/big%20170bpm%20%40TeaBoi.wav"
+	],
+	[
+		"drums/loops/full/",
+		"decapitated 108bpm @amplifi.music.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/loops/full/decapitated%20108bpm%20%40amplifi.music.wav"
+	],
+	[
+		"drums/loops/full/",
+		"dirt 140bpm @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/loops/full/dirt%20140bpm%20%40TeaBoi.wav"
+	],
+	[
+		"drums/loops/full/",
+		"dirt 150bpm @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/loops/full/dirt%20150bpm%20%40TeaBoi.wav"
+	],
+	[
+		"drums/loops/full/",
+		"dirt 180bpm @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/loops/full/dirt%20180bpm%20%40TeaBoi.wav"
+	],
+	[
+		"drums/loops/full/",
+		"dirt 60bpm @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/loops/full/dirt%2060bpm%20%40TeaBoi.wav"
+	],
+	[
+		"drums/loops/full/",
+		"how the mighty fall 110bpm @amplifi.music.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/loops/full/how%20the%20mighty%20fall%20110bpm%20%40amplifi.music.wav"
+	],
+	[
+		"drums/loops/full/",
+		"mc haus 124bpm @amplifi.music.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/loops/full/mc%20haus%20124bpm%20%40amplifi.music.wav"
+	],
+	[
+		"drums/loops/full/",
+		"remembertherage 154bpm - @amplifi.music .wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/loops/full/remembertherage%20154bpm%20-%20%40amplifi.music%20.wav"
+	],
+	[
+		"drums/loops/full/",
+		"tr808 240bpm @amplifi.music.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/loops/full/tr808%20240bpm%20%40amplifi.music.wav"
+	],
+	[
+		"drums/loops/full/",
+		"trap 140bpm @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/loops/full/trap%20140bpm%20%40TeaBoi.wav"
+	],
+	[
+		"drums/loops/full/",
+		"trap 170bpm @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/loops/full/trap%20170bpm%20%40TeaBoi.wav"
+	],
+	[
+		"drums/loops/midi/hihat/",
+		"hihat 1 @TeaBoi.mid",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/loops/midi/hihat/hihat%201%20%40TeaBoi.mid"
+	],
+	[
+		"drums/loops/midi/hihat/",
+		"hihat 2 @TeaBoi.mid",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/loops/midi/hihat/hihat%202%20%40TeaBoi.mid"
+	],
+	[
+		"drums/loops/midi/hihat/",
+		"hihat 3 @TeaBoi.mid",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/loops/midi/hihat/hihat%203%20%40TeaBoi.mid"
+	],
+	[
+		"drums/loops/midi/hihat/",
+		"hihat 4 @TeaBoi.mid",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/loops/midi/hihat/hihat%204%20%40TeaBoi.mid"
+	],
+	[
+		"drums/loops/midi/hihat/",
+		"hihat 5 @TeaBoi.mid",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/loops/midi/hihat/hihat%205%20%40TeaBoi.mid"
+	],
+	[
+		"drums/loops/midi/hihat/",
+		"hihat 6 @TeaBoi.mid",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/loops/midi/hihat/hihat%206%20%40TeaBoi.mid"
+	],
+	[
+		"drums/loops/midi/hihat/",
+		"hihat 7 @TeaBoi.mid",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/loops/midi/hihat/hihat%207%20%40TeaBoi.mid"
+	],
+	[
+		"drums/loops/midi/hihat/",
+		"hihat roll 1 @TeaBoi.mid",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/loops/midi/hihat/hihat%20roll%201%20%40TeaBoi.mid"
+	],
+	[
+		"drums/loops/midi/hihat/",
+		"hihat roll 2 @TeaBoi.mid",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/loops/midi/hihat/hihat%20roll%202%20%40TeaBoi.mid"
+	],
+	[
+		"drums/loops/perc/",
+		"cartoon run 114bpm @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/loops/perc/cartoon%20run%20114bpm%20%40TeaBoi.wav"
+	],
+	[
+		"drums/loops/perc/",
+		"moombah 110bpm @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/loops/perc/moombah%20110bpm%20%40TeaBoi.wav"
+	],
+	[
+		"drums/loops/perc/",
+		"table hit 140bpm  @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/loops/perc/table%20hit%20140bpm%20%20%40TeaBoi.wav"
+	],
+	[
+		"drums/loops/top/",
+		"flangus 128bpm @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/loops/top/flangus%20128bpm%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/808/",
+		"clean 808 c 1 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/808/clean%20808%20c%201%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/808/",
+		"clean 808 c 2 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/808/clean%20808%20c%202%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/808/",
+		"clean 808 c 3 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/808/clean%20808%20c%203%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/808/",
+		"clean 808 c 4 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/808/clean%20808%20c%204%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/808/",
+		"clean 808 c 5 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/808/clean%20808%20c%205%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/808/",
+		"fat 808 c 1 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/808/fat%20808%20c%201%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/808/",
+		"fat 808 c 10 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/808/fat%20808%20c%2010%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/808/",
+		"fat 808 c 11 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/808/fat%20808%20c%2011%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/808/",
+		"fat 808 c 12 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/808/fat%20808%20c%2012%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/808/",
+		"fat 808 c 2 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/808/fat%20808%20c%202%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/808/",
+		"fat 808 c 3 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/808/fat%20808%20c%203%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/808/",
+		"fat 808 c 4 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/808/fat%20808%20c%204%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/808/",
+		"fat 808 c 6 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/808/fat%20808%20c%206%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/808/",
+		"fat 808 c 7 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/808/fat%20808%20c%207%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/808/",
+		"fat 808 c 8 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/808/fat%20808%20c%208%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/808/",
+		"fat 808 c 9 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/808/fat%20808%20c%209%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/claps/",
+		"trap clap 1 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/claps/trap%20clap%201%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/claps/",
+		"trap clap 2 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/claps/trap%20clap%202%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/claps/",
+		"trap clap 3 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/claps/trap%20clap%203%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/claps/",
+		"trap clap 4 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/claps/trap%20clap%204%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/hi hats/",
+		"Open Hat 1 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/hi%20hats/Open%20Hat%201%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/hi hats/",
+		"Ringing Hat @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/hi%20hats/Ringing%20Hat%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/hi hats/",
+		"ch 1 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/hi%20hats/ch%201%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/hi hats/",
+		"ch 10 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/hi%20hats/ch%2010%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/hi hats/",
+		"ch 2 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/hi%20hats/ch%202%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/hi hats/",
+		"ch 3 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/hi%20hats/ch%203%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/hi hats/",
+		"ch 4 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/hi%20hats/ch%204%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/hi hats/",
+		"ch 5 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/hi%20hats/ch%205%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/hi hats/",
+		"ch 6 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/hi%20hats/ch%206%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/hi hats/",
+		"ch 7 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/hi%20hats/ch%207%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/hi hats/",
+		"ch 8 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/hi%20hats/ch%208%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/hi hats/",
+		"ch 9 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/hi%20hats/ch%209%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"Couch Kick 23 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/Couch%20Kick%2023%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"Couch Kick 24 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/Couch%20Kick%2024%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"Deep Kick 2 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/Deep%20Kick%202%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"Deep Kick 3 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/Deep%20Kick%203%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"Deep Kick 4 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/Deep%20Kick%204%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"Deep Kick 5 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/Deep%20Kick%205%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"Deep Kick 6 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/Deep%20Kick%206%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"Deep Kick @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/Deep%20Kick%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"Kick 1 @DJ_PIXEL.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/Kick%201%20%40DJ_PIXEL.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"Kick 1 @Klassic.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/Kick%201%20%40Klassic.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"Kick 2 @DJ_PIXEL.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/Kick%202%20%40DJ_PIXEL.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"Kick 2 @Klassic.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/Kick%202%20%40Klassic.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"Kick 3 @DJ_PIXEL.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/Kick%203%20%40DJ_PIXEL.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"Kick 3 @Klassic.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/Kick%203%20%40Klassic.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"Kick 4 @DJ_PIXEL.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/Kick%204%20%40DJ_PIXEL.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"Kick 4 @Klassic.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/Kick%204%20%40Klassic.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"Kick 5 @DJ_PIXEL.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/Kick%205%20%40DJ_PIXEL.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"Kick 5 @Klassic.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/Kick%205%20%40Klassic.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"Kick 6 @DJ_PIXEL.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/Kick%206%20%40DJ_PIXEL.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"couch kick 1 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/couch%20kick%201%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"couch kick 10 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/couch%20kick%2010%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"couch kick 11 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/couch%20kick%2011%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"couch kick 12 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/couch%20kick%2012%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"couch kick 13 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/couch%20kick%2013%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"couch kick 14 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/couch%20kick%2014%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"couch kick 15 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/couch%20kick%2015%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"couch kick 16 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/couch%20kick%2016%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"couch kick 17 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/couch%20kick%2017%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"couch kick 18 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/couch%20kick%2018%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"couch kick 19 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/couch%20kick%2019%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"couch kick 2 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/couch%20kick%202%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"couch kick 20 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/couch%20kick%2020%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"couch kick 21 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/couch%20kick%2021%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"couch kick 22 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/couch%20kick%2022%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"couch kick 3 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/couch%20kick%203%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"couch kick 4 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/couch%20kick%204%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"couch kick 5 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/couch%20kick%205%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"couch kick 6 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/couch%20kick%206%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"couch kick 7 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/couch%20kick%207%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"couch kick 8 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/couch%20kick%208%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"couch kick 9 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/couch%20kick%209%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"long kick 1 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/long%20kick%201%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"long kick 10 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/long%20kick%2010%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"long kick 11 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/long%20kick%2011%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"long kick 12 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/long%20kick%2012%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"long kick 13 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/long%20kick%2013%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"long kick 14 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/long%20kick%2014%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"long kick 15 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/long%20kick%2015%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"long kick 16 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/long%20kick%2016%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"long kick 17 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/long%20kick%2017%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"long kick 18 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/long%20kick%2018%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"long kick 19 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/long%20kick%2019%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"long kick 2 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/long%20kick%202%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"long kick 20 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/long%20kick%2020%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"long kick 3 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/long%20kick%203%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"long kick 4 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/long%20kick%204%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"long kick 5 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/long%20kick%205%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"long kick 6 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/long%20kick%206%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"long kick 7 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/long%20kick%207%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"long kick 8 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/long%20kick%208%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"long kick 9 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/long%20kick%209%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"pointy kick 1 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/pointy%20kick%201%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"pointy kick 10 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/pointy%20kick%2010%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"pointy kick 11 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/pointy%20kick%2011%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"pointy kick 12 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/pointy%20kick%2012%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"pointy kick 13 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/pointy%20kick%2013%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"pointy kick 14 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/pointy%20kick%2014%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"pointy kick 15 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/pointy%20kick%2015%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"pointy kick 16 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/pointy%20kick%2016%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"pointy kick 2 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/pointy%20kick%202%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"pointy kick 3 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/pointy%20kick%203%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"pointy kick 4 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/pointy%20kick%204%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"pointy kick 5 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/pointy%20kick%205%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"pointy kick 6 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/pointy%20kick%206%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"pointy kick 7 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/pointy%20kick%207%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"pointy kick 8 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/pointy%20kick%208%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"pointy kick 9 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/pointy%20kick%209%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"punchy kick 1 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/punchy%20kick%201%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"punchy kick 10 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/punchy%20kick%2010%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"punchy kick 11 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/punchy%20kick%2011%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"punchy kick 12 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/punchy%20kick%2012%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"punchy kick 13 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/punchy%20kick%2013%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"punchy kick 14 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/punchy%20kick%2014%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"punchy kick 15 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/punchy%20kick%2015%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"punchy kick 16 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/punchy%20kick%2016%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"punchy kick 17 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/punchy%20kick%2017%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"punchy kick 18 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/punchy%20kick%2018%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"punchy kick 19 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/punchy%20kick%2019%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"punchy kick 2 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/punchy%20kick%202%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"punchy kick 20 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/punchy%20kick%2020%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"punchy kick 21 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/punchy%20kick%2021%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"punchy kick 22 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/punchy%20kick%2022%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"punchy kick 23 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/punchy%20kick%2023%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"punchy kick 24 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/punchy%20kick%2024%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"punchy kick 25 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/punchy%20kick%2025%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"punchy kick 26 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/punchy%20kick%2026%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"punchy kick 27 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/punchy%20kick%2027%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"punchy kick 28 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/punchy%20kick%2028%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"punchy kick 29 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/punchy%20kick%2029%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"punchy kick 3 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/punchy%20kick%203%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"punchy kick 30 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/punchy%20kick%2030%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"punchy kick 31 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/punchy%20kick%2031%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"punchy kick 4 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/punchy%20kick%204%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"punchy kick 5 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/punchy%20kick%205%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"punchy kick 6 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/punchy%20kick%206%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"punchy kick 7 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/punchy%20kick%207%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"punchy kick 8 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/punchy%20kick%208%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"punchy kick 9 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/punchy%20kick%209%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"stomp kick 1 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/stomp%20kick%201%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"stomp kick 10 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/stomp%20kick%2010%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"stomp kick 11 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/stomp%20kick%2011%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"stomp kick 12 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/stomp%20kick%2012%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"stomp kick 13 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/stomp%20kick%2013%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"stomp kick 14 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/stomp%20kick%2014%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"stomp kick 15 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/stomp%20kick%2015%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"stomp kick 16 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/stomp%20kick%2016%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"stomp kick 17 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/stomp%20kick%2017%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"stomp kick 18 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/stomp%20kick%2018%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"stomp kick 19 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/stomp%20kick%2019%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"stomp kick 2 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/stomp%20kick%202%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"stomp kick 20 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/stomp%20kick%2020%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"stomp kick 21 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/stomp%20kick%2021%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"stomp kick 22 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/stomp%20kick%2022%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"stomp kick 23 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/stomp%20kick%2023%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"stomp kick 24 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/stomp%20kick%2024%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"stomp kick 25 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/stomp%20kick%2025%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"stomp kick 3 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/stomp%20kick%203%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"stomp kick 4 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/stomp%20kick%204%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"stomp kick 5 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/stomp%20kick%205%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"stomp kick 6 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/stomp%20kick%206%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"stomp kick 7 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/stomp%20kick%207%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"stomp kick 8 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/stomp%20kick%208%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"stomp kick 9 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/stomp%20kick%209%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"trap kick 1 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/trap%20kick%201%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"trap kick 10 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/trap%20kick%2010%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"trap kick 11 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/trap%20kick%2011%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"trap kick 12 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/trap%20kick%2012%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"trap kick 13 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/trap%20kick%2013%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"trap kick 14 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/trap%20kick%2014%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"trap kick 15 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/trap%20kick%2015%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"trap kick 16 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/trap%20kick%2016%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"trap kick 17 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/trap%20kick%2017%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"trap kick 18 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/trap%20kick%2018%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"trap kick 19 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/trap%20kick%2019%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"trap kick 2 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/trap%20kick%202%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"trap kick 20 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/trap%20kick%2020%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"trap kick 21 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/trap%20kick%2021%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"trap kick 3 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/trap%20kick%203%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"trap kick 4 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/trap%20kick%204%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"trap kick 5 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/trap%20kick%205%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"trap kick 6 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/trap%20kick%206%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"trap kick 7 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/trap%20kick%207%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"trap kick 8 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/trap%20kick%208%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/kicks/",
+		"trap kick 9 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/kicks/trap%20kick%209%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/perc/",
+		"perc 1 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/perc/perc%201%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/perc/",
+		"perc 10 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/perc/perc%2010%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/perc/",
+		"perc 11 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/perc/perc%2011%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/perc/",
+		"perc 12 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/perc/perc%2012%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/perc/",
+		"perc 13 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/perc/perc%2013%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/perc/",
+		"perc 14 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/perc/perc%2014%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/perc/",
+		"perc 2 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/perc/perc%202%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/perc/",
+		"perc 3 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/perc/perc%203%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/perc/",
+		"perc 4 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/perc/perc%204%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/perc/",
+		"perc 5 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/perc/perc%205%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/perc/",
+		"perc 6 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/perc/perc%206%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/perc/",
+		"perc 7 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/perc/perc%207%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/perc/",
+		"perc 8 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/perc/perc%208%20%40TeaBoi.wav"
+	],
+	[
+		"drums/one shot/perc/",
+		"perc 9 @TeaBoi.wav",
+		"https://raw.githubusercontent.com/TheSmallTeaBoi/the-libre-sample-pack/master/drums/one%20shot/perc/perc%209%20%40TeaBoi.wav"
+	]
+]

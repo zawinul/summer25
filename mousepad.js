@@ -11,8 +11,35 @@ mousepad = (function () {
 	let w;
 	let mousex, mousey;
 	const WAVECANVAS = 0;
-	const VCANVAS = 1;
+	const SPEEDCANVAS = 1;
+	const INFOCANVAS = 2;
 	const CURSORCANVAS = 3;
+	let dragging = false;
+
+	const padStatus = {
+		mode: 'pos',
+		lum: .5,
+		cont: 4,
+		xrange: [0, 1],
+		yrange: [0, 1],
+		mousex, mousey,
+		mx: 0,
+		my: 0,
+		speedx: 0,
+		speedy: 0,
+		amp: 0, //dB
+		mix: .5,
+	}
+	let curOscStatus = {};
+
+	const modes = {
+		amp: { bgcolor: '#e0e0ff' },
+		pos: { bgcolor: '#ffffff' },
+		speed: { bgcolor: '#f0f0ff' },
+		lfox: { bgcolor: '#fff0f0' },
+		lfoy: { bgcolor: '#fff0f0' },
+		lum: { bgcolor: '#ffffff' }
+	};
 
 	let curstatus = {
 		x: 0,
@@ -31,9 +58,9 @@ mousepad = (function () {
 	let oldstatus = {};
 
 	function init() {
-		
+
 		reposition();
-		canvases[VCANVAS].hide();
+		setMode('pos');
 	}
 
 
@@ -42,137 +69,180 @@ mousepad = (function () {
 			case "Shift":
 				savestatus();
 				curstatus.shift = e.type === "keydown";
-				update();
+				checkStatusChange();
 				break;
 			case "Control":
 				savestatus();
 				curstatus.control = e.type === "keydown";
-				update();
+				checkStatusChange();
 				break;
 			case "Alt":
 				savestatus();
 				curstatus.alt = e.type === "keydown";
-				update();
+				checkStatusChange();
 				break;
 			case "Meta": // Windows su PC, Command su Mac
 				savestatus();
 				curstatus.meta = e.type === "keydown";
-				update();
+				checkStatusChange();
 		}
 	});
 
-	$(document).on("mousemove click", function (evt) {
+	$('.padmode').on('click', function () {
+		let mode = $(this).attr('data-mode');
+
+		setMode(mode);
+	});
+
+	function checkStatusChange() {
+		for (var k in curstatus) {
+			if (curstatus[k] != oldstatus[k]) {
+				update();
+				savestatus();
+				debugStatus();
+			}
+		}
+	}
+
+	$(document).on("mousemove mousedown mouseup click", function (evt) {
+		if (evt.type!='mousemove')
+			console.log({mouseevent:[evt.type, evt.buttons]})
 		let where = 'out';
 		let canvas = canvases[0];
+		if (!canvas)
+			return;
 		let x = mousex = evt.clientX - canvas.offset().left;
 		let y = mousey = evt.clientY - canvas.offset().top;
-		if (leftband.contains(x,y))
+		if (leftband.contains(x, y))
 			where = 'left';
-		else if (topband.contains(x,y))
+		else if (topband.contains(x, y))
 			where = 'top';
-		else if (space.contains(x,y))
+		else if (space.contains(x, y))
 			where = 'in';
 
-		curstatus.left = evt.buttons & 1;
-		curstatus.right = evt.buttons & 2;
-		if (curstatus.where!=where || curstatus.x!=x || curstatus.y!=y) {
-			savestatus();
-			curstatus.x = x;
-			curstatus.y = y;
-			curstatus.where = where;
-			update();
-		}
+		curstatus.left = (evt.buttons & 1) == 1;// || (evt.type == 'click') || (evt.type == 'mousedown');
+		curstatus.right = (evt.buttons & 2) == 2;
+		curstatus.x = x;
+		curstatus.y = y;
+		curstatus.where = where;
+		curstatus.shift = evt.shiftKey;
+		curstatus.alt = evt.altKey;
+		curstatus.control = evt.ctrlKey;
+		curstatus.meta = evt.metaKey;
+		checkStatusChange();
 	});
 
-	const M_LEFT=1;
-	const M_RIGHT=2;
-	const M_SHIFT=4;
-	const M_CONTROL=8;
-	const M_ALT=16;
-	const M_META = 32;
-	const M_LEFTBAR = 64;
-	const M_TOPBAR = 128;
-	const M_CENTER = 256;
-	const kmask = c=> 
-		(c.left?M_LEFT:0) +
-		(c.right?M_RIGHT:0) +
-		(c.shift?M_SHIFT:0) +
-		(c.control?M_CONTROL:0) +
-		(c.alt?M_ALT:0) +
-		(c.meta?M_META:0) +
-		(c.where=='left'?M_LEFTBAR:0) +
-		(c.where=='top'?M_TOPBAR:0) +
-		(c.where=='in'?M_CENTER:0);
 
-	const isCursorView = (c)=>kmask(c) == M_CENTER;
-	const isCursorSet = (c)=>kmask(c) == M_CENTER+M_LEFT;
-	
-	function update() {
-		//console.log('update', curstatus.shift, curstatus.where);
-		if (curstatus.shift && !oldstatus.shift)
-			canvases[VCANVAS].show();
-		
-		if (!curstatus.shift  && oldstatus.shift)
-			canvases[VCANVAS].hide();
-		
-		let m = kmask(curstatus);
-		//console.log(m);
-		let oldm = kmask(oldstatus);
-		if (isCursorSet(curstatus)) {
-			canvases[CURSORCANVAS].show();
-			let normx = (curstatus.x - space.left)/space.width;
-			let normy = (curstatus.y - space.top)/space.height;
-			vocoderWorker.postMessage({ action: 'set', value: { posx: normx, posy: normy } })
+
+	function update(force) {
+		let setSpeed = s => s.mode == 'speed' || (s.mode == 'pos' && s.shift);
+		let setAmp = s => s.mode == 'amp';
+		let mode = curstatus.mode;
+
+		$('.canvas-container').css('background-color', modes[mode].bgcolor);
+
+
+		if (curstatus.where == 'in') {
+			if (mode == 'pos') {
+				if (curstatus.left && !curstatus.shift) {
+					dragging = true;
+					padStatus.mx = (curstatus.x - space.left) / space.width;
+					padStatus.my = -(curstatus.y - space.bottom) / space.height;
+					vocoderWorker.postMessage({ type: 'set-status', data: { targetx: padStatus.mx, targety: padStatus.my, dragging } })
+				}
+				else {
+					dragging = false;
+					vocoderWorker.postMessage({ type: 'set-status', data: { dragging } })
+				}
+			}
+
+			if (mode == 'speed' || (mode == 'pos' && curstatus.shift)) {
+				$('.canvas-container').css('background-color', modes['speed'].bgcolor);
+
+				if (!setSpeed(oldstatus))
+					ctx[SPEEDCANVAS].clearRect(0, 0, w, w);
+
+				canvases[SPEEDCANVAS].toggleClass('hidden', false);
+				const CSPACE = .05;
+				const MAXP = 2, MINP = -8;
+				if (curstatus.left) {
+					function getv(norm) {
+						if (norm < 0)
+							return -getv(-norm);
+						if (norm < CSPACE)
+							return 0;
+						norm = (norm - CSPACE) / (1 - CSPACE);
+						const logVal = MINP + norm * (MAXP - MINP);
+						const val = Math.pow(2, logVal);
+						return val;
+					}
+					let x = (curstatus.x - space.cx) / (space.width / 2);
+					let y = -(curstatus.y - space.cy) / (space.height / 2);
+
+					padStatus.speedx = getv(x);
+					padStatus.speedy = getv(y);
+					vocoderWorker.postMessage({ type: 'set-status', data: { speedx: padStatus.speedx, speedy: padStatus.speedy } })
+
+					redrawSpeedCanvas();
+					showInfo('X speed = ' + padStatus.speedx.toFixed(4) + '*\nY speed = ' + padStatus.speedy.toFixed(3) + '*');
+				}
+			}
+			else
+				canvases[SPEEDCANVAS].toggleClass('hidden', true);
+
+			if (mode == 'amp') {
+				$('.canvas-container').css('background-color', modes['amp'].bgcolor);
+
+				if (!setAmp(oldstatus))
+					ctx[SPEEDCANVAS].clearRect(0, 0, w, w);
+
+				canvases[SPEEDCANVAS].toggleClass('hidden', false);
+				if (curstatus.left) {
+					let x = (curstatus.x - space.left) / space.width;
+					let y = -(curstatus.y - space.cy) / (space.height / 2);
+					let ampDb = y * 48;
+					let amp = dbToAmplitude(ampDb)
+					padStatus.mix = x;
+					padStatus.amp = ampDb;
+					//vocoderWorker.postMessage({ type: 'set-status', data: { scale: amp, mix: x } });
+
+					$('#slider-amp').val(ampDb).trigger('input');
+					$('#merge-param').val(x).trigger('input');
+					redrawSpeedCanvas();
+					showInfo('amp = ' + ampDb.toFixed(1) + ' dB\nbalance = ' + (x * 2 - 1).toFixed(3));
+
+				}
+			}
+
+
+			if (mode == 'lum') {
+				if (curstatus.left && curstatus.where == 'in') {
+					let x = (curstatus.x - space.left) / space.width;
+					let y = (curstatus.y - space.top) / space.height;
+					padStatus.lum = 0.2 + y;
+					padStatus.cont = 1 + x * 5;
+					redrawCenterWaves();
+				}
+
+			}
 		}
-		// let canvas = canvases[0];
-		// let x = mousex = evt.clientX - canvas.offset().left;
-		// let y = mousey = evt.clientY - canvas.offset().top;
-		// let mode = $('#move-mode').val();
-
-		// if (evt.shiftKey) {
-		// 	canvases[VCANVAS].show();
-		// 	redrawKnob();
-		// 	mode = 'vxvy';
-		// }
-		// else {
-		// 	mode = 'xy';
-		// 	canvases[VCANVAS].hide();
-		// }
-		// if (!evt.buttons)
-		// 	return;
-
-		// if (mmcount++ > 100) {
-		// 	mmcount = 0;
-		// 	console.log({ evt });
-		// 	window.evt = evt;
-		// }
-		// if (mode == 'xy') {
-		// 	if (oscillator) {
-		// 		let normx = (x - space.left) / space.width;
-		// 		let normy = (y - space.top) / space.height;
-		// 		console.log(normx, normy);
-		// 		oscillator.port.postMessage({ action: 'set', value: { posx: normx, posy: normy } });
-		// 	}
-		// }
-
-		// if (mode == 'vxvy') {
-		// 	if (oscillator) {
-		// 		let normx = (x - space.cx) / (space.width / 2);
-		// 		let normy = (y - space.cy) / (space.height / 2);
-		// 		let rad = Math.sqrt(normx * normx + normy * normy);
-		// 		let alpha = Math.atan2(normy, normx);
-		// 		rad = Math.pow(rad, 20);
-		// 		oscillator.port.postMessage({
-		// 			action: 'set',
-		// 			value: {
-		// 				fposx: rad * Math.cos(alpha),
-		// 				fposy: rad * Math.sin(alpha),
-		// 			}
-		// 		});
-		// 	}
-		// }
-		
 	}
+
+	function debounce(func, timeout = 300) {
+		let timer;
+		return (...args) => {
+			clearTimeout(timer);
+			timer = setTimeout(() => { func.apply(this, args); }, timeout);
+		};
+	}
+
+	function _redrawCenterWaves() {
+		ctx[WAVECANVAS].clearRect(BANDW, BANDW, w - BANDW, w - BANDW);
+		redrawCenterWave('x');
+		redrawCenterWave('y');
+	}
+
+	const redrawCenterWaves = debounce(_redrawCenterWaves, 100);
 
 	function setWave(index, wave) {
 		index = (index.toLowerCase() == 'y') ? 'y' : 'x';
@@ -190,31 +260,37 @@ mousepad = (function () {
 		r.right = left + width;
 		r.cx = left + width / 2;
 		r.cy = top + height / 2;
-		r.contains = (x,y) => x >= r.left && x <= r.right && y >= r.top && y <= r.bottom;
+		r.contains = (x, y) => x >= r.left && x <= r.right && y >= r.top && y <= r.bottom;
 		return r;
 	}
 
 	function reposition() {
-		let container = $('.arena');
-		w = Math.min(container.width(), container.height())-5;
-		let left = (container.width() - w) / 2;
-		let top = (container.height() - w) / 2;
-		top=0;
+		let mousepadSpace = $('.arena');
+		let container = $('.canvas-container');
+		w = Math.min(mousepadSpace.width(), mousepadSpace.height()) - 5;
+		let left = (mousepadSpace.width() - w) / 2;
+		let top = (mousepadSpace.height() - w) / 2;
+		top = 0;
 		container.empty();
 
 		topband = rect(BANDW, 0, w - BANDW, BANDW);
 		leftband = rect(0, BANDW, BANDW, w - BANDW);
 		space = rect(BANDW, BANDW, w - BANDW, w - BANDW);
-
+		container.css({
+			left: left,
+			top: top,
+			width: w,
+			height: w
+		})
+		$('.panel-controls').css({paddingLeft: left, width: w});
+		
 		for (let i = 0; i < NCANVAS; i++) {
 			canvases[i] = $(`<canvas 
 				id="mousepad${i}" 
 				class="mousepad" 
 				width="${w}" height="${w}" 
-				style="left:${left}px;top:${top}px;width:${w}px;height:${w}px; z-index:${100 + i * 10}"></canvas>`)
+				style="z-index:${100 + i * 10}"></canvas>`)
 				.appendTo(container)
-				// .on('mousemove', evt => onMouseMove(evt))
-				// .on('click', evt => onMouseClick(evt));
 
 			ctx[i] = canvases[i][0].getContext('2d');
 			ctx[i].clearRect(0, 0, w, w)
@@ -224,12 +300,12 @@ mousepad = (function () {
 
 	function redraw() {
 		clearWave();
-		ctx[WAVECANVAS].clearRect(0,0,w,w);
+		ctx[WAVECANVAS].clearRect(0, 0, w, w);
 		redrawBandWave('x');
 		redrawBandWave('y');
 		redrawCenterWave('x');
 		redrawCenterWave('y');
-		redrawKnob();
+		redrawSpeedCanvas();
 		redrawInfo();
 	}
 
@@ -260,11 +336,11 @@ mousepad = (function () {
 					globalmax = s;
 			}
 		}
-		let globalrange = globalmax-globalmin;
-		if (globalrange==0)
+		let globalrange = globalmax - globalmin;
+		if (globalrange == 0)
 			globalrange = 1;
 
-		return { min, max, globalmin, globalmax,globalrange}
+		return { min, max, globalmin, globalmax, globalrange }
 	}
 
 	function redrawBandWave(index) {
@@ -273,25 +349,46 @@ mousepad = (function () {
 		if (!data)
 			return;
 		let len = data.length;
-		let left = BANDW, right = w, extent = w - BANDW;
-		let {min, max, globalmin, globalmax, globalrange} = getMinMax(data, extent);
-		let v0 = BANDW;
-		let v1 = 0;
+		let start, end, extent = w - BANDW;
+		let { min, max, globalmin, globalmax, globalrange } = getMinMax(data, extent);
+		let v0, v1;
+		if (index == 'x') {
+			v0 = BANDW - 5;
+			v1 = 0 + 5;
+			start = BANDW;
+			end = w;
+		}
+		else {
+			v0 = BANDW - 5;
+			v1 = 0 + 5;
+			end = BANDW;
+			start = w;
+		}
+
 		//c.clearRect(0,0,w,w);
 		c.lineWidth = 1;
-		c.strokeStyle = 'black';
+		//c.strokeStyle = 'black';
+		c.strokeStyle = '#007bff';
 
-		let gmin = min.map(v=>v0 + (v - globalmin) * (v1 - v0) / globalrange);
-		let gmax = max.map(v=>v0 + (v - globalmin) * (v1 - v0) / globalrange);
+		let gmin, gmax;
+		if (index == 'x') {
+			gmin = min.map(v => v0 + (v - globalmin) * (v1 - v0) / globalrange);
+			gmax = max.map(v => v0 + (v - globalmin) * (v1 - v0) / globalrange);
+		}
+		else {
+			gmin = min.map(v => v0 + (v - globalmin) * (v1 - v0) / globalrange);
+			gmax = max.map(v => v0 + (v - globalmin) * (v1 - v0) / globalrange);
+		}
+
 		for (let i = 0; i < extent; i++) {
 			c.beginPath();
 			if (index == 'x') {
-				c.moveTo(left + i, gmin[i]);
-				c.lineTo(left + i, gmax[i]);
+				c.moveTo(start + i, gmin[i]);
+				c.lineTo(start + i, gmax[i]);
 			}
 			else {
-				c.moveTo(gmin[i], left + i);
-				c.lineTo(gmax[i], left + i);
+				c.moveTo(gmin[i], start - i);
+				c.lineTo(gmax[i], start - i);
 
 			}
 			c.stroke();
@@ -309,32 +406,34 @@ mousepad = (function () {
 		let c = ctx[WAVECANVAS];
 		if (!waves[index].data)
 			return;
-		
-		let data = waves[index].data.map(x=>Math.abs(x));
+
+		let data = waves[index].data.map(x => Math.abs(x));
 		let len = data.length;
 
 		let extent = space.width;
-		let {min, max, globalmin, globalmax, globalrange} = getMinMax(data, extent);
+		let { min, max, globalmin, globalmax, globalrange } = getMinMax(data, extent);
 		let v0 = 0;
 		let v1 = 1;
 		//c.clearRect(0,0,w,w);
 		c.lineWidth = 1;
 		c.strokeStyle = 'black';
+		// c.strokeStyle = '#007bff';
+		//c.strokeStyle = '#a0a0a0';
+		let alphamax = max.map(v => v / globalmax);
 
-		let alphamax = max.map(v=>v/globalmax);
 		for (let i = 0; i < extent; i++) {
 			let alpha = alphamax[i];
-			alpha = Math.pow(alpha*alpha*alpha, 2);
-			c.globalAlpha = alpha;
+			alpha = Math.pow(alpha, padStatus.cont);
+			alpha = alpha * padStatus.lum;
+			c.globalAlpha = Math.max(0, Math.min(alpha, 1));
 			c.beginPath();
 			if (index == 'x') {
 				c.moveTo(space.left + i, space.top);
 				c.lineTo(space.left + i, space.bottom);
 			}
 			else {
-				c.moveTo(space.left, space.top + i);
-				c.lineTo(space.right, space.top + i);
-
+				c.moveTo(space.left, space.bottom - i);
+				c.lineTo(space.right, space.bottom - i);
 			}
 			c.stroke();
 		}
@@ -349,9 +448,9 @@ mousepad = (function () {
 		c.stroke();
 	}
 
-	function redrawKnob() {
+	function redrawSpeedCanvas() {
 		let { left, top, width, height, cx, cy } = space;
-		let c = ctx[VCANVAS];
+		let c = ctx[SPEEDCANVAS];
 		c.lineWidth = 1;
 		c.strokeStyle = '#808080';
 		c.clearRect(0, 0, w, w);
@@ -359,99 +458,178 @@ mousepad = (function () {
 		line(c, left, cy, left + width, cy);
 		line(c, cx, top, cx, top + height);
 
-		c.beginPath();
-		// draw *1 circle
-		c.arc(cx, cy, width / 4, 0, 2 * Math.PI);
-		c.stroke();
-
-		c.strokeStyle = '#00a000';
-		line(c, cx, cy, mousex, mousey);
-
-
+		drawArrow(ctx[SPEEDCANVAS], cx, cy, curstatus.x, cy, { color: '#0056b3' })
+		drawArrow(ctx[SPEEDCANVAS], cx, cy, cx, curstatus.y, { color: '#0056b3' })
 	}
 
 	function redrawInfo() {
 
 	}
 
-	function setPos(x, y) {
+	function showOscStatus(s) {
+		curOscStatus = s;
 		let c = ctx[CURSORCANVAS];
 		c.clearRect(0, 0, w, w);
-		c.lineWidth = 1;
+		c.lineWidth = 2;
+		c.strokeStyle = '#a00000';
+		c.fillStyle = '#a00000';
+		let { left, top, right, bottom, width, height } = space;
+		let x = left + s.posx * width;
+		let y = bottom - s.posy * height;
 
-		c.strokeStyle = '#008000';
-		let { left, top, width, height } = space;
 		c.beginPath();
-		c.moveTo(left + x * width, top);
-		c.lineTo(left + x * width, top + height);
+		c.moveTo(x, top);
+		c.lineTo(x, bottom);
 		c.stroke();
 		c.beginPath();
-		c.moveTo(left, top + y * height);
-		c.lineTo(left + width, top + y * height);
+		c.moveTo(left, y);
+		c.lineTo(right, y);
 		c.stroke();
+
+		let lx = left + (s.posx + s.lfox) * width;
+		let ly = bottom - (s.posy + s.lfoy) * height;
+		c.beginPath();
+		c.arc(lx, ly, 3, 0, 2*Math.PI);
+		c.stroke();
+		c.fill();
+
+		if (!dragging) {
+			//if (s.speedx != 0 && s.speedy != 0) {
+			let gfx = s.speedx / waves.x.data.length;
+			let gfy = -s.speedy / waves.y.data.length;
+			let angle = Math.atan2(gfy, gfx);
+
+
+			let points = lineSquareIntersections(space, x, y, angle)
+			if (points.length == 2) {
+				c.save();
+				c.lineWidth = 1;
+				c.strokeStyle = '#700000';
+				c.setLineDash([5, 15]);
+
+				// c.beginPath();
+				// c.moveTo(p1[0], p1[1]);
+				// c.lineTo(p2[0], p2[1]);
+				// c.stroke();
+				c.beginPath();
+				c.moveTo(points[0].x, points[0].y);
+				c.lineTo(points[1].x, points[1].y);
+				c.stroke();
+
+				c.restore();
+			}
+		}
+		debugStatus();
+	}
+
+	function lineSquareIntersections(rect, px, py, angle) { // thanks to GPT
+		const m = Math.tan(angle);
+		const points = [];
+
+		// lati verticali
+		[rect.left, rect.left + rect.width].forEach(xSide => {
+			const y = py + m * (xSide - px);
+			if (y >= rect.top && y <= rect.top + rect.height) {
+				points.push({ x: xSide, y });
+			}
+		});
+
+		// lati orizzontali (evitare divisione per 0)
+		if (Math.abs(m) > 1e-10) {
+			[rect.top, rect.top + rect.height].forEach(ySide => {
+				const x = px + (ySide - py) / m;
+				if (x >= rect.left && x <= rect.left + rect.width) {
+					points.push({ x, y: ySide });
+				}
+			});
+		}
+
+		// alla fine points conterrà 2 intersezioni
+		return points;
+	}
+
+	function drawArrow(ctx, x1, y1, x2, y2, opts = {}) { // thanks to GPT
+		const {
+			color = '#111',
+			width = 4,
+			headLength = 12,
+			headAngle = Math.PI / 8,
+			lineDash = [],
+			cap = 'round'
+		} = opts;
+
+		// Direzione linea
+		const dx = x2 - x1;
+		const dy = y2 - y1;
+		const angle = Math.atan2(dy, dx);
+
+		ctx.save();
+		ctx.strokeStyle = color;
+		ctx.fillStyle = color;
+		ctx.lineWidth = width;
+		ctx.setLineDash(lineDash);
+		ctx.lineCap = cap;
+		ctx.lineJoin = 'round';
+
+		// Corpo della freccia
+		ctx.beginPath();
+		ctx.moveTo(x1, y1);
+		ctx.lineTo(x2, y2);
+		ctx.stroke();
+
+		// Punta della freccia (triangolo isoscele)
+		const x3 = x2 - headLength * Math.cos(angle - headAngle);
+		const y3 = y2 - headLength * Math.sin(angle - headAngle);
+		const x4 = x2 - headLength * Math.cos(angle + headAngle);
+		const y4 = y2 - headLength * Math.sin(angle + headAngle);
+
+		ctx.beginPath();
+		ctx.moveTo(x2, y2);
+		ctx.lineTo(x3, y3);
+		ctx.lineTo(x4, y4);
+		ctx.closePath();
+		ctx.fill();
+
+		ctx.restore();
+	}
+
+	function debugStatus() {
+		let s = Object.assign({}, curstatus, curOscStatus);
+		function getVal(k) {
+			if (typeof (s[k]) == 'number') return s[k].toFixed(4);
+			return s[k];
+		}
+		let txt = Object.keys(s).map(x => `${x.padStart(10, ' ')}: ${getVal(x)}`).join('\n');
+		$('.debug-monitor').text(txt);
 
 	}
 
-	// let mmcount = 0;
-	// function onMouseClick(evt) {
-	// 	evt.stopPropagation();
-	// 	onMouseMove(evt);
-	// }
+	function showInfo(txt) {
+		let c = ctx[INFOCANVAS];
+		c.font = '30px sans-serif';
+		c.fillStyle = '#0056b3';
+		let x = 20 + space.left;
+		let y = 50 + space.top;
+		c.clearRect(0, 0, w, w);
+		for (let line of txt.split('\n')) {
+			c.fillText(line, x, y);
+			y += 50;
+		}
+	}
 
-	// function onMouseMove(evt) {
-	// 	evt.stopPropagation();
-	// 	let canvas = canvases[0];
-	// 	let x = mousex = evt.clientX - canvas.offset().left;
-	// 	let y = mousey = evt.clientY - canvas.offset().top;
-	// 	let mode = $('#move-mode').val();
+	function setMode(mode) {
 
-	// 	if (evt.shiftKey) {
-	// 		canvases[VCANVAS].show();
-	// 		redrawKnob();
-	// 		mode = 'vxvy';
-	// 	}
-	// 	else {
-	// 		mode = 'xy';
-	// 		canvases[VCANVAS].hide();
-	// 	}
-	// 	if (!evt.buttons)
-	// 		return;
+		$('.padmode').removeClass('on');
+		$('.padmode[data-mode="' + mode + '"]').addClass('on');
+		if (!modes[mode])
+			return;
+		padStatus.mode = mode;
+		curstatus.mode = mode;
+		canvases[SPEEDCANVAS].toggleClass('hidden', mode != 'speed');
+		canvases[CURSORCANVAS].toggleClass('hidden', false);
 
-	// 	if (mmcount++ > 100) {
-	// 		mmcount = 0;
-	// 		console.log({ evt });
-	// 		window.evt = evt;
-	// 	}
-	// 	if (mode == 'xy') {
-	// 		if (oscillator) {
-	// 			let normx = (x - space.left) / space.width;
-	// 			let normy = (y - space.top) / space.height;
-	// 			console.log(normx, normy);
-	// 			oscillator.port.postMessage({ action: 'set', value: { posx: normx, posy: normy } });
-	// 		}
-	// 	}
-
-	// 	if (mode == 'vxvy') {
-	// 		if (oscillator) {
-	// 			let normx = (x - space.cx) / (space.width / 2);
-	// 			let normy = (y - space.cy) / (space.height / 2);
-	// 			let rad = Math.sqrt(normx * normx + normy * normy);
-	// 			let alpha = Math.atan2(normy, normx);
-	// 			rad = Math.pow(rad, 20);
-	// 			oscillator.port.postMessage({
-	// 				action: 'set',
-	// 				value: {
-	// 					fposx: rad * Math.cos(alpha),
-	// 					fposy: rad * Math.sin(alpha),
-	// 				}
-	// 			});
-	// 		}
-	// 	}
-
-	// }
-
-
-
+		checkStatusChange();
+	}
 
 
 	let resizeTimeout = null;
@@ -463,13 +641,13 @@ mousepad = (function () {
 		}, 200);
 	});
 
-
 	return {
 		init, reposition, redraw,
-		redrawWave: redrawBandWave,
-		redrawKnob,
 		redrawInfo,
 		setWave,
-		setPos
+		setMode,
+		showOscStatus,
+		getStatus: () => padStatus,
+		setStatus: x => Object.assign(padStatus, x)
 	}
 })();

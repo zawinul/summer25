@@ -24,9 +24,9 @@ class Vocoder extends AudioWorkletProcessor {
 		this.sampleRate = sampleRate;
 		this.outFrames = [];
 		for (let i = 0; i < overlap; i++)
-			this.outFrames[i] = this.createOutBuffer(fftSize+1, i * fftSize / overlap);
+			this.outFrames[i] = this.createOutBuffer(fftSize, i * fftSize / overlap);
 
-		this.lastFrame = new Float32Array(fftSize + 1).fill(0);
+		this.lastFrame = new Float32Array(fftSize).fill(0);
 		this.port.postMessage({ type: 'initialized' });
 	}
 
@@ -39,7 +39,8 @@ class Vocoder extends AudioWorkletProcessor {
 		let ph = initialPh;
 		let data = new Float32Array(size).fill(0);
 		function getSample() {
-			let ret = data[ph++];
+			let ret = data[ph];
+			ph++;
 			if (ph >= data.length) {
 				ph = 0;
 				data.set(oscillator.lastFrame);
@@ -50,72 +51,10 @@ class Vocoder extends AudioWorkletProcessor {
 		return { ph, data, getSample }
 	}
 
-	// fillNextFrame(memory) {
-	// 	//log('fnf', this.posx, this.posy);
-	// 	if (this.waveY == this.emptyWave && this.waveY == this.emptyWave) {
-	// 		memory.fill(0);
-	// 		return;
-	// 	}
-	// 	let frame1 = this.waveX.getAnalizedFrame(this.posx + this.lfox, memory);
-	// 	let frame2 = this.waveY.getAnalizedFrame(this.posy + this.lfoy, memory);
-	// 	// debugdump.frame1 = frame1;
-	// 	// debugdump.frame2 = frame2;
-	// 	// debugdump.posx = this.posx;
-	// 	// debugdump.posy = this.posy;
-	// 	// debugdump.lfox = this.lfox;
-	// 	// debugdump.lfoy = this.lfoy;
-	// 	// debugdump.lfoph = this.lfoph;
-	// 	// debugdump.lforad = this.lforad;
-	// 	// debugdump.lfofreq = this.lfofreq;
-
-	// 	let frame;
-	// 	if (this.waveX == this.emptyWave)
-	// 		frame = frame2;
-	// 	else if (this.waveY == this.emptyWave)
-	// 		frame = frame1;
-	// 	else
-	// 		frame = this.mergeFrame(frame1, frame2);
-
-	// 	simplifiedResynthesize(frame, memory);
-	// }
-
-	// checkFrame(frame) {
-	// 	for (let m of frame.magnitudes) {
-	// 		if (Number.isNaN(m)) {
-	// 			log("m is NaN", debugdump);
-	// 			return false;
-	// 		}
-	// 	}
-	// 	for (let d of frame.deltaPh) {
-	// 		if (Number.isNaN(d)) {
-	// 			log("d is NaN", debugdump);
-	// 			return false;
-	// 		}
-	// 	}
-	// 	return true;
-	// }
-	// mergeFrameSpace
-
-	// mergeFrame(frame1, frame2) {
-	// 	let len = fftSize / 2 + 1;
-	// 	let { magnitudes, deltaPh } = this.mergeFrameSpace;
-	// 	for (let i = 0; i < len; i++) {
-	// 		let m1 = frame1.magnitudes[i];
-	// 		let m2 = frame2.magnitudes[i];
-	// 		let dph1 = frame1.deltaPh[i];
-	// 		let dph2 = frame2.deltaPh[i];
-	// 		//magnitudes[i] = m1 * (1 - this.mix) + m2 * this.mix;
-	// 		magnitudes[i] = Math.min(m1, m2);
-	// 		let deltadelta = normalize(dph2 - dph1);
-	// 		let delta = dph1 + (deltadelta * m2 / (m1 + m2))
-	// 		deltaPh[i] = normalize(delta);
-	// 	}
-	// 	return this.mergeFrameSpace;
-	// }
 
 	async onMessage(event) {
 		let d = event.data;
-		log('on osc msg', d.type)
+		//log('on osc msg', d.type)
 		if (d.type=='init') {
 			this.init(d.fftSize, d.overlap, d.sampleRate);
 			this.port.postMessage({ type: 'initialized' });
@@ -127,41 +66,11 @@ class Vocoder extends AudioWorkletProcessor {
 		if (d.type === 'new-frame') {
 			this.lastFrame.set(d.data)
 		}
+		if (d.type === 'dump-request') {
+			this.port.postMessage({ type: 'dump', data: {frames:this.outFrames, lastFrame: this.lastFrame} });
+		}
 	}
 
-
-	// async setwave(index, buffer) {
-	// 	let data = new Float32Array(buffer);
-	// 	let len = data.length;
-	// 	let left = 0;
-	// 	let right = len;
-	// 	let ph = 0;
-
-	// 	function getAnalizedFrame(normPh) {
-	// 		debugdump.normPh = normPh;
-	// 		debugdump.index = index;
-	// 		debugdump.len = len;
-	// 		let ph = Math.round(left + normPh * (right - left));
-	// 		ph = ph % len;
-	// 		//log('gaf', ph );
-	// 		return simplifiedAnalysisAtPoint(data, ph, debugdump);
-	// 	}
-	// 	let w = { data, len, left, right, getAnalizedFrame, ph };
-	// 	if (index == 'y')
-	// 		this.waveY = w;
-	// 	else
-	// 		this.waveX = w;
-	// }
-	// emptyWave() {
-	// 	return {
-	// 		getAnalizedFrame: function () {
-	// 			return {
-	// 				magnitudes: [],
-	// 				deltaPh: []
-	// 			}
-	// 		}
-	// 	}
-	// }
 
 	/**
 	 * Questo metodo viene chiamato dal motore audio del browser ogni volta

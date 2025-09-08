@@ -11,56 +11,154 @@
 <body>
 
 	<div class="container">
-		<h1>Summer 2025</h1>
+
+
+
+		<h1>Summer 25</h1>
 		<p>Ph Vocoder interpolation.</p>
 
-		<div class="controls">
-			<button id="btn-pause">Play</button>
-		</div>
 
-		
+
 		<div class="sliders">
-			<div class="slider-group">
-				<label for="slider-amp">Wave X</label>
-				<input type="text" class="waveurl" data-index="x" value="wav/t2.wav">
-			</div>
-			<div class="slider-group">
-				<label for="slider-amp">Wave Y</label>
-				<input type="text" class="waveurl" data-index="y" value="wav/t4.wav">
+
+			<div id="preset-area" class="file-input">
+				<div class="row">
+					<label>Preset</label>
+					<button>💾 save</button>
+				</div>
+				<div class="row hint">
+					You can drop here your preset
+				</div>
+				<div class="row">
+					<select>
+						<option>preset 1</option>
+						<option>preset 2</option>
+						<option>preset 3</option>
+					</select>
+					<button>💾 load</button>
+				</div>
 			</div>
 
-			<div class="slider-group">
-				<label for="slider-amp">Ampl</label>
-				<input type="range" id="slider-amp" min="0" max="1" value="0.5" step="0.01">
-				<span id="amp-value">0.50</span>
+			<div class="controls">
+				<button id="btn-pause" class="play">[space] Play</button>
 			</div>
-			<div class="slider-group">
+
+			<div class="file-input wx">
+				<div class="row">
+					<label>X wave</label>
+				</div>
+				<div class="row hint">
+					You can drop here your X wave
+				</div>
+				<div class="row">
+					<select>
+						<option>preset 1</option>
+						<option>preset 2</option>
+						<option>preset 3</option>
+					</select>
+					<button>💾 load</button>
+				</div>
+			</div>
+
+
+			<div class="file-input wy">
+				<div class="row">
+					<label>Y wave</label>
+				</div>
+				<div class="row hint">
+					You can drop here your Y wave
+				</div>
+				<div class="row">
+					<select>
+						<option>preset 1</option>
+						<option>preset 2</option>
+						<option>preset 3</option>
+					</select>
+					<button>💾 load</button>
+				</div>
+			</div>
+
+			<!-- 
+			<div class="control-group wx">
+				<label for="slider-amp">Wave X</label>
+				<input type="text" class="wavename" data-index="x" readonly>
+			</div>
+			<div class="control-group wy">
+				<label for="slider-amp">Wave Y</label>
+				<input type="text" class="wavename" data-index="y" readonly>
+			</div> -->
+
+			<div class="control-group">
+				<label for="slider-amp">Ampl</label>
+				<input type="range" id="slider-amp" min="-48" max="48" value="0" step=".5">
+				<span id="amp-value">0 dB</span>
+			</div>
+			<div class="control-group">
+				<label for="reverb-type">Rev Type</label>
+				<select id="reverb-type"></select>
+			</div>
+			<div class="control-group">
 				<label for="slider-reverb">Rev Send</label>
-				<input type="range" id="slider-reverb" min="0" max="1" value="0" step="0.01">
-				<span id="reverb-value">0.00</span>
+				<input type="range" id="slider-reverb" min="-96" max="24" value="-96" step="0.5">
+				<span id="reverb-value"></span>
+			</div>
+			<div class="control-group">
+				<label>Combine</label>
+				<select id="merge-mode">
+					<option selected value="mix">mix</option>
+					<option value="min">min</option>
+					<option value="max">max</option>
+					<option value="diff">diff</option>
+					<option value="mul">mul</option>
+					<option value="mix2">mix2</option>
+					<!-- <option value="cep">cep</option> -->
+				</select>
+			</div>
+			<div class="control-group merge-param">
+				<label>Balance</label>
+				<input type="range" id="merge-param" min="0" max="1" value=".5" step="0.01">
+				<span id="merge-param-value">0.00</span>
 			</div>
 		</div>
-		<div id="status">Status: Pronto. Clicca Start.</div>
-		
+		<div class="meters">
+			<div class="meter">
+				<canvas class="cx"></canvas>
+			</div>
+			<div class="meter">
+				<canvas class="cy"></canvas>
+			</div>
+			<div class="meter">
+				<canvas class="cxy"></canvas>
+			</div>
+		</div>
+		<div id="status"></div>
+
 	</div>
 
 	<div class="panel">
 		<div class="panel-controls">
 			<!-- <button id="btn-move-left">Move Left</button>
 			<button id="btn-move-right">Move Right</button> -->
-			<select id="move-mode">
-				<option value="xy">xy</option>
-				<option value="vxvy">vxvy</option>
-				<option value="polar">polar</option>
-			</select>
+			<button class="padmode amp" data-mode="amp">[A] amp</button>
+			<button class="padmode pos on" data-mode="pos">[P] pos</button>
+			<!-- <button class="padmode speed" data-mode="speed">[S] speed</button> -->
+			<button class="padmode lfox" data-mode="lfox">[X] lfo X</button>
+			<button class="padmode lfoy" data-mode="lfoy">[Y] lfo Y</button>
+			<button class="padmode lum" data-mode="lum">[L] lum/contr</button>
+			<div class="rcontrols pos" style="
+				display: inline;
+				text-align: right;
+				flex: 1;
+			">
+				friction <input type="range" id="friction" min="0" max="1" value="0" step=".0025">
+			</div>
 		</div>
 		<div class="arena">
-			<canvas class="mousepad" id="mousepad0"></canvas>
-			<canvas class="mousepad" id="mousepad1"></canvas>
-			<canvas class="mousepad" id="mousepad2"></canvas>
-			<canvas class="mousepad" id="mousepad3"></canvas>
+			<div class="canvas-container">
+			</div>
 		</div>
 	</div>
+	<pre class="debug-monitor"></pre>
 	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 	<script src="main.js"></script>
 	<script src="mousepad.js"></script>
