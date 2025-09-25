@@ -1,14 +1,21 @@
+//"use strict";
+
 const fftSize = 4096;
 const overlap = 4;
 let audioContext;
 let vocoderWorker;
 let waveX, waveY;
 
+let oscInStatus = {};
+let oscOutStatus = {};
+let loadPresetDiv, loadXWaveDiv, loadYWaveDiv;
+let vocoderOscillatorNode;
+
 function amplitudeToDb(amplitude) {
 	if (amplitude <= 0) {
 		return -96; // l'ampiezza nulla corrisponde a -∞ dB
 	}
-	return Math.max(-96,20 * Math.log10(amplitude));
+	return Math.max(-96, 20 * Math.log10(amplitude));
 }
 
 function dbToAmplitude(db) {
@@ -16,7 +23,6 @@ function dbToAmplitude(db) {
 }
 
 $(function () {
-
 	function log() {
 		let pars = ['main'];
 		for (let i = 0; i < arguments.length; i++) {
@@ -32,21 +38,16 @@ $(function () {
 	let workerInitialized = Promise.withResolvers();
 
 
-	let vocoderOscillatorNode;
 	let amplitudeNode;
 	let reverbNode;
 	let reverbSendNode;
 	let mainOutputNode;
-	let oscStatus = {};
-	let convolver;
 
 
 	const jsonTerminator = '###\n'
 
 	async function init() {
-		initUI();
-		initWaveDragAndDrop();
-		initPresetDragAndDrop();
+		await initUI();
 		initWaveSelector();
 		initIrSelector();
 		mousepad.init();
@@ -54,6 +55,116 @@ $(function () {
 		onMergeModeChange();
 		await updateReverbIr();
 		initKeys();
+	}
+
+	async function initUI() {
+		$('#btn-pause').on('click', togglePause);
+		$('#slider-amp').on('input', function () {
+			const value = parseFloat($(this).val());
+			// if (amplitudeNode) {
+			// 	// Usiamo setTargetAtTime per un cambio di volume più morbido
+			// 	amplitudeNode.gain.setTargetAtTime(value, audioContext.currentTime, 0.01);
+			// }
+			let amp = dbToAmplitude(value);
+			vocoderWorker.postMessage({ type: 'set-status', data: { scale: amp } });
+
+			$('#amp-value').text(value.toFixed(1) + ' dB');
+		});
+
+
+		$('#slider-reverb').on('input', function () {
+			const value = parseFloat($(this).val());
+			if (reverbSendNode) {
+				let gain = value < -95.9 ? 0 : dbToAmplitude(value);
+				reverbSendNode.gain.setTargetAtTime(gain, audioContext.currentTime, 0.01);
+			}
+			$('#reverb-value').text(value.toFixed(0) + ' dB');
+		});
+
+
+		$('.wavename').on('change', function (evt) {
+			let url = $(this).val();
+			let index = $(this).attr('data-index');
+			loadAudio(url, index);
+		});
+		$('#merge-param, #merge-mode').on('change', onMergeModeChange);
+		$('#merge-param').on('input', onMergeModeChange);
+
+		loadPresetDiv = $('#modal-load-preset').detach();
+		$('#save-preset').on('click', evt => savePreset());
+		$('#load-preset').on('click', evt => openModal(loadPresetDiv, "Load a preset", null, "Close"));
+		$('#load-preset-button', loadPresetDiv).on('click', async function (evt) {
+			let { name, content } = await loadFile("s25");
+			if (name != null) {
+				let filename = name.split('/').slice(-1)[0];
+				filename = filename.split('.');
+				filename = filename.slice(0, filename.length - 1).join('.');
+				$('#preset-area .name').text(filename);
+				restoreBytes(content);
+				closeModals();
+
+			}
+		})
+		let presetlist = await fetch('presets/list.json');
+		presetlist = await presetlist.json();
+		let listContainer = $('#select-preset', loadPresetDiv);
+		for (let p of presetlist) {
+			$(`<option value="${p.file}">${p.name}</option>`).appendTo(listContainer)
+		}
+		listContainer.val(null).on('change', async function () {
+			let file = $(this).val();
+			if (file) {
+				let url = `presets/${file}.s25`
+				await loadPreset(url);
+				closeModals();
+			}
+		});
+		loadXWaveDiv = $('#modal-load-wave').detach();
+		loadYWaveDiv = loadXWaveDiv.clone();
+		let wmodals = { x: loadXWaveDiv, y: loadYWaveDiv };
+		let wavelist = await fetch('waves/list.json');
+		wavelist = await wavelist.json();
+		for (let index in wmodals) {
+			let c = wmodals[index];
+			let wContainer = $('#select-wave', c);
+			for (let p of wavelist)
+				$(`<option value="${p.file}">${p.name}</option>`).appendTo(wContainer);
+
+			wContainer.val(null).on('change', async function () {
+				let file = $(this).val();
+				if (file) {
+					let url = `waves/${file}`
+					await loadWave(index, url);
+					closeModals();
+				}
+			});
+
+			wContainer.val(null);
+		}
+
+		$('#load-x-wave').on('click', function (evt) {
+			openModal(loadXWaveDiv, "Load X wave", null, "Close");
+		});
+		$('#load-y-wave').on('click', function (evt) {
+			openModal(loadYWaveDiv, "Load Y wave", null, "Close");
+		});
+
+		initWaveDragAndDrop('x', $('.load-wave-drag-area', loadXWaveDiv));
+		initWaveDragAndDrop('y', $('.load-wave-drag-area', loadYWaveDiv));
+		initWaveDragAndDrop('x', $('#top-drop-bar'));
+		initWaveDragAndDrop('y', $('#left-drop-bar'));
+		initPresetDragAndDrop($('#load-preset-drag-area', loadPresetDiv));
+
+	}
+
+	async function loadWave(index, url) {
+		let resp = await fetch(url);
+		let parts = url.split('/');
+		parts = parts[parts.length - 1]
+		parts = parts.split('.');
+		let name = parts.slice(0, parts.length - 1).join('.');
+		let buf = await resp.arrayBuffer();
+		await setWave(index, buf, name);
 	}
 
 	function uiMessage(msg) {
@@ -69,7 +180,10 @@ $(function () {
 	async function initVocoderOscillator() {
 		log('in initVocoderOscillator');
 		await audioContext.audioWorklet.addModule('vocoder-osc.worklet.js');
-		vocoderOscillatorNode = new AudioWorkletNode(audioContext, 'phase-vocoder-processor');
+		vocoderOscillatorNode = new AudioWorkletNode(audioContext, 'phase-vocoder-processor', {
+			numberOfOutputs: 1,
+			outputChannelCount: [2] // <--- 
+		});
 		vocoderOscillatorNode.port.onmessage = evt => onOscillatorMessage(evt);
 		await oscCreated.promise;
 		log('initVocoderOscillator: osc created');
@@ -123,7 +237,9 @@ $(function () {
 			await audioContext.suspend();
 
 			uiMessage('AudioContext creato. Inizializzazione worker vocoder...');
-
+			const lib = initCommon(fftSize, overlap, audioContext.sampleRate);
+			Object.assign(window, lib);		
+	
 			await initVocoderWorker();
 			await initVocoderOscillator();
 
@@ -176,12 +292,12 @@ $(function () {
 	function togglePause() {
 		if (isSuspended) {
 			audioContext.resume();
-			$('#btn-pause').text('[space] Pause');
+			$('#btn-pause-text').text('pause');
 			isSuspended = false;
 		}
 		else {
 			audioContext.suspend();
-			$('#btn-pause').text('[space] Play');
+			$('#btn-pause-text').text('play');
 			isSuspended = true;
 		}
 	}
@@ -215,9 +331,12 @@ $(function () {
 			log('worker has been created');
 			workerCreated.resolve();
 		}
-		if (d.type == 'osc-status') {
-			oscStatus = d.data;
-			mousepad.showOscStatus(oscStatus);
+		if (d.type == 'osc-in-status') {
+			oscInStatus = d.data;
+		}
+		if (d.type == 'osc-out-status') {
+			oscOutStatus = d.data;
+			mousepad.showOscStatus(oscOutStatus);
 		}
 		if (d.type == 'new-frame') {
 			vocoderOscillatorNode.port.postMessage({
@@ -299,7 +418,7 @@ $(function () {
 		sel.on('change', () => updateReverbIr());
 	}
 
-	async function setWave(index, arrayBuffer) {
+	async function setWave(index, arrayBuffer, name) {
 		let audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
 		if (audioBuffer.numberOfChannels > 1) {
 			console.warn("L'audio non è mono. Si utilizza solo il primo canale.");
@@ -307,11 +426,13 @@ $(function () {
 		const monoChannelData = audioBuffer.getChannelData(0);
 		if (index == 'y') {
 			waveY = monoChannelData.slice()
-			mousepad.setWave(index, waveY)
+			mousepad.setWave(index, waveY);
+			$(`.wy .name`).text(name);
 		}
 		else {
 			waveX = monoChannelData.slice();
 			mousepad.setWave(index, waveX);
+			$(`.wx .name`).text(name);
 		}
 
 		let payload = {
@@ -366,43 +487,11 @@ $(function () {
 	}
 
 
-	function initUI() {
-		$('#btn-pause').on('click', togglePause);
-		$('#slider-amp').on('input', function () {
-			const value = parseFloat($(this).val());
-			// if (amplitudeNode) {
-			// 	// Usiamo setTargetAtTime per un cambio di volume più morbido
-			// 	amplitudeNode.gain.setTargetAtTime(value, audioContext.currentTime, 0.01);
-			// }
-			let amp = dbToAmplitude(value);
-			vocoderWorker.postMessage({ type: 'set-status', data: { scale: amp } });
 
-			$('#amp-value').text(value.toFixed(1)+' dB');
-		});
-
-
-		$('#slider-reverb').on('input', function () {
-			const value = parseFloat($(this).val());
-			if (reverbSendNode) {
-				let gain = value < -95.9 ? 0 : dbToAmplitude(value);
-				reverbSendNode.gain.setTargetAtTime(gain, audioContext.currentTime, 0.01);
-			}
-			$('#reverb-value').text(value.toFixed(0)+' dB');
-		});
-
-		
-		$('#friction').on('input', function () {
-			const friction = parseFloat($(this).val());
-			vocoderWorker.postMessage({ type: 'set-status', data: { friction } })
-		});
-
-		$('.wavename').on('change', function (evt) {
-			let url = $(this).val();
-			let index = $(this).attr('data-index');
-			loadAudio(url, index);
-		});
-		$('#merge-param, #merge-mode').on('change', onMergeModeChange);
-		$('#merge-param').on('input', onMergeModeChange);
+	async function loadPreset(url) {
+		let resp = await fetch(url);
+		let buf = await resp.arrayBuffer();
+		restoreBytes(buf);
 	}
 
 	function onMergeModeChange() {
@@ -411,59 +500,94 @@ $(function () {
 		vocoderWorker.postMessage({ type: 'set-status', data: { mergeMode: mode, mergeMix: param } })
 	}
 
-	function initWaveDragAndDrop() {
-		let areas = [['x', $('.file-input.wx')], ['y', $('.file-input.wy')]];
-		for (let area of areas) {
-			let [index, div] = area;
-			div.on('dragover', e => {
-				e.preventDefault();
-				div.toggleClass('dragover', true);
-				console.log({ dragover: e })
-			});
+	function loadFile(acceptedExtensions = null) {
+		return new Promise((resolve, reject) => {
+			// crea l'input al volo
+			const input = document.createElement("input");
+			input.type = "file";
+			if (acceptedExtensions)
+				input.accept = acceptedExtensions;
 
-			div.on('dragleave', e => {
-				e.preventDefault();
-				div.toggleClass('dragover', false);
-			});
+			input.style.display = "none";
 
+			document.body.appendChild(input);
 
-			div.on('drop', async e => {
-				e.preventDefault();
-				div.toggleClass('dragover', false);
-
-				const files = e.originalEvent.dataTransfer.files;
-				if (files.length > 0) {
-					const file = files[0];
-					if (!file.type.startsWith("audio/")) {
-						alert("Il file non è un audio!");
-						return;
-					}
-					$('.hint', div).text(file.name);
-					const arrayBuffer = await file.arrayBuffer();
-					await setWave(index, arrayBuffer);
-
-					//const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-					// // Esempio: aggiungo il file al select come nuova opzione
-					// const option = document.createElement('option');
-					// option.textContent = file.name;
-					// option.value = file.name;
-					// select.appendChild(option);
-					// select.value = file.name;
-
-					// // Puoi anche leggere il contenuto del file
-					// const reader = new FileReader();
-					// reader.onload = () => {
-					// 	console.log("Contenuto del file:", reader.result);
-					// };
-					// reader.readAsText(file);
+			input.addEventListener("change", () => {
+				const file = input.files[0];
+				if (!file) {
+					document.body.removeChild(input);
+					return { name: null, content: null }
 				}
-			})
-		}
+
+				const reader = new FileReader();
+				reader.onload = e => {
+					const arrayBuffer = e.target.result;
+					resolve({
+						name: file.name,
+						content: arrayBuffer
+					});
+					document.body.removeChild(input);
+				};
+				reader.onerror = err => {
+					reject(err);
+					document.body.removeChild(input);
+				};
+
+				reader.readAsArrayBuffer(file);
+			});
+
+			// apri il file selector
+			input.click();
+		});
+	}
+
+	function initWaveDragAndDrop(index, div) {
+		div.on('dragover', e => {
+			e.preventDefault();
+			div.toggleClass('dragover', true);
+			console.log({ dragover: e })
+		});
+
+		div.on('dragleave', e => {
+			e.preventDefault();
+			div.toggleClass('dragover', false);
+		});
+
+
+		div.on('drop', async e => {
+			e.preventDefault();
+			div.toggleClass('dragover', false);
+
+			const files = e.originalEvent.dataTransfer.files;
+			if (files.length > 0) {
+				const file = files[0];
+				if (!file.type.startsWith("audio/")) {
+					alert("Il file non è un audio!");
+					return;
+				}
+				const arrayBuffer = await file.arrayBuffer();
+				await setWave(index, arrayBuffer, file.name);
+				closeModals();
+				//const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+				// // Esempio: aggiungo il file al select come nuova opzione
+				// const option = document.createElement('option');
+				// option.textContent = file.name;
+				// option.value = file.name;
+				// select.appendChild(option);
+				// select.value = file.name;
+
+				// // Puoi anche leggere il contenuto del file
+				// const reader = new FileReader();
+				// reader.onload = () => {
+				// 	console.log("Contenuto del file:", reader.result);
+				// };
+				// reader.readAsText(file);
+			}
+		})
 	}
 
 
-	function initPresetDragAndDrop() {
-		let div = $('#preset-area')
+	function initPresetDragAndDrop(div) {
 
 		div.on('dragover', e => {
 			e.preventDefault();
@@ -487,6 +611,7 @@ $(function () {
 				const arrayBuffer = await file.arrayBuffer();
 				restoreBytes(arrayBuffer);
 			}
+			closeModals();
 		})
 
 	}
@@ -552,13 +677,25 @@ $(function () {
 		$('#merge-mode').val(obj.mergeMode).trigger('input');
 		$('#merge-param').val(obj.mergeParam).trigger('input');
 		$('#reverb-type').val(obj.reverbType).trigger('change');
+		$('#traction').val(obj.osc.traction);
+		$('#luminosity').val(obj.pad.lum);
+		$('#contrast').val(obj.pad.contrast);
+
+		$('[par="lfofreq"]').val(obj.osc.lfofreq);
+		$('[par="lfoxamp"]').val(obj.osc.lfoxamp);
+		$('[par="lfoyamp"]').val(obj.osc.lfoyamp);
+		$('[par="lfodeltaph"]').val(obj.osc.lfodeltaph);
+		$('[par="lfodeltaph"]').val(obj.osc.lfodeltaph);
+		$('[par="lfowave"]').val(obj.osc.lfowave);
+		$('[par="lforatio"]').val(obj.osc.lforatio);
+		$('[par="steps"]').val(obj.osc.steps);
 
 		if (obj.pad) {
 			mousepad.setStatus(obj.pad);
 		}
 		if (obj.osc) {
-			Object.assign(oscStatus, obj.osc);
-			vocoderWorker.postMessage({ type: 'set-status', data: oscStatus });
+			Object.assign(oscInStatus, obj.osc);
+			vocoderWorker.postMessage({ type: 'set-status', data: oscInStatus });
 		}
 		mousepad.redraw();
 
@@ -571,7 +708,7 @@ $(function () {
 		const pad = (num) => String(num).padStart(2, '0');
 		const timestamp = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}_${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}`;
 		let fileName = `preset_${timestamp}`;
-		filenName = prompt('preset name?', fileName);
+		fileName = prompt('preset name?', fileName);
 		if (!fileName)
 			return;
 
@@ -583,7 +720,7 @@ $(function () {
 
 		const link = document.createElement('a');
 		link.href = URL.createObjectURL(fileBlob);
-		link.download = fileName+'.s25';
+		link.download = fileName + '.s25';
 		document.body.appendChild(link);
 		link.click();
 		document.body.removeChild(link);
@@ -608,7 +745,7 @@ $(function () {
 			yname: $('.wy input').val(),
 		});
 		d.pad = mousepad.getStatus();
-		d.osc = oscStatus;
+		d.osc = oscInStatus;
 		let txt = fileMagic + '\n' + JSON.stringify(d, null, 2) + '\n' + jsonTerminator;
 		return concatenateBytes(txt, wx, wy);
 	}
@@ -621,29 +758,64 @@ $(function () {
 		const resultBuffer = new ArrayBuffer(totalLength);
 		const resultView = new Uint8Array(resultBuffer);
 		let offset = 0;
+
 		resultView.set(textBytes, offset);
 		offset += textBytes.length;
-		resultView.set(new Uint8Array(waveX.buffer), offset);
-		offset += waveX.byteLength;
-		resultView.set(new Uint8Array(waveY.buffer), offset);
+		resultView.set(new Uint8Array(wx.buffer), offset);
+		offset += wx.byteLength;
+		resultView.set(new Uint8Array(wy.buffer), offset);
 		return resultBuffer;
 	}
-	window.savePreset = savePreset;
+
+	// modal
+	function openModal(div, captionText = "Confermi?", btnOkText = "OK", btnCancelText = "Cancel") {
+		return new Promise((resolve) => {
+			const overlay = $('<div class="modal-overlay"></div>');
+			const modal = $('<div class="modal-window"></div>').appendTo(overlay);
+			const caption = $('<div class="modal-caption"></div>').text(captionText).appendTo(modal);
+			const content = div.addClass('detachable').appendTo(modal);
+			const buttons = $('<div class="modal-buttons"></div>').appendTo(modal);
+
+			if (btnOkText) {
+				const btnOk = $('<button>' + btnOkText + '</button>').appendTo(buttons);
+				btnOk.on("click", () => {
+					closeModals();
+					resolve(true);
+				});
+			}
+			if (btnCancelText) {
+				const btnCancel = $('<button>' + btnCancelText + '</button>').appendTo(buttons);
+				btnCancel.on("click", () => {
+					closeModals();
+					resolve(false);
+				});
+			}
+
+			$('body').append(overlay);
+		});
+	}
+
+	function closeModals() {
+		$('.modal-overlay .detachable').detach();
+		$('.modal-overlay').remove();
+	}
+
+
 
 	function initKeys() {
 		let cnt = 0;
 		$(document).on('keydown', evt => {
 			// console.log({ evt: evt.key, c: cnt++ });
 			let c = (evt.key || '').toLowerCase();
-			if ((' apsxl').indexOf(c)>=0)
+			if (('pdmes').indexOf(c) >= 0)
 				evt.preventDefault();
-			
-			if (c == ' ') togglePause();
-			if (c == 'a') mousepad.setMode('amp');
-			if (c == 'p') mousepad.setMode('pos');
-			if (c == 's') mousepad.setMode('speed');
-			if (c == 'x') mousepad.setMode('lfox');
-			if (c == 'l') mousepad.setMode('lum');
+
+			if (c == 'p') togglePause();
+			//if (c == 'a') mousepad.setMode('amp');
+			if (c == 'd') mousepad.setMode('drag');
+			if (c == 's') mousepad.setMode('settings');
+			if (c == 'e') mousepad.setMode('effects');
+			if (c == 'm') mousepad.setMode('motion');
 		});
 	}
 	$(() => init());

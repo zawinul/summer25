@@ -1,175 +1,188 @@
 body {
-	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
-	color: #333;
-	display: flex;
-	flex-flow: row;
-	min-height: 100vh;
-	margin: 0;
-
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  color: #333;
+  display: flex;
+  flex-flow: row;
+  min-height: 100vh;
+  margin: 0;
 }
-
+.hidden {
+  display: none;
+}
 .container {
-	padding: 30px;
-	border-radius: 10px;
-	box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-	width: 280px;
-	max-width: 500px;
-	text-align: center;
-
-	display: flex;
-	flex-direction: column;
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  width: 280px;
+  max-width: 500px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
 }
-
+.container .controls {
+  margin: 20px 0;
+}
+.container button.play {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  margin: 5px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+}
 h1 {
-	color: #1a1a1a;
-	margin-top: 0;
+  color: #1a1a1a;
+  margin-top: 0;
 }
-
-.controls {
-	margin: 20px 0;
-}
-
-button.play {
-	background-color: #007bff;
-	color: white;
-	border: none;
-	padding: 10px 20px;
-	margin: 5px;
-	border-radius: 5px;
-	cursor: pointer;
-	font-size: 16px;
-}
-
 button.padmode {
-	border: 1px solid #404040;
-	background-color: #555;
-	color: #f0f0ff;
-	padding: 2px 10px;
-	margin: 3px 5px;
-	border-radius: 2px;
-	cursor: pointer;
-	font-size: 16px;
-	transition: background-color 0.2s;
+  border: 1px solid #404040;
+  background-color: #555;
+  color: #f0f0ff;
+  padding: 2px 10px;
+  margin: 3px 5px;
+  border-radius: 2px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.2s;
 }
-
-button.padmode.on {
-	background-color: #007bff;
-	color: #f0f0ff;
-	font-weight: bold;
+button.padmode.padmode.on {
+  background-color: #007bff;
+  color: #f0f0ff;
+  font-weight: bold;
 }
-
-
-
-button:hover:not(:disabled) {
-	background-color: #0056b3;
-}
-
-button:disabled {
-	background-color: #cccccc;
-	cursor: not-allowed;
-}
-
-.sliders,
-.waves {
-	margin-top: 30px;
-}
-
 .control-group {
-	margin-bottom: 15px;
-	display: flex;
-	flex-direction: row;
-	align-items: center;
+  margin-bottom: 15px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
 }
-
 .control-group label {
-	font-weight: bold;
-	margin-bottom: 10px;
-	/* width: 100px; */
-	/* max-width: 100px; */
-	min-width: 71px;
-	/* border: 1px solid red; */
-	text-align: right;
-	margin-right: 10px;
+  font-weight: bold;
+  margin: 0;
+  /* width: 100px; */
+  /* max-width: 100px; */
+  min-width: 71px;
+  /* border: 1px solid red; */
+  text-align: right;
+  margin-right: 10px;
 }
-
+.control-group label.indent {
+  padding-left: 20px;
+}
 .control-group input[type="range"] {
-	flex: 1;
+  flex: 1;
 }
-
-.container select {
-	width: 200px;
-}
-
 .control-group span {
-	padding: 2px 0px;
-	margin-left: 20px;
-	border-radius: 4px;
-	margin-top: 5px;
-	font-family: 'Courier New', Courier, monospace;
-	font-size: 12px;
+  padding: 2px 0px;
+  margin-left: 20px;
+  border-radius: 4px;
+  margin-top: 5px;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 12px;
 }
-
+.container select {
+  width: 200px;
+}
 #status {
-	margin-top: 20px;
-	color: #666;
-	font-style: italic;
+  margin-top: 20px;
+  color: #666;
+  font-style: italic;
 }
-
 .panel {
-	flex: 1;
-	height: 100vh;
-	display: flex;
-	flex-direction: column;
+  flex: 1;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
-
-
+.panel h3 {
+  color: #007bff;
+}
 .panel .panel-controls {
-	height: 33px;
-	padding: 4px 0;
-	text-align: left;
-	display: flex;
+  height: 33px;
+  padding: 4px 0;
+  text-align: left;
+  display: flex;
 }
-
-.panel .arena {
-	position: relative;
-	overflow: hidden;
-	width: 100%;
-	flex: 1;
+.panel .pad-area {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  flex: 1;
 }
-
 .panel .canvas-container {
-	position: absolute;
+  position: absolute;
 }
-
-.panel canvas {
-	border: 1px solid black;
-	width: 100%;
-	height: 100%;
-	position: absolute;
-	left: 0;
-	top: 0;
-	background: none;
+.panel .canvas-container canvas.dynamic {
+  border: 1px solid black;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  left: 0;
+  top: 0;
+  background: none;
 }
-
-.panel canvas.hidden {
-	display: none;
+.panel .canvas-container .subpanel {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 200;
 }
-
-.worker-controls {
-	margin-top: 20px;
-	padding: 15px;
-	border: 1px solid #ddd;
-	border-radius: 8px;
-	background-color: #f9f9f9;
+.panel .canvas-container .subpanel .content {
+  background-color: rgba(255, 255, 255, 0.75);
+  height: 100%;
+  margin: 0;
+  padding: 6px 20px;
 }
-
-.worker-controls h3 {
-	margin-top: 0;
-	margin-bottom: 15px;
-	color: #333;
-	font-size: 16px;
+.panel .canvas-container .subpanel .content .control-group {
+  display: flex;
+  flex-direction: row;
 }
-
+.panel .canvas-container .subpanel .content .control-group input[type="range"] {
+  flex: 1;
+}
+.panel .canvas-container .subpanel .content label {
+  width: 100px;
+  margin-right: 12px;
+}
+.panel .canvas-container .subpanel .content .text {
+  width: 100px;
+  margin-right: 12px;
+}
+.panel .canvas-container .subpanel .content .spaceright {
+  width: 250px;
+}
+.panel .canvas-container .subpanel .content input[type="radio"] {
+  margin-left: 25px;
+}
+.panel .canvas-container .subpanel.settings-controls .content {
+  background: linear-gradient(to bottom, white 0%, white 15%, rgba(255, 255, 255, 0) 30%, rgba(255, 255, 255, 0) 100%);
+  height: 100%;
+}
+.panel .canvas-container .subpanel .lfoshape {
+  position: relative;
+  padding: 10px 0;
+  min-height: 140px;
+}
+.panel .canvas-container .subpanel .lfoshape * {
+  z-index: 2;
+}
+.panel .canvas-container .subpanel .lfoshape input[type="range"] {
+  flex: none;
+  width: 40%;
+}
+.panel .canvas-container .subpanel .lfoshape canvas {
+  position: absolute;
+  right: 0;
+  top: 0;
+  height: 100%;
+  width: 100%;
+  z-index: 0;
+}
 /* .worker-buttons {
 	display: flex;
 	flex-wrap: wrap;
@@ -196,95 +209,145 @@ button:disabled {
 	background-color: #c82333;
 }
  */
-
 .meters canvas {
-	width: 100%;
-	height: 70px;
-	background-color: #f0f0f0;
+  width: 100%;
+  height: 70px;
+  background-color: #f0f0f0;
 }
-
-.container .sliders .dragover {
-	background-color: yellow;
-	border: 2px solid red;
-
+.dragover {
+  background-color: yellow;
+  border: 2px solid #000080;
 }
-
 .container .preset {
-	border: 1px solid gray;
-	background-color: #c0c0c0;
+  border: 1px solid gray;
+  background-color: #c0c0c0;
 }
-
 .debug-monitor {
-	position: absolute;
-	right: 20px;
-	top: 20px;
-	z-index: 9999;
-	background-color: white;
-	color: black;
-	padding: 5px;
-	width: 200px;
-	overflow: hidden;
+  position: absolute;
+  right: 20px;
+  top: 20px;
+  z-index: 9999;
+  background-color: white;
+  color: black;
+  padding: 5px;
+  width: 200px;
+  overflow: hidden;
 }
-
 /*-------*/
-
 .rcontrols {
-	display: inline;
-	text-align: right;
-	flex: 1;
+  display: inline;
+  text-align: right;
+  flex: 1;
 }
-
-.dropdown {
-	position: absolute;
-	margin-top: 5px;
-	list-style: none;
-	padding: 0;
-	background: white;
-	border: 1px solid #ccc;
-	border-radius: 5px;
-	min-width: 120px;
-	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+.rcontrols.hidden {
+  display: none;
+}
+/*.dropdown {
+    position: absolute;
+    margin-top: 5px;
+    list-style: none;
+    padding: 0;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    min-width: 120px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 }
 
 .dropdown li {
-	padding: 8px 12px;
+    padding: 8px 12px;
 }
 
 .dropdown li:hover {
-	background: #f0f0f0;
+    background: #f0f0f0;
 }
 
 .hidden {
-	display: none;
+    display: none;
 }
-
+*/
 .file-input {
-   display: flex;
-    flex-direction: column;
-    gap: 8px;
-    max-width: 400px;
-    border: 1px solid #aaa;
-    padding: 4px;
-    background-color: #f0f0f0;
-	border-radius: 3px;;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 400px;
+  border: 1px solid #aaa;
+  padding: 4px;
+  background-color: #f0f0f0;
+  border-radius: 3px;
 }
-
 .file-input .hint {
-	color: #808080;
+  color: #808080;
 }
-
 .file-input .row {
-	display: flex;          
-	align-items: center;
-	gap: 8px;
-	position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
 }
 .file-input button {
-	width: 70px;
+  width: 70px;
 }
-
 .file-input label {
-	font-weight: bold;
-	text-align: left;
-	margin-right: 10px;
+  font-weight: bold;
+  text-align: left;
+  margin-right: 10px;
+}
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+/* Finestra modale */
+.modal-window {
+  background: white;
+  border-radius: 8px;
+  max-width: 500px;
+  width: auto;
+  padding: 1rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+/* Caption */
+.modal-caption {
+  font-weight: bold;
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+}
+/* Pulsanti */
+.modal-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+.modal-buttons button {
+  padding: 0.4rem 0.8rem;
+  cursor: pointer;
+}
+#modal-load-preset {
+  width: 450px;
+}
+kbd {
+  background-color: rgba(50, 50, 50, 0.5);
+  border: 1px solid #b6bec6;
+  border-radius: 2px;
+  padding: 0 2px;
+}
+.drop-wave-bar {
+  position: absolute;
+  background-color: #ffffc0;
+  border: 2px solid #007bff;
+  border-radius: 5px;
+  z-index: 300;
+  opacity: 0;
+}
+.drop-wave-bar.dragover {
+  opacity: 1;
 }

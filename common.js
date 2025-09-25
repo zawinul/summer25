@@ -1,4 +1,48 @@
 
+
+const LFOWAVE_SINE = 0;
+const LFOWAVE_COSINE = 1;
+const LFOWAVE_TRIANGLE = 2;
+const LFOWAVE_SAW_UP = 3;
+const LFOWAVE_SAW_DOWN = 4;
+const LFOWAVE_SQUARE = 5;
+
+const pi = Math.PI;
+const twoPi = 2 * Math.PI;
+
+function lfowaveX(shape, rad) { // -PI < rad <PI
+	rad = normalize(rad);
+	if (shape == LFOWAVE_SQUARE)
+		return rad >= 0 ? 1 : -1;
+	if (shape == LFOWAVE_SINE)
+		return Math.sin(rad);
+	// if (shape == LFOWAVE_COSINE)
+	// 	return Math.cos(rad);
+	if (shape == LFOWAVE_SAW_UP)
+		return rad / pi;
+	if (shape == LFOWAVE_SAW_DOWN)
+		return - rad / pi;
+	if (shape == LFOWAVE_TRIANGLE)
+		return 2 * Math.abs(rad) / pi - 1;
+	return 0;
+}
+
+function lfowaveY(shape, rad, deltaph) { 
+	const shapeYDeltaPh = (shape==LFOWAVE_SINE || shape==LFOWAVE_TRIANGLE) ? Math.PI/2 :0;
+	return lfowaveX(shape, rad + deltaph + shapeYDeltaPh);
+}
+
+function normalize(x) {
+	x = x % twoPi; // porta il valore in [-2π, 2π)
+	if (x <= -Math.PI) {
+		x += twoPi;
+	} else if (x > Math.PI) {
+		x -= twoPi;
+	}
+	return x;;
+}
+
+
 function initCommon(fftSize, overlap, sampleRate) {
 
 	let debugdump = {}
@@ -6,13 +50,12 @@ function initCommon(fftSize, overlap, sampleRate) {
 	const doPhaseVocoder = true;
 	const simplifiedPhaseVocoder = true;
 
-	const twoPi = 2 * Math.PI;
 
 	const windowSize = fftSize;
 	const hopSize = windowSize / overlap;
 
 	let lastPhases = new Float32Array(fftSize / 2 + 1).fill(0);
-	const resetPhases = ()=>lastPhases.fill(0);
+	const resetPhases = () => lastPhases.fill(0);
 
 	const binCenterFreqHz = [];
 	let hopSizeSec = hopSize / sampleRate;
@@ -25,13 +68,6 @@ function initCommon(fftSize, overlap, sampleRate) {
 	const window = createHammingWindow(windowSize);
 
 	//const normalize = x => x > Math.PI ? x - twoPi : (x < -Math.PI ? x + twoPi : x);
-	function normalize(x) {
-		if (x > Math.PI)
-			return x - twoPi;
-		if (x < -Math.PI)
-			return x + twoPi;
-		return x;
-	}
 
 
 	function createHammingWindow(size) {
@@ -177,15 +213,15 @@ function initCommon(fftSize, overlap, sampleRate) {
 		return complexSpectrum;
 
 	}
-	
+
 	function simplifiedAnalysisAtPoint(signal, point, debugdump) {
 		const len = signal.length;
-		const modlen = x=>{while(x<0) x+=len; while(x>=len) x-=len; return x;};
+		const modlen = x => { while (x < 0) x += len; while (x >= len) x -= len; return x; };
 		let window = simplifiedAnalysisAtPoint.window;
 		if (!window)
 			window = simplifiedAnalysisAtPoint.window = createHammingWindow(windowSize);
 
-		let start1 = modlen(Math.round(point +len - windowSize / 2 - hopSize / 2));
+		let start1 = modlen(Math.round(point + len - windowSize / 2 - hopSize / 2));
 		let start2 = modlen(start1 + hopSize);
 		debugdump.start1 = start1;
 		debugdump.start2 = start2;
@@ -250,7 +286,31 @@ function initCommon(fftSize, overlap, sampleRate) {
 			// L'output della iFFT di fft.js è solo nella parte reale dell'array (indici pari)
 			outArea[j] += timeDomainFrame[j * 2] * window[j];
 	}
+
+	function linearSpeedRescale(x) {
+		const D = .01;
+		if (x<0)
+			return -linearSpeedRescale(-x);
+		x = x<D ? 0 : (x-D)*(1-D);
+		x = x*x*x;
+		return x;
+	}
+
 	
+	function lfoAmpRescale(x) {
+		const D = .01;
+		x = x<D ? 0 : (x-D)*(1-D);
+		x = x*x*x;
+		return x;
+	}
+
+	function delayLengthRescale(x) {
+		const D = .01;
+		x = x<D ? 0 : (x-D)*(1-D);
+		x = Math.round(x*x*x*3000)/1000;
+		return x;
+	}
+
 	let exp = {
 		createHammingWindow, normalize,
 		fft, fftSize, windowSize, overlap, hopSize,
@@ -260,7 +320,10 @@ function initCommon(fftSize, overlap, sampleRate) {
 		simplified_complexSpectrumToPhaseVocoder, simplified_phaseVocoderToComplexSpectrum,
 		frequencyToPhaseDelta,
 		resetPhases,
-		debugdump
+		debugdump,
+		linearSpeedRescale,
+		lfoAmpRescale,
+		delayLengthRescale
 
 	};
 	return exp;

@@ -3,6 +3,9 @@ console.log('Vocoder Worker avviato');
 importScripts("fft.js");
 importScripts("common.js");
 
+
+
+
 let sampleRate;
 let currentBuffer = null;
 
@@ -13,52 +16,44 @@ let hopSize;
 
 let window;
 
-self.targetx = 0;
-self.targety = 0;
-self.posx = 0;
-self.posy = 0;
-self.maxdist = 0;
-self.dragging = false;
-self.friction = 0;
-self.mergeMix = .5;
-self.mergeAlpha = 1;
-self.mergeMode = 0;
+let inparams = {
+	targetx: 0,
+	targety: 0,
+	forcepos: false,
+	dragging: false,
+	traction: 0,
+	mergeMix: .5,
+	mergeMode: 'mix',
 
-self.speedx = 0;
-self.speedy = 0;
-self.lfoph = 0;
-self.lfoxamp = 0;
-self.lfoyamp = 0;
-self.lfofreq = 0;
-self.lfox = 0;
-self.lfoy = 0;
-self.vmode = 0;
-self.incX = 0;
-self.incY = 0;
-self.resetPh = false;
-self.scale = 1;
+	speedx: 0,
+	speedy: 0,
 
-const LFOWAVE_SINE = 0;
-const LFOWAVE_TRIANGLE = 1;
-const LFOWAVE_SAW_UP = 2;
-const LFOWAVE_SAWD_OWN = 3;
-const LFOWAVE_SQUARE = 4;
+	lfoxamp: 0,
+	lfoyamp: 0,
+	lfofreq: 0,
+	
+	lfowave: LFOWAVE_SINE,
+	lfodeltaph: 0,
+
+	scale: 1,
+	steps: 0
+}
+
+let outparams = {
+	posx: 0,
+	posy: 0,
+	maxdist: 0,
+	lfoph: 0,
+	xlfonorm: 0,
+	ylfonorm: 0,
+	lfox: 0,
+	lfoy: 0,
+	incx: 0, 
+	incy: 0,
+
+};
 
 
-
-self.xlfowave = LFOWAVE_SINE;
-self.ylfowave = LFOWAVE_SINE;
-self.xlfoamp = 0;
-self.ylfoamp = 0;
-self.xlfospeed = 1;
-self.ylfospeed = 1;
-self.xlfoph = 0;
-self.ylfoph = 0;
-self.lfosync = false;
-self.lforatio = 1;
-self.lfodeltaph;
-self.lfox =0;
-self.lfoy =0;
 
 let mergeFrameSpace;
 let emptyFrame;
@@ -84,8 +79,8 @@ async function init() {
 
 	outBuffer = new Float32Array(fftSize);
 
-	posx = targetx = Math.random();
-	posy = targetx = Math.random();
+	outparams.posx = inparams.targetx = Math.random();
+	outparams.posy = inparams.targetx = Math.random();
 	mergeFrameSpace = {
 		magnitudes: new Float32Array(fftSize / 2 + 1),
 		deltaPh: new Float32Array(fftSize / 2 + 1)
@@ -107,73 +102,54 @@ async function init() {
 
 function incrementPosition() {
 
-	if (dragging) {
-		let dx = targetx - posx;
-		let dy = targety - posy;
-		if (friction>0) {
-			const dist = Math.sqrt(dx*dx+dy*dy);
-			if (dist>maxdist) {
-				dx = dx*maxdist/dist;
-				dy = dy*maxdist/dist;
+	if (inparams.dragging) {
+		let dx = inparams.targetx - outparams.posx;
+		let dy = inparams.targety - outparams.posy;
+		if ((inparams.traction < 1) && !inparams.forcepos) {
+			const dist = Math.sqrt(dx * dx + dy * dy);
+			if (dist > outparams.maxdist) {
+				dx = dx * outparams.maxdist / dist;
+				dy = dy * outparams.maxdist / dist;
 			}
-		} 
-		posx +=dx;
-		posy += dy;
+		}
+		outparams.posx += dx;
+		outparams.posy += dy;
 	}
 	else {
-		incx = waveX ? speedx * (fftSize / overlap) / waveX.len : 0;
-		incy = waveY ? speedy * (fftSize / overlap) / waveY.len : 0;
-		posx += incx;
-		posy += incy;
+		let incx = linearSpeedRescale(inparams.speedx);
+		let incy = linearSpeedRescale(inparams.speedy);
+		outparams.incx = waveX ? incx * (fftSize / overlap) / waveX.len : 0;
+		outparams.incy = waveY ? incy * (fftSize / overlap) / waveY.len : 0;
+		outparams.posx += outparams.incx;
+		outparams.posy += outparams.incy;
 	}
-	if (posx < 0) posx += 1;
-	if (posx >= 1) posx -= 1;
-	if (posy < 0) posy += 1;
-	if (posy >= 1) posy -= 1;
+	if (outparams.posx < 0) outparams.posx += 1;
+	if (outparams.posx >= 1) outparams.posx -= 1;
+	if (outparams.posy < 0) outparams.posy += 1;
+	if (outparams.posy >= 1) outparams.posy -= 1;
 
 	computeLfo();
 }
 
+let ph=0;
 function computeLfo() {
-/*
-self.xlfowave = LFOWAVE_SINE;
-self.ylfowave = LFOWAVE_SINE;
-self.xlfospeed = 1;
-self.ylfospeed = 1;
-self.xlfoph = 0;
-self.ylfoph = 0;
-self.lfosync = false;
-self.lforatio = 1;
-self.lfodeltaph;
-*/
-	period = hopSize/sampleRate;
-	xlfoph = normalize(xlfoph + xlfospeed * period);
-	ylfoph = lfosync 
-		? normalize(ylfoph + xlfospeed * lforatio * period)
-		: normalize(ylfoph + ylfospeed  * period);
-	lfox = lfowave(xlfowave, xlfoph) * xlfoamp;
-	lfoy = lfowave(ylfowave, ylfoph) * ylfoamp;
+	let spedhz = Math.pow(inparams.lfofreq,3) * 10;
+	let period = hopSize / sampleRate;
+	let lfospeed = spedhz * period;
+
+	ph += lfospeed;
+	let v = ph;
+	if (inparams.steps!=0) {
+		let slice = 2*Math.PI / inparams.steps;
+		v = ph / slice;
+		v = Math.round(v) % inparams.steps;
+		v = v * slice;
+	}
+	outparams.lfoph = v = normalize(v);
+	outparams.lfox = lfowaveX(inparams.lfowave, v) * lfoAmpRescale(inparams.lfoxamp);
+	outparams.lfoy = lfowaveY(inparams.lfowave, v, inparams.lfodeltaph) * lfoAmpRescale(inparams.lfoyamp);
 }
 
-const pi = Math.PI;
-
-function lfowave(shape, rad) { // -PI < rad <PI
-	// while (rad<0)
-	// 	rad += 2*Math.PI;
-	// while (rad>=2*Math.PI)
-	// 	rad -= 2*Math.PI;
-	if (shape==LFOWAVE_SQUARE)
-		return rad>=0 ? 1 : -1;
-	if (shape==LFOWAVE_SINE)
-		return Math.sin(rad);
-	if (shape==LFOWAVE_SAW_UP)
-		return rad/pi;
-	if (shape==LFOWAVE_SAW_DOWN)
-		return 1 - rad/pi;
-	if (shape==LFOWAVE_TRIANGLE)
-		return 2*Math.abs(rad)/pi-1;
-	return 0;
-}
 
 function getGraphData(size, x, y, merge) {
 	let ret = {
@@ -204,13 +180,13 @@ function getGraphData(size, x, y, merge) {
 
 let frameX, frameY, mergedFrame;
 function fillNextFrame(memory) {
-	//log('fnf', posx, posy);
+	//log('fnf', outparams.posx, outparams.posy);
 	if (waveY == emptyWave && waveY == emptyWave) {
 		memory.fill(0);
 		return;
 	}
-	frameX = waveX.getAnalizedFrame(posx + lfox, memory);
-	frameY = waveY.getAnalizedFrame(posy + lfoy, memory);
+	frameX = waveX.getAnalizedFrame(outparams.posx + outparams.lfox, memory);
+	frameY = waveY.getAnalizedFrame(outparams.posy + outparams.lfoy, memory);
 
 
 	if (waveX == emptyWave)
@@ -224,58 +200,79 @@ function fillNextFrame(memory) {
 	if (mergedFrame.magnitudes)
 		mergedFrame.magnitudes[fftSize / 2] = 0;
 	if (mergedFrame.deltaPh)
-		mergedFrame.deltaPh[fftSize/2] = 0;
+		mergedFrame.deltaPh[fftSize / 2] = 0;
 
 	simplifiedResynthesize(mergedFrame, memory);
-	for(let i=0;i<memory.length;i++)
-		memory[i] *= scale;
+	for (let i = 0; i < memory.length; i++)
+		memory[i] *= inparams.scale;
 }
 
 function mergeFrame(frame1, frame2) {
+	let mode = inparams.mergeMode;
 	let len = fftSize / 2 + 1;
 	let { magnitudes, deltaPh } = mergeFrameSpace;
+	let input_m1 = frame1.magnitudes;
+	let input_m2 = frame2.magnitudes;
 
+	if (mode.includes('dx')){
+		input_m1 = derivate(input_m1, 'x');
+		mode = mode.replace('dx', '');
+	}
+	if (mode.includes('dy')){
+		input_m2 = derivate(input_m2, 'y');
+		mode = mode.replace('dy', '');
+	}
 	for (let i = 0; i < len; i++) {
-		let m1 = frame1.magnitudes[i];
-		let m2 = frame2.magnitudes[i];
+		let m1 = input_m1[i];
+		let m2 = input_m2[i];
 		let dph1 = frame1.deltaPh[i];
 		let dph2 = frame2.deltaPh[i];
-		if (mergeMode == 'mix') {
-			magnitudes[i] = m1 * (1 - mergeMix) + m2 * mergeMix;
+		if (mode == 'mix') {
+			magnitudes[i] = m1 * (1 - inparams.mergeMix) + m2 * inparams.mergeMix;
 		}
-		else if (mergeMode == 'diff') {
-			magnitudes[i] = Math.abs(m1 * (1 - mergeMix) - m2 * mergeMix);
+		else if (mode == 'diff') {
+			magnitudes[i] = Math.abs(m1 * (1 - inparams.mergeMix) - m2 * inparams.mergeMix);
 		}
-		else if (mergeMode == 'min') {
-			magnitudes[i] = Math.min(m1 * (1 - mergeMix), m2 * mergeMix);
+		else if (mode == 'min') {
+			magnitudes[i] = Math.min(m1 * (1 - inparams.mergeMix), m2 * inparams.mergeMix);
 		}
-		else if (mergeMode == 'max') {
-			magnitudes[i] = Math.max(m1 * (1 - mergeMix), m2 * mergeMix);
+		else if (mode == 'max') {
+			magnitudes[i] = Math.max(m1 * (1 - inparams.mergeMix), m2 * inparams.mergeMix);
 		}
-		else if (mergeMode == 'mul') {
-			magnitudes[i] =  Math.pow(m1,1 - mergeMix) * Math.pow(m2, mergeMix);
+		else if (mode == 'mul') {
+			magnitudes[i] = Math.pow(m1, 1 - inparams.mergeMix) * Math.pow(m2, inparams.mergeMix);
 		}
 
 
-
-		//magnitudes[i] = Math.min(m1, m2);
 		let deltadelta = normalize(dph2 - dph1);
-		let delta = dph1 + (deltadelta * m2 / (m1 + m2))
+		let delta = (m1+m2!=0) ? dph1 + (deltadelta * m2 / (m1 + m2)) : dph1;
 		deltaPh[i] = normalize(delta);
 	}
 
-	if (mergeMode == 'cep') {
-		let out = mixcep(frame1.magnitudes, frame2.magnitudes);
-		for(let i=0;i<magnitudes.length; i++)
-			magnitudes[i] = out[i];	
-	}
+	// if (inparams.mergeMode == 'cep') {
+	// 	let out = mixcep(frame1.magnitudes, frame2.magnitudes);
+	// 	for (let i = 0; i < magnitudes.length; i++)
+	// 		magnitudes[i] = out[i];
+	// }
 
 	return mergeFrameSpace;
 }
 
+let derivateBuffers = {};
+function derivate(buffer, tag) {
+	if (!derivateBuffers[tag])
+		derivateBuffers[tag] = [buffer.slice(),new Float32Array(buffer.length)];
+	let [value, delta] = derivateBuffers[tag];
+	for (let i = 0; i < buffer.length; i++) {
+		delta[i] = Math.abs(buffer[i] - value[i]);
+		value[i] = buffer[i];
+	}
+	return delta;
+}
+
 function mixcep(ax, ay) {
 	if (!mixcep.fft)
-		mixcep.fft = new FFT(fftSize/2);
+		mixcep.fft = new FFT(fftSize / 2);
 	let mfft = mixcep.fft;
 
 	let xComplexSpectrum = mfft.createComplexArray();
@@ -288,16 +285,16 @@ function mixcep(ax, ay) {
 
 	let s = mfft.createComplexArray();
 	for (let i = 0; i < s.length; i++)
-		s[i] = xComplexSpectrum[i]*(1-mergeMix) + yComplexSpectrum[i]*mergeMix;
+		s[i] = xComplexSpectrum[i] * (1 - inparams.mergeMix) + yComplexSpectrum[i] * inparams.mergeMix;
 
 	// debug: s = xComplexSpectrum;
 
 	const amps = mfft.createComplexArray();
 	mfft.inverseTransform(amps, s);
 
-	let out = new Float32Array(fftSize/2);
+	let out = new Float32Array(fftSize / 2);
 	for (let i = 0; i < out.length; i++)
-		out[i] = amps[i*2];
+		out[i] = amps[i * 2];
 	return out;
 }
 
@@ -322,6 +319,8 @@ function setwave(index, buffer) {
 	log('set wave ' + index);
 }
 
+const LEFTTRACTIONVALUE = .0001;
+const RIGHTTRACTIONVALUE = .2;
 
 self.onmessage = async function (event) {
 	const d = event.data;
@@ -332,7 +331,7 @@ self.onmessage = async function (event) {
 		log('vocoder worker init', d);
 		fftSize = d.fftSize;
 		overlap = d.overlap;
-		hopSize = fftSize/overlap;
+		hopSize = fftSize / overlap;
 		sampleRate = d.sampleRate;
 		await init();
 		self.postMessage({
@@ -342,15 +341,17 @@ self.onmessage = async function (event) {
 	}
 
 	if (type == 'set-status') {
-		Object.assign(self, d.data);
-		maxdist = 5*Math.pow(.000005, friction);
-		if (typeof(d.data.lfosync)=='boolean' && d.data.lfosync)
-			ylfoph = xlfoph * lforatio;
-		if (resetPh) {
-			resetPhases();
-			resetPh = false;
+		for(var k in d.data) {
+			if (typeof(inparams[k])=='number')
+				inparams[k] = d.data[k]-0;
+			else if (typeof(inparams[k])=='boolean')
+				inparams[k] = !!d.data[k];
+			else
+				inparams[k] = d.data[k];
 		}
-
+		// console.log(self);
+		// parameters manipulation
+		outparams.maxdist = LEFTTRACTIONVALUE * Math.pow(RIGHTTRACTIONVALUE / LEFTTRACTIONVALUE, inparams.traction);
 	}
 
 
@@ -376,25 +377,14 @@ self.onmessage = async function (event) {
 			type: 'new-frame',
 			data: outBuffer,
 		});
+		
 		self.postMessage({
-			type: 'osc-status',
-			data: {
-				dragging,
-				friction,
-				posx,
-				posy,
-				xlfoph,
-				ylfoph,
-				targetx,
-				targety,
-				maxdist,
-				speedx,
-				speedy,
-				lfox,
-				lfoy,
-				incX,
-				incY,
-			}
+			type: 'osc-in-status',
+			data: inparams
+		});
+		self.postMessage({
+			type: 'osc-out-status',
+			data:outparams
 		});
 	}
 

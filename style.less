@@ -1,0 +1,516 @@
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    color: #333;
+    display: flex;
+    flex-flow: row;
+    min-height: 100vh;
+    margin: 0;
+
+}
+
+.hidden {
+    display: none;
+}
+
+.container {
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    width: 280px;
+    max-width: 500px;
+    text-align: center;
+
+    display: flex;
+    flex-direction: column;
+
+    .controls {
+        margin: 20px 0;
+    }
+
+    button.play {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        margin: 5px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+    }
+
+}
+
+h1 {
+    color: #1a1a1a;
+    margin-top: 0;
+}
+
+
+button.padmode {
+    border: 1px solid #404040;
+    background-color: #555;
+    color: #f0f0ff;
+    padding: 2px 10px;
+    margin: 3px 5px;
+    border-radius: 2px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.2s;
+
+    &.padmode.on {
+        background-color: #007bff;
+        color: #f0f0ff;
+        font-weight: bold;
+    }
+
+}
+
+
+
+
+// button:hover:not(:disabled) {
+//     background-color: #0056b3;
+// }
+
+// button:disabled {
+//     background-color: #cccccc;
+//     cursor: not-allowed;
+// }
+
+// .left-panel,
+// .waves {
+//     margin-top: 30px;
+// }
+
+.control-group {
+    margin-bottom: 15px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+
+    label {
+        font-weight: bold;
+        margin: 0;
+        /* width: 100px; */
+        /* max-width: 100px; */
+        min-width: 71px;
+        /* border: 1px solid red; */
+        text-align: right;
+        margin-right: 10px;
+
+        &.indent {
+            padding-left: 20px;
+            ;
+        }
+    }
+
+    input[type="range"] {
+        flex: 1;
+    }
+
+    span {
+        padding: 2px 0px;
+        margin-left: 20px;
+        border-radius: 4px;
+        margin-top: 5px;
+        font-family: 'Courier New', Courier, monospace;
+        font-size: 12px;
+    }
+
+
+}
+
+
+
+.container select {
+    width: 200px;
+}
+
+#status {
+    margin-top: 20px;
+    color: #666;
+    font-style: italic;
+}
+
+.panel {
+    flex: 1;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+
+    h3 {
+        color: #007bff;
+    }
+
+    .panel-controls {
+        height: 33px;
+        padding: 4px 0;
+        text-align: left;
+        display: flex;
+    }
+
+    .pad-area {
+        position: relative;
+        overflow: hidden;
+        width: 100%;
+        flex: 1;
+    }
+
+    .canvas-container {
+        position: absolute;
+
+        //border: 2px solid red;
+        canvas.dynamic {
+            border: 1px solid black;
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            left: 0;
+            top: 0;
+            background: none;
+
+        }
+
+        .subpanel {
+            width: 100%;
+            height: 100%;
+            box-sizing: border-box;
+            position: absolute;
+            left: 0;
+            top: 0;
+            z-index: 200;
+
+            .content {
+                background-color: rgba(255, 255, 255, .75);
+                height: 100%;
+                margin: 0;
+                padding: 6px 20px;
+
+                .control-group {
+                    display: flex;
+                    flex-direction: row;
+                    input[type="range"] {
+                        flex: 1;
+                    }
+                }
+                label {
+                    width: 100px;
+                    margin-right: 12px;
+                }
+                .text {
+                    width: 100px;
+                    margin-right: 12px;
+                }
+                .spaceright {
+                    width: 250px;
+                }
+                input[type="radio"] {
+                    margin-left: 25px;
+                }
+            }
+
+            // &.effects-controls {
+            // }
+
+            &.settings-controls {
+                .content {
+                    background: linear-gradient(to bottom,
+                            white 0%,
+                            white 15%,
+                            rgba(255, 255, 255, 0) 30%,
+                            rgba(255, 255, 255, 0) 100%);
+                    height: 100%;
+                }
+            }
+
+            // &.motion-controls {
+
+            //     z-index: 200;
+            // }
+
+            .lfoshape {
+                position: relative;
+                // border: 1px solid lightgray;
+                // background-color: #ffffff;
+                padding: 10px 0;
+                min-height: 140px;
+
+                * {
+                    z-index: 2;
+                }
+
+                input[type="range"] {
+                    flex: none;
+                    width: 40%;
+                }
+
+                canvas {
+                    z-index: 0;
+                    // background-color: red;
+                    // border: 3px solid black;
+                    position: absolute;
+                    right: 0;
+                    top: 0;
+                    height: 100%;
+                    width: 100%;
+                    z-index: 0;
+                }
+            }
+        }
+
+    }
+
+}
+
+
+
+
+
+
+/* .worker-buttons {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	justify-content: center;
+}
+
+.worker-buttons button {
+	padding: 8px 12px;
+	font-size: 12px;
+	min-width: 80px;
+	background-color: #28a745;
+}
+
+.worker-buttons button:hover:not(:disabled) {
+	background-color: #218838;
+}
+
+.worker-buttons button:nth-child(2) {
+	background-color: #dc3545;
+}
+
+.worker-buttons button:nth-child(2):hover:not(:disabled) {
+	background-color: #c82333;
+}
+ */
+
+.meters canvas {
+    width: 100%;
+    height: 70px;
+    background-color: #f0f0f0;
+}
+
+.dragover {
+    background-color: yellow;
+    border: 2px solid #000080;
+
+}
+
+.container .preset {
+    border: 1px solid gray;
+    background-color: #c0c0c0;
+}
+
+.debug-monitor {
+    position: absolute;
+    right: 20px;
+    top: 20px;
+    z-index: 9999;
+    background-color: white;
+    color: black;
+    padding: 5px;
+    width: 200px;
+    overflow: hidden;
+}
+
+/*-------*/
+
+.rcontrols {
+    display: inline;
+    text-align: right;
+    flex: 1;
+
+    &.hidden {
+        display: none;
+    }
+}
+
+/*.dropdown {
+    position: absolute;
+    margin-top: 5px;
+    list-style: none;
+    padding: 0;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    min-width: 120px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.dropdown li {
+    padding: 8px 12px;
+}
+
+.dropdown li:hover {
+    background: #f0f0f0;
+}
+
+.hidden {
+    display: none;
+}
+*/
+
+.file-input {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-width: 400px;
+    border: 1px solid #aaa;
+    padding: 4px;
+    background-color: #f0f0f0;
+    border-radius: 3px;
+
+    .hint {
+        color: #808080;
+    }
+
+    .row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        position: relative;
+    }
+
+    button {
+        width: 70px;
+    }
+
+    label {
+        font-weight: bold;
+        text-align: left;
+        margin-right: 10px;
+    }
+}
+
+
+// modal
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+/* Finestra modale */
+.modal-window {
+    background: white;
+    border-radius: 8px;
+    max-width: 500px;
+    width: auto;
+    padding: 1rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Caption */
+.modal-caption {
+    font-weight: bold;
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+}
+
+/* Pulsanti */
+.modal-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.modal-buttons button {
+    padding: 0.4rem 0.8rem;
+    cursor: pointer;
+}
+
+#modal-load-preset {
+    width: 450px;
+}
+
+//-------------------
+// :root {
+//     --kbd-bg: #f3f4f6;
+//     --kbd-border: #d1d5db;
+//     --kbd-color: #111827;
+//     --kbd-radius: 6px;
+//     --kbd-padding: 6px 10px;
+//     --kbd-font: 600 0.9rem/1 "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+//     --kbd-shadow: 0 1px 0 rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+// }
+
+// kbd.key {
+//     display: inline-grid;
+//     place-items: center;
+//     vertical-align: middle;
+//     background: var(--kbd-bg);
+//     color: var(--kbd-color);
+//     border: 1px solid var(--kbd-border);
+//     border-radius: var(--kbd-radius);
+//     padding: var(--kbd-padding);
+//     font: var(--kbd-font);
+//     box-shadow: var(--kbd-shadow);
+//     min-width: 1.6em;
+//     text-align: center;
+//     box-sizing: border-box;
+//     -webkit-font-smoothing: antialiased;
+//     cursor: default;
+//     /* suggerisce che è un'indicazione, non un bottone */
+// }
+
+
+
+
+// .kbd-pill {
+//     --pad: 6px 10px;
+//     display: inline-grid;
+//     place-items: center;
+//     background: linear-gradient(#ffffff, #f7fafc);
+//     border: 1px solid #e2e8f0;
+//     border-radius: 999px;
+//     padding: var(--pad);
+//     font: 600 0.85rem/1 "Segoe UI", Roboto, sans-serif;
+//     box-shadow: 0 2px 0 rgba(0, 0, 0, 0.03);
+//     min-width: auto;
+// }
+
+// .kbd-pressed {
+//     transform: translateY(1px);
+//     box-shadow: 0 0 0 rgba(0, 0, 0, 0.0);
+//     background: linear-gradient(#e6e8eb, #cfd4da);
+//     border-color: #b6bec6;
+// }
+
+kbd {
+    background-color: rgba(50, 50, 50, 0.5);
+    border: 1px solid #b6bec6;
+    border-radius: 2px;
+    padding: 0 2px;
+}
+
+//-----------------
+
+.drop-wave-bar {
+    position: absolute;
+    background-color: #ffffc0;
+    border: 2px solid #007bff;
+    border-radius: 5px;
+    z-index: 300;
+    opacity: 0;
+    &.dragover {
+        opacity: 1;
+    }
+}

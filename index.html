@@ -19,44 +19,49 @@
 
 
 
-		<div class="sliders">
+		<div class="left-panel">
+
+			<div class="controls">
+				<button id="btn-pause" class="play"><kbd>P</kbd> <span id="btn-pause-text">play</span></button>
+			</div>
+
+			<div class="control-group">
+				<label>Ampl</label>
+				<input type="range" id="slider-amp" min="-36" max="12" value="0" step=".5" list="amp-ticks">
+				<datalist id="amp-ticks">
+					<option value="12"></option>
+					<option value="0"></option>
+					<option value="-12"></option>
+					<option value="-24"></option>
+					<option value="-36"></option>
+				</datalist>
+				<span id="amp-value"></span>
+			</div>
 
 			<div id="preset-area" class="file-input">
 				<div class="row">
 					<label>Preset</label>
-					<button>💾 save</button>
 				</div>
-				<div class="row hint">
-					You can drop here your preset
-				</div>
-				<div class="row">
-					<select>
-						<option>preset 1</option>
-						<option>preset 2</option>
-						<option>preset 3</option>
-					</select>
-					<button>💾 load</button>
+				<div class="row" style="position:relative;">
+					<div class="name" style="flex:1;text-align: left;"></div>
+					<button id="load-preset">💾 load</button>
+					<button id="save-preset">💾 save</button>
 				</div>
 			</div>
 
-			<div class="controls">
-				<button id="btn-pause" class="play">[space] Play</button>
-			</div>
 
 			<div class="file-input wx">
 				<div class="row">
 					<label>X wave</label>
 				</div>
-				<div class="row hint">
-					You can drop here your X wave
-				</div>
 				<div class="row">
-					<select>
+					<div class="name" style="flex:1;text-align: left;"></div>
+					<!-- <select disabled>
 						<option>preset 1</option>
 						<option>preset 2</option>
 						<option>preset 3</option>
-					</select>
-					<button>💾 load</button>
+					</select> -->
+					<button id="load-x-wave">💾 load</button>
 				</div>
 			</div>
 
@@ -65,16 +70,17 @@
 				<div class="row">
 					<label>Y wave</label>
 				</div>
-				<div class="row hint">
+				<!-- <div class="row hint">
 					You can drop here your Y wave
-				</div>
+				</div> -->
 				<div class="row">
-					<select>
+					<!-- <select disabled>
 						<option>preset 1</option>
 						<option>preset 2</option>
 						<option>preset 3</option>
-					</select>
-					<button>💾 load</button>
+					</select> -->
+					<div class="name" style="flex:1;text-align: left;"></div>
+					<button id="load-y-wave">💾 load</button>
 				</div>
 			</div>
 
@@ -88,38 +94,50 @@
 				<input type="text" class="wavename" data-index="y" readonly>
 			</div> -->
 
-			<div class="control-group">
-				<label for="slider-amp">Ampl</label>
-				<input type="range" id="slider-amp" min="-48" max="48" value="0" step=".5">
-				<span id="amp-value">0 dB</span>
-			</div>
-			<div class="control-group">
-				<label for="reverb-type">Rev Type</label>
-				<select id="reverb-type"></select>
-			</div>
-			<div class="control-group">
-				<label for="slider-reverb">Rev Send</label>
-				<input type="range" id="slider-reverb" min="-96" max="24" value="-96" step="0.5">
-				<span id="reverb-value"></span>
-			</div>
-			<div class="control-group">
-				<label>Combine</label>
-				<select id="merge-mode">
-					<option selected value="mix">mix</option>
-					<option value="min">min</option>
-					<option value="max">max</option>
-					<option value="diff">diff</option>
-					<option value="mul">mul</option>
-					<option value="mix2">mix2</option>
-					<!-- <option value="cep">cep</option> -->
-				</select>
-			</div>
-			<div class="control-group merge-param">
-				<label>Balance</label>
-				<input type="range" id="merge-param" min="0" max="1" value=".5" step="0.01">
-				<span id="merge-param-value">0.00</span>
+			<div class="file-input altro">
+
+				<div class="control-group">
+					<label>Combine</label>
+				</div>
+
+
+				<div class="control-group">
+					<label style="font-weight: normal;">mode</label>
+					<select id="merge-mode">
+						<option selected value="mix">mix(X,Y)</option>
+						<option value="min">min(X,Y)</option>
+						<option value="max">max(X,Y)</option>
+						<option value="diff">|X-Y|</option>
+						<option value="mul">X*Y</option>
+
+						<option value="dxmix">mix(ΔX,Y)</option>
+						<option value="dymix">mix(X,ΔY)</option>
+						<option value="dxdymix">mix(ΔX,ΔY)</option>
+
+						<option value="dxmul">mul(ΔX,Y)</option>
+						<option value="dymul">mul(X,ΔY)</option>
+						<option value="dxdymul">mul(ΔX,ΔY)</option>
+
+
+						<!-- <option value="mix2">mix2</option> -->
+						<!-- <option value="cep">cep</option> -->
+					</select>
+				</div>
+				<div class="control-group">
+					<label style="font-weight: normal;">mix</label>
+					<input type="range" id="merge-param" min="0" max="1" value=".5" step=".01" list="merge-param-ticks">
+					<datalist id="merge-param-ticks">
+						<option value="0"></option>
+						<option value=".25"></option>
+						<option value=".5"></option>
+						<option value=".75"></option>
+						<option value="1"></option>
+					</datalist>
+					<!-- <span id="reverb-value"></span> -->
+				</div>
 			</div>
 		</div>
+
 		<div class="meters">
 			<div class="meter">
 				<canvas class="cx"></canvas>
@@ -139,27 +157,264 @@
 		<div class="panel-controls">
 			<!-- <button id="btn-move-left">Move Left</button>
 			<button id="btn-move-right">Move Right</button> -->
-			<button class="padmode amp" data-mode="amp">[A] amp</button>
-			<button class="padmode pos on" data-mode="pos">[P] pos</button>
+
+			<!-- <button class="padmode amp" data-mode="amp">[A] amp</button>-->
+			<button class="padmode pos on" data-mode="drag"><kbd>D</kbd> drag</button>
 			<!-- <button class="padmode speed" data-mode="speed">[S] speed</button> -->
-			<button class="padmode lfox" data-mode="lfox">[X] lfo X</button>
-			<button class="padmode lfoy" data-mode="lfoy">[Y] lfo Y</button>
-			<button class="padmode lum" data-mode="lum">[L] lum/contr</button>
-			<div class="rcontrols pos" style="
-				display: inline;
-				text-align: right;
-				flex: 1;
-			">
-				friction <input type="range" id="friction" min="0" max="1" value="0" step=".0025">
-			</div>
+			<button class="padmode motion" data-mode="motion"><kbd>M</kbd> motion</button>
+			<button class="padmode motion" data-mode="effects"><kbd>E</kbd> effects</button>
+			<button class="padmode settings" data-mode="settings"><kbd>S</kbd> settings</button>
+			<!-- <div class="rcontrols traction hideable" data-mode="pos">
+				traction <input type="range" id="traction" min="0" max="1" value="1" step=".0025">
+			</div> -->
 		</div>
-		<div class="arena">
+
+		<div class="pad-area">
+
 			<div class="canvas-container">
+
+				<div class="motion-controls subpanel hideable">
+					<div class="content">
+						<h3>Manual</h3>
+						<div class="control-group">
+							<label class="indent">traction</label>
+							<input type="range" id="traction" min="0" max="1" value="0" step=".005">
+						</div>
+
+						<h3>Linear</h3>
+						<div class="lfoshape">
+							<div class="control-group">
+								<label class="indent">X speed</label>
+								<input type="range" id="x-speed" min="-1" max="1" value="0" step=".005" par="speedx"
+									list="x-speed-list">
+								<datalist id="x-speed-list">
+									<option value="-1"></option>
+									<option value="0"></option>
+									<option value="1"></option>
+								</datalist>
+								<span class="spaceright"></span>
+							</div>
+							<div class="control-group">
+								<label class="indent">Y speed</label>
+								<input type="range" id="y-speed" min="-1" max="1" value="0" step=".005" par="speedy"
+									list="y-speed-list">
+								<datalist id="y-speed-list">
+									<option value="-1"></option>
+									<option value="0"></option>
+									<option value="1"></option>
+								</datalist>
+								<span class="spaceright"></span>
+							</div>
+							<canvas id="lin-shape-canvas"></canvas>
+
+						</div>
+
+						<h3>Cyclic</h3>
+						<div class="lfoshape">
+							<div class="control-group">
+								<label class="indent">Speed</label>
+								<input type="range" min="0" max="3" value="0" step=".001" par="lfofreq">
+								<span class="spaceright"></span>
+
+							</div>
+							<div class="control-group">
+								<label class="indent">X Ampl</label>
+								<input type="range" id="xlfo-amp" min="0" max="1" value="0" step=".005" par="lfoxamp">
+								<span class="spaceright"></span>
+							</div>
+							<div class="control-group">
+								<label class="indent">Y Ampl</label>
+								<input type="range" id="xlfo-amp" min="0" max="1" value="0" step=".005" par="lfoyamp">
+								<span class="spaceright"></span>
+							</div>
+							<div class="control-group">
+								<label class="indent">Shape</label>
+								<select id="lfo-shape" par="lfowave">
+									<option value="0" selected>sine</option>
+									<!-- <option value="1">cosine</option> -->
+									<option value="2">triangle</option>
+									<option value="3">saw up</option>
+									<option value="4">saw down</option>
+									<option value="5">square</option>
+								</select>
+								<span class="spaceright"></span>
+							</div>
+							<!-- <div class="control-group">
+								<label class="indent">Y shape</label>
+								<select par="ylfowave">
+									<option value="0">sine</option>
+									<option value="1" selected>cosine</option>
+									<option value="2">triangle</option>
+									<option value="3">saw up</option>
+									<option value="4">saw down</option>
+									<option value="5">square</option>
+								</select>
+							</div> -->
+							<!-- <div class="control-group">
+								<label class="indent">Y/X freq ratio</label>
+								<select par="lforatio">
+									<option value="1">1</option>
+									<option value="2">2</option>
+									<option value="3">3</option>
+									<option value="4">4</option>
+									<option value=".5">1/2</option>
+									<option value=".3333">1/3</option>
+									<option value=".25">1/4</option>
+									<option value=".6666667">2/3</option>
+									<option value="1.5">3/2</option>
+									<option value="1.3333333">4/3</option>
+									<option value=".75">3/4</option>
+								</select>
+							</div> -->
+							<div class="control-group">
+								<label class="indent">Phase shift</label>
+								<input type="range" min="0" max="6.28" value="0" step=".005" par="lfodeltaph">
+								<span class="spaceright"></span>
+							</div>
+							<div class="control-group">
+								<label class="indent">steps</label>
+								<select par="steps">
+									<option value="0">free run</option>
+									<option value="2">2</option>
+									<option value="3">3</option>
+									<option value="4">4</option>
+									<option value="5">5</option>
+									<option value="6">6</option>
+									<option value="7">7</option>
+									<option value="8">8</option>
+								</select>
+								<span class="spaceright"></span>
+							</div>
+
+							<canvas id="lfo-shape-canvas"></canvas>
+						</div>
+
+
+					</div>
+				</div>
+
+				<div class="effects-controls subpanel hideable">
+					<div class="content">
+						<h3>Delay</h3>
+						<div class="control-group">
+							<label>Delay mode</label>
+							<input type="radio" name="delay-mode" value="1" checked style="margin-left: 0px"> Parallel
+							<input type="radio" name="delay-mode" value="2"> Bounce from L
+							<input type="radio" name="delay-mode" value="3"> Bounce from R
+							<input type="radio" name="delay-mode" value="4"> Bounce from LR
+						</div>
+						<div class="control-group">
+							<label>Left Delay</label>
+							<input type="range" id="left-delay" min="0" max="1" value="1" step="0.005">
+							<span class="text" id="left-delay-value"></span>
+						</div>
+						<div class="control-group">
+							<label>Right Delay</label>
+							<input type="range" id="right-delay" min="0" max="1" value="1" step="0.005">
+							<span class="text" id="right-delay-value"></span>
+						</div>
+						<div class="control-group">
+							<label>Feedback</label>
+							<input type="range" id="delay-feedback" min="0" max="1" value="0" step="0.005">
+							<span class="text" id="delay-feedback-value">sdfgdsgdsgd</span>
+						</div>
+						<div class="control-group">
+							<label>HF Dump</label>
+							<input type="range" id="delay-lopass" min="0" max="1" value="0" step="0.005">
+							<span class="text" id="delay-lopass-value">sdfgdsgdsgd</span>
+						</div>
+						<div class="control-group">
+							<label>Dry-Wet Balance</label>
+							<input type="range" id="delay-mix" min="0" max="1" value="0" step="0.005">
+							<span class="text" id="delay-mix-value">sdfgdsgdsgd</span>
+						</div>
+
+						<h3>Reverb</h3>
+						<div class="control-group">
+							<label for="reverb-type">Rev Type</label>
+							<select id="reverb-type"></select>
+						</div>
+						<div class="control-group">
+							<label for="slider-reverb">Rev Send</label>
+							<input type="range" id="slider-reverb" min="-96" max="24" value="-96" step="0.5">
+							<span class="text" id="reverb-value"></span>
+						</div>
+
+					</div>
+
+				</div>
+
+				<div id="top-drop-bar" class="drop-wave-bar"></div>
+				<div id="left-drop-bar" class="drop-wave-bar"></div>
+				<div class="settings-controls subpanel hideable">
+					<div class="content">
+						<div class="control-group">
+							<label>Luminosity</label>
+							<input type="range" id="luminosity" min="0" max="1" value=".3" step=".005">
+						</div>
+						<div class="control-group">
+							<label>Contrast</label>
+							<input type="range" id="contrast" min="0" max="1" value=".3" step=".005">
+						</div>
+					</div>
+
+				</div>
+
 			</div>
 		</div>
 	</div>
+
+	<div id="modal-load-wave" class="modal">
+		You can
+		<ul>
+			<li>
+				select a demo wave here
+				<select id="select-wave">
+				</select>
+			</li>
+			<li>
+				load one from disk by clicking <button id="load-x-wave">💾 load</button>
+			</li>
+			<li>
+				drag&drop your file in this area<br>
+				<div class="load-wave-drag-area" style="
+					width: 80%;
+					height: 100px;
+					border: 2px dashed black;
+					margin-top: 10px;
+				"></div>
+			</li>
+		</ul>
+	</div>
+
+
+	<div id="modal-load-preset" class="modal">
+		You can
+		<ul>
+			<li>
+				select a demo preset here
+				<select id="select-preset">
+				</select>
+			</li>
+			<li>
+				load a preset from disk by clicking <button id="load-preset-button">💾 load</button>
+			</li>
+			<li>
+				drag&drop your file in this area<br>
+				<div id="load-preset-drag-area" style="
+					width: 80%;
+					height: 100px;
+					border: 2px dashed black;
+					margin-top: 10px;
+				"></div>
+			</li>
+		</ul>
+	</div>
+
 	<pre class="debug-monitor"></pre>
 	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+	<script src="fft.js"></script>
+	<script src="common.js"></script>
 	<script src="main.js"></script>
 	<script src="mousepad.js"></script>
 
