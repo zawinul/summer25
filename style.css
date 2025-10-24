@@ -22,6 +22,19 @@ body {
 .container .controls {
   margin: 20px 0;
 }
+.container div.volume {
+  display: inline;
+  color: #007bff;
+  font-size: 1.5em;
+  margin: 0;
+  padding: 0;
+}
+.container div#amp-value {
+  display: inline;
+  width: 80px;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 12px;
+}
 .container button.play {
   background-color: #007bff;
   color: white;
@@ -53,7 +66,6 @@ button.padmode.padmode.on {
   font-weight: bold;
 }
 .control-group {
-  margin-bottom: 15px;
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -123,6 +135,9 @@ button.padmode.padmode.on {
   top: 0;
   background: none;
 }
+[mode="motion"] .panel .canvas-container canvas.dynamic.wave {
+  opacity: 0.2;
+}
 .panel .canvas-container .subpanel {
   width: 100%;
   height: 100%;
@@ -132,11 +147,17 @@ button.padmode.padmode.on {
   top: 0;
   z-index: 200;
 }
+.panel .canvas-container .subpanel.help-on-line .content {
+  overflow: auto;
+}
 .panel .canvas-container .subpanel .content {
   background-color: rgba(255, 255, 255, 0.75);
   height: 100%;
   margin: 0;
   padding: 6px 20px;
+}
+[mode="motion"] .panel .canvas-container .subpanel .content {
+  background-color: rgba(255, 255, 255, 0.65);
 }
 .panel .canvas-container .subpanel .content .control-group {
   display: flex;
@@ -209,14 +230,9 @@ button.padmode.padmode.on {
 	background-color: #c82333;
 }
  */
-.meters canvas {
-  width: 100%;
-  height: 70px;
-  background-color: #f0f0f0;
-}
 .dragover {
-  background-color: yellow;
-  border: 2px solid #000080;
+  background-color: yellow !important;
+  border: 2px solid #000080 !important;
 }
 .container .preset {
   border: 1px solid gray;
@@ -272,9 +288,10 @@ button.padmode.padmode.on {
   gap: 8px;
   max-width: 400px;
   border: 1px solid #aaa;
-  padding: 4px;
+  padding: 4px 6px;
   background-color: #f0f0f0;
   border-radius: 3px;
+  margin-top: 4px;
 }
 .file-input .hint {
   color: #808080;
@@ -285,6 +302,9 @@ button.padmode.padmode.on {
   gap: 8px;
   position: relative;
 }
+.file-input .row .name {
+  font-size: 12px;
+}
 .file-input button {
   width: 70px;
 }
@@ -292,6 +312,31 @@ button.padmode.padmode.on {
   font-weight: bold;
   text-align: left;
   margin-right: 10px;
+  flex: 1;
+}
+.file-input select[par="merge-mode"] {
+  width: 120px;
+}
+.file-input.meter {
+  padding: 0;
+  height: 73px;
+  box-sizing: border-box;
+}
+.file-input.meter canvas {
+  box-sizing: border-box;
+  width: 100%;
+  height: 70px;
+  background-color: #f0f0f0;
+  margin: 1px 0;
+}
+.file-input div.side-label {
+  display: inline;
+  color: #007bff;
+  font-size: 0.75em;
+  padding: 0;
+  width: 50px;
+  text-align: center;
+  margin: 0;
 }
 .modal-overlay {
   position: fixed;
@@ -309,7 +354,7 @@ button.padmode.padmode.on {
 .modal-window {
   background: white;
   border-radius: 8px;
-  max-width: 500px;
+  max-width: 800px;
   width: auto;
   padding: 1rem;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
@@ -350,4 +395,35 @@ kbd {
 }
 .drop-wave-bar.dragover {
   opacity: 1;
+}
+/* Spinner e overlay */
+#spinner-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 9999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.spinner-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 5px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: #fff;
+  animation: spin 1s ease-in-out infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }

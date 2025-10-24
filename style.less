@@ -27,6 +27,21 @@ body {
         margin: 20px 0;
     }
 
+    div.volume {
+        display: inline;
+        color: #007bff;
+        font-size: 1.5em;
+        margin: 0;
+        padding: 0;
+    }
+
+    div#amp-value {
+        display: inline;
+        width: 80px;
+        font-family: 'Courier New', Courier, monospace;
+        font-size: 12px;
+    }
+
     button.play {
         background-color: #007bff;
         color: white;
@@ -83,7 +98,7 @@ button.padmode {
 // }
 
 .control-group {
-    margin-bottom: 15px;
+    // margin-bottom: 15px;
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -169,6 +184,9 @@ button.padmode {
             top: 0;
             background: none;
 
+            [mode="motion"] &.wave {
+                opacity: .2;
+            }
         }
 
         .subpanel {
@@ -180,30 +198,42 @@ button.padmode {
             top: 0;
             z-index: 200;
 
+            &.help-on-line .content {
+                overflow: auto;
+            }
             .content {
                 background-color: rgba(255, 255, 255, .75);
                 height: 100%;
                 margin: 0;
                 padding: 6px 20px;
 
+                [mode="motion"] & {
+                    background-color: rgba(255, 255, 255, .65);
+                }
+
                 .control-group {
                     display: flex;
                     flex-direction: row;
+
                     input[type="range"] {
                         flex: 1;
                     }
                 }
+
                 label {
                     width: 100px;
                     margin-right: 12px;
                 }
+
                 .text {
                     width: 100px;
                     margin-right: 12px;
                 }
+
                 .spaceright {
                     width: 250px;
                 }
+
                 input[type="radio"] {
                     margin-left: 25px;
                 }
@@ -263,7 +293,7 @@ button.padmode {
 }
 
 
-
+// canvas[mode="motion"] 
 
 
 
@@ -294,16 +324,10 @@ button.padmode {
 }
  */
 
-.meters canvas {
-    width: 100%;
-    height: 70px;
-    background-color: #f0f0f0;
-}
 
 .dragover {
-    background-color: yellow;
-    border: 2px solid #000080;
-
+    background-color: yellow !important;
+    border: 2px solid #000080 !important;
 }
 
 .container .preset {
@@ -366,9 +390,11 @@ button.padmode {
     gap: 8px;
     max-width: 400px;
     border: 1px solid #aaa;
-    padding: 4px;
+    padding: 4px 6px;
     background-color: #f0f0f0;
     border-radius: 3px;
+
+    margin-top: 4px;
 
     .hint {
         color: #808080;
@@ -379,6 +405,10 @@ button.padmode {
         align-items: center;
         gap: 8px;
         position: relative;
+
+        .name {
+            font-size: 12px;
+        }
     }
 
     button {
@@ -389,7 +419,40 @@ button.padmode {
         font-weight: bold;
         text-align: left;
         margin-right: 10px;
+        flex: 1;
     }
+
+    select[par="merge-mode"] {
+        width: 120px;
+    }
+
+    &.meter {
+        padding: 0;
+        height: 73px;
+        box-sizing: border-box;
+
+        canvas {
+            box-sizing: border-box;
+            width: 100%;
+            height: 70px;
+            background-color: #f0f0f0;
+            //border: 1px solid #c0c0c0;
+            margin: 1px 0;
+        }
+    }
+
+    div.side-label {
+        display: inline;
+        color: #007bff;
+        font-size: .75em;
+        margin: 0;
+        padding: 0;
+        width: 50px;
+        text-align: center;
+        margin: 0;
+    }
+
+
 }
 
 
@@ -411,7 +474,7 @@ button.padmode {
 .modal-window {
     background: white;
     border-radius: 8px;
-    max-width: 500px;
+    max-width: 800px;
     width: auto;
     padding: 1rem;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
@@ -510,7 +573,51 @@ kbd {
     border-radius: 5px;
     z-index: 300;
     opacity: 0;
+
     &.dragover {
         opacity: 1;
+    }
+}
+
+
+///////////////
+
+// input[type="range"] {
+//   accent-color: #ff0000; /* Il TUO colore */
+// }
+
+
+/* Spinner e overlay */
+#spinner-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.spinner-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: #fff;
+    animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
     }
 }

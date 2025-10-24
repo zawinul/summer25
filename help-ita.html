@@ -1,0 +1,100 @@
+<div class="paper">
+    <header>
+        <h1>Summer 25</h1>
+        <p class="authors">Paolo Andrenacci</p>
+        <!-- <p class="affiliations"><sup>1</sup> Dipartimento di Fisica Teorica, Università degli Studi di Bologna</p>
+        <p class="affiliations"><sup>2</sup> Istituto di Scienze Gastronomiche, Accademia Culinaria di Roma</p> -->
+    </header>
+
+    <section class="abstract">
+        <h2>Cos'è e cosa fa</h2>
+        <p>Summer 25 è un'applicazione web nata durante l'estate 2025 per sperimentare l'audio in real time all'interno del browser, la tecnica di sintesi e resintesi chiamata pase vocoder e la combinazione spettrale interattiva di due suoni. Altre idee si sono poi aggiunte durante lo sviluppo.</p>
+        <p>L'applicazione non ha pretese di utilizzo professionale anche si riesce a ottenere combinazioni sonore interessati ma è pensata piuttosto come strumento ricreativo o didattico per permettere di giocare con la sintesi anche a utenti occasionali.</p>
+        <p>I due suoni sono mappati rispettivamente sull'asse X e sull'asse Y dell'area di lavoro. Muovendosi con il mouse è possibile selezionare un punto all'interno del suono X e del suono Y. In quel punto verrà calcolato lo spettro tramite l'analisi phase vocoder, i due spettri verranno combinati tra loro in varie modalità e il risultato verrà risintetizzato. Tutto questo avviene in realtime.</p>
+    </section>
+
+    <div class="main-content">
+        <section>
+            <h2>Utilizzo</h2>
+            Per prima cosa occorre caricare due file audio, uno per l'asse X e uno per l'asse Y. Si possono caricare file audio in formato WAV, MP3, o OGG. L'applicazione funziona sia con suoni brevi come campioni che con interi brani musicali. Alcuni file di esempio sono presenti nell'applicazione (utilizzare il taso "load" nelle sezioni "X Wave" e "Y Wave" a sinistra). Si possono caricare anche file propri da disco sia tramite i tasti "load" che attraverso drag&drop nelle rispettive sezioni o nella striscia sopra e a sinistra del pannello centrale.
+
+            <p>Una volta caricati i file premere il tasto Play in alto a sinistra per avviare la sintesi e muoversi nel pannello centrale tenendo il tasto sinistro del mouse premuto.</p>
+        </section>
+
+        <section>
+            <h2>Drag</h2>
+        </section>
+
+        <section>
+            <h2>Motion</h2>
+            <p>Variando le coordinate del punto <i>x,y</i> all'interno del pannello centrale è possibile spostarsi all'interno dello spettro dei due suoni. Con movimenti lenti si può fare una ricerca spettrale mentre con movimenti più ampi si possono sperimentare modulazioni ed effetti melodici</p>
+            <p>I movimenti sono di tre tipi: <i>manual</i>,<i>linear</i>, <i>cyclic</i>.
+            Le tre modalità agiscono contemporaneamente e il loro effetto si somma.</p> 
+            I dettagli delle tre modalità si configurane nel pannello "Motion" a cui si accede con il tasto M sopra al pannello.
+            <p>
+                <i>Manual</i>: il punto <i>x,y</i> viene mosso manualmente con il mouse. Il parametro "traction" permette di regolare la reattività ai movimenti del mouse. Con valori bassi il punto si muove lentamente permettendo transizioni dolci tra un punto e l'altro.
+                <i>Linear</i>: il punto <i>x,y</i> viene mosso in linea retta a velocità costante. E' possibile scegliere indipendentemente la componente x e y della velocità. Quando la velocità è 1* in una direzione, il punto si muove lungo quella direzione alla velocità originale del campione. 
+                <i>Cyclic</i>: il punto <i>x,y</i> viene cambiato in in maniera ciclica. I parametri X Ampl e Y Ampl regolano l'ampiezza della modulazione. Per gli altri parametri fare riferimento al grafico a destra dei parametri stessi per una esplorazione intuitiva.
+            </p>
+
+            
+        </section>
+
+        <section>
+
+            <table>
+                <caption><strong>Tabella 1:</strong> shortcut.</caption>
+                <thead>
+                    <tr>
+                        <th>Tasti</th>
+                        <th>Azione</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>D, M, E, F1</td>
+                        <td>Aprono rispettivamente il pannello Drag, Motion, Effects, Help</td>
+                    </tr>
+                    <!-- <tr>
+                        <td>D</td>
+                        <td>Apre il pannello Drag</td>
+                    </tr>
+                    <tr>
+                        <td>M</td>
+                        <td>Apre il pannello Motion</td>
+                    </tr>
+                    <tr>
+                        <td>E</td>
+                        <td>Apre il pannello Effects</td>
+                    </tr>
+                    <tr>
+                        <td>F1</td>
+                        <td>Apre il pannello Help</td>
+                    </tr> -->
+                    <tr>
+                        <td>Tab</td>
+                        <td>Ruota tra i tre pannelli precedenti</td>
+                    </tr>
+                    <tr>
+                        <td>X, Y</td>
+                        <td>Carica un suono da app o da disco rispettivamente su X o su Y</td>
+                    </tr>
+                    <tr>
+                        <td>Alt+X, Alt+Y</td>
+                        <td>Carica un suono scelto casualmente tra quelli presenti in app  rispettivamente su X o su Y</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        
+        <section class="references">
+            <h2>Riferimenti</h2>
+            <ol>
+                <li>Einstein, A., Podolsky, B., & Rosen, N. (1935). Can Quantum-Mechanical Description of Physical Reality Be Considered Complete?. <i>Physical Review</i>, 47(10), 777.</li>
+                <li>Maillard, L. C. (1912). Action des acides aminés sur les sucres; formation des mélanoïdines par voie méthodique. <i>Comptes Rendus de l'Académie des Sciences</i>, 154, 66-68.</li>
+                 <li>Illy, A., & Viani, R. (Eds.). (2005). <i>Espresso coffee: the science of quality</i>. Elsevier academic press.</li>
+            </ol>
+        </section>
+    </div>
+</div>

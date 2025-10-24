@@ -10,7 +10,18 @@ const LFOWAVE_SQUARE = 5;
 const pi = Math.PI;
 const twoPi = 2 * Math.PI;
 
-function lfowaveX(shape, rad) { // -PI < rad <PI
+const mergeModes = [
+	["mix", "X + Y", "X", "Y", "X+Y"],
+	["min", "min(X,Y)", "X", "Y", "min(X,Y)"],
+	["max", "max(X,Y)", "X", "Y", "max(X,Y)"],
+	["dxmix", "ΔX + Y", "ΔX", "Y", "ΔX+Y"],
+	["dymix", "X + ΔY", "X", "ΔY", "X+ΔY"],
+	["dxdymix", "ΔX + ΔY", "ΔX", "ΔY", "ΔX+ΔY"],
+	["xcy", "X * contour[Y]", "X", "contour(Y)", "X*contour(Y)"],
+	["cxy", "contour[X] * Y", "contour(X)", "Y", "contour(X)*Y"]
+];
+
+function lfowave(shape, rad, deltaph) { // -PI < rad <PI
 	rad = normalize(rad);
 	if (shape == LFOWAVE_SQUARE)
 		return rad >= 0 ? 1 : -1;
@@ -27,9 +38,13 @@ function lfowaveX(shape, rad) { // -PI < rad <PI
 	return 0;
 }
 
-function lfowaveY(shape, rad, deltaph) { 
-	const shapeYDeltaPh = (shape==LFOWAVE_SINE || shape==LFOWAVE_TRIANGLE) ? Math.PI/2 :0;
-	return lfowaveX(shape, rad + deltaph + shapeYDeltaPh);
+function lfowaveX(shape, rad, deltaph) {
+	return lfowave(shape, rad - deltaph);
+}
+
+function lfowaveY(shape, rad, deltaph) {
+	const shapeYDeltaPh = (shape == LFOWAVE_SINE || shape == LFOWAVE_TRIANGLE) ? Math.PI / 2 : 0;
+	return lfowave(shape, rad + deltaph + shapeYDeltaPh);
 }
 
 function normalize(x) {
@@ -288,29 +303,80 @@ function initCommon(fftSize, overlap, sampleRate) {
 	}
 
 	function linearSpeedRescale(x) {
-		const D = .01;
-		if (x<0)
+		if (x < 0)
 			return -linearSpeedRescale(-x);
-		x = x<D ? 0 : (x-D)*(1-D);
-		x = x*x*x;
+		const D = .01;
+		if (x < D)
+			return 0;
+		x = (x - D) / (1 - D);
+		x = x * x * x * 2;
 		return x;
 	}
 
-	
+
 	function lfoAmpRescale(x) {
 		const D = .01;
-		x = x<D ? 0 : (x-D)*(1-D);
-		x = x*x*x;
+		x = x < D ? 0 : (x - D) / (1 - D);
+		x = x * x * x * .5;
 		return x;
 	}
 
 	function delayLengthRescale(x) {
 		const D = .01;
-		x = x<D ? 0 : (x-D)*(1-D);
-		x = Math.round(x*x*x*3000)/1000;
+		x = x < D ? 0 : (x - D) * (1 - D);
+		x = Math.round(x * x * x * 3000) / 1000;
 		return x;
 	}
 
+	const LEFTTRACTIONVALUE = .0005;
+	const RIGHTTRACTIONVALUE = .2;
+	function tractionRescale(x) {
+		return LEFTTRACTIONVALUE * Math.pow(RIGHTTRACTIONVALUE / LEFTTRACTIONVALUE, x);
+	}
+
+	function lfoSpeedRescale(x) {
+		return Math.pow(x, 3) * 10;
+	}
+
+	function cutoffToAlpha(cutoff) {
+		return 1 - Math.exp(-2 * Math.PI * cutoff / sampleRate);
+	}
+
+	function alphaToCutoff(alpha) {
+		return -(sampleRate / (2 * Math.PI)) * Math.log(1 - alpha);
+	}
+
+	function amplitudeToDb(amplitude) {
+		if (amplitude <= 0) {
+			return -96; // l'ampiezza nulla corrisponde a -∞ dB
+		}
+		return Math.max(-96, 20 * Math.log10(amplitude));
+	}
+
+	function dbToAmplitude(db) {
+		return Math.pow(10, db / 20);
+	}
+
+	const hstep = Math.pow(2, 1 / 12);
+
+	function getContourTable() {
+		let keys = [0];
+		for (let i = 1; i <= fftSize; i++) {
+			let hz = i * sampleRate / fftSize;
+			let key = 69 + Math.log(hz / 440) / Math.log(hstep);
+			keys[i] = Math.round(key / 3);
+		}
+		let counts = new Array(fftSize).fill(0);
+		for (let i = 1; i <= fftSize; i++) {
+			counts[keys[i]]++;
+		}
+
+		return { keys, counts };
+	}
+	let contourTable = getContourTable();
+
+
+	const now = () => new Date().getTime();
 	let exp = {
 		createHammingWindow, normalize,
 		fft, fftSize, windowSize, overlap, hopSize,
@@ -323,8 +389,16 @@ function initCommon(fftSize, overlap, sampleRate) {
 		debugdump,
 		linearSpeedRescale,
 		lfoAmpRescale,
-		delayLengthRescale
-
+		delayLengthRescale,
+		tractionRescale,
+		lfoSpeedRescale,
+		cutoffToAlpha,
+		alphaToCutoff,
+		amplitudeToDb,
+		dbToAmplitude,
+		contourTable,
+		mergeModes,
+		now
 	};
 	return exp;
 }

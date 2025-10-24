@@ -6,10 +6,10 @@ let delSize;
 let lbuff;
 let rbuff;
 
-const MODE_PARALLEL = 0;
-const MODE_PINGPONG_L = 1;
-const MODE_PINGPONG_R = 2;
-const MODE_PINGPONG_LR = 3;
+const MODE_PARALLEL = 1;
+const MODE_PINGPONG_L = 2;
+const MODE_PINGPONG_R = 3;
+// const MODE_PINGPONG_LR = 4;
 
 
 function log() {
@@ -34,7 +34,7 @@ class Vocoder extends AudioWorkletProcessor {
 		this.sampleRate = sampleRate = _sampleRate;
 		this.outFrames = [];
 
-		delSize = 3*sampleRate;
+		delSize = 3 * sampleRate;
 		lbuff = new Float32Array(delSize).fill(0);
 		rbuff = new Float32Array(delSize).fill(0);
 
@@ -70,7 +70,7 @@ class Vocoder extends AudioWorkletProcessor {
 	async onMessage(event) {
 		let d = event.data;
 		//log('on osc msg', d.type)
-		if (d.type=='init') {
+		if (d.type == 'init') {
 			this.init(d.fftSize, d.overlap, d.sampleRate);
 			this.port.postMessage({ type: 'initialized' });
 		}
@@ -82,10 +82,11 @@ class Vocoder extends AudioWorkletProcessor {
 			this.lastFrame.set(d.data)
 		}
 		if (d.type === 'dump-request') {
-			this.port.postMessage({ type: 'dump', data: {frames:this.outFrames, lastFrame: this.lastFrame} });
+			this.port.postMessage({ type: 'dump', data: { frames: this.outFrames, lastFrame: this.lastFrame } });
 		}
 		if (d.type === 'set-delay') {
 			Object.assign(delParams, d.data);
+			console.log({dalData:d.data})
 		}
 	}
 
@@ -100,15 +101,15 @@ class Vocoder extends AudioWorkletProcessor {
 	 */
 	process(inputs, outputs, parameters) {
 		// Prendiamo il primo (e unico) output buffer
-		//const output = outputs[0];
-		const channelL = outputs[0][0];
-		const channelR = outputs[0][1];
+		const output = outputs[0];
+		const channelL = output[0];
+		const channelR = output[1];
 
 		for (let i = 0; i < channelL.length; i++) {
 			let oscOutSample = 0;
-			for (let outFrame of this.outFrames) 
+			for (let outFrame of this.outFrames)
 				oscOutSample += outFrame.getSample();
-			
+
 			let delOut = delay(oscOutSample);
 			channelL[i] = delOut[0];
 			channelR[i] = delOut[1];
@@ -127,37 +128,59 @@ let delParams = {
 	mix: 0
 }
 let wcur = 0;
-let lastL = 0, lastR = 0;
+let lastL = 0, lastR = 0, filteredFeedback = 0;
 
 function delay(input) {
-	let sLeftDelay = Math.round(delParams.ldelay * sampleRate);
-	let sRightDelay = Math.round(delParams.rdelay * sampleRate);
-	
-	let leftDelayOut = lbuff[(wcur-sLeftDelay+delSize)%delSize];
-	let rightDelayOut = rbuff[(wcur-sRightDelay+delSize)%delSize];
-	lastL += (leftDelayOut-lastL)*delParams.lopass;
-	lastR += (rightDelayOut-lastR)*delParams.lopass;
-	if (Number.isNaN(lastL) || Number.isNaN(lastR)) {
-		lastL = 0;
-		lastR = 0;
-	}
-	let lin = delParams.mode!=MODE_PINGPONG_R ? input : 0;
-	let rin = delParams.mode!=MODE_PINGPONG_L ? input : 0;
-	if (delParams.mode==MODE_PARALLEL) {
-		lin += lastL*delParams.feedback;
-		rin += lastR*delParams.feedback;
-	}
-	else {
-		lin += lastR*delParams.feedback;
-		rin += lastL*delParams.feedback;
-	}
+	let ldelSamples = Math.round(delParams.ldelay * sampleRate);
+	let rdelSamples = Math.round(delParams.rdelay * sampleRate);
 
-	lbuff[wcur] = lin;
-	rbuff[wcur] = rin;
+	let leftDelayOut = lbuff[(wcur - ldelSamples + delSize) % delSize];
+	let rightDelayOut = rbuff[(wcur - rdelSamples + delSize) % delSize];
+	// lastL += (leftDelayOut - lastL) * delParams.lopass;
+	// lastR += (rightDelayOut - lastR) * delParams.lopass;
+	// if (Number.isNaN(lastL) || Number.isNaN(lastR)) {
+	// 	lastL = 0;
+	// 	lastR = 0;
+	// }
+	let leftDelayIn = 0, rightDelayIn = 0;
+	if (delParams.mode == MODE_PARALLEL) {
+		let fb = leftDelayOut + rightDelayOut;
+		filteredFeedback += (fb - filteredFeedback) * delParams.lopass;
+		if (Number.isNaN(filteredFeedback)) filteredFeedback = 0;
+		leftDelayIn  = input + filteredFeedback * delParams.feedback;
+		rightDelayIn = input + filteredFeedback * delParams.feedback;
+	}
+	else if (delParams.mode == MODE_PINGPONG_L) {
+		let fb = rightDelayOut;
+		filteredFeedback += (fb - filteredFeedback) * delParams.lopass;
+		if (Number.isNaN(filteredFeedback)) filteredFeedback = 0;
+		leftDelayIn = input + filteredFeedback * delParams.feedback;
+		rightDelayIn = leftDelayOut;
+	}
+	else if (delParams.mode == MODE_PINGPONG_R) {
+		let fb = leftDelayOut;
+		filteredFeedback += (fb - filteredFeedback) * delParams.lopass;
+		if (Number.isNaN(filteredFeedback)) filteredFeedback = 0;
+		leftDelayIn = rightDelayOut;
+		rightDelayIn = input + filteredFeedback * delParams.feedback;
+	}
+	// let lin = delParams.mode!=MODE_PINGPONG_R ? input : 0;
+	// let rin = delParams.mode!=MODE_PINGPONG_L ? input : 0;
+	// if (delParams.mode==MODE_PARALLEL) {
+	// 	lin += lastL*delParams.feedback;
+	// 	rin += lastR*delParams.feedback;
+	// }
+	// else {
+	// 	lin += lastR*delParams.feedback;
+	// 	rin += lastL*delParams.feedback;
+	// }
 
-	wcur = (wcur+1) % delSize;
-	let outl = input*(1-delParams.mix) + leftDelayOut*delParams.mix;
-	let outr = input*(1-delParams.mix) + rightDelayOut*delParams.mix;
+	lbuff[wcur] = leftDelayIn;
+	rbuff[wcur] = rightDelayIn;
+
+	wcur = (wcur + 1) % delSize;
+	let outl = input * .5 * (1 - delParams.mix) + leftDelayOut * delParams.mix;
+	let outr = input * .5 * (1 - delParams.mix) + rightDelayOut * delParams.mix;
 	return [outl, outr];
 }
 

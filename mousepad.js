@@ -12,10 +12,10 @@ mousepad = (function () {
 
 	let canvases = {
 		wave: { class: 'wave', zIndex: 100 },
-		speed: { class: 'speed-arrow', zIndex: 110 },
+		wavebar: { class: 'wavebar', zIndex: 100 },
 		cursor: { class: 'cursor', zIndex: 120 },
+		cursorpoint: { class: 'cursorpoint', zIndex: 120 },
 		info: { class: 'info', zIndex: 130 },
-		lfo: { class: 'lfo-view', zIndex: 140 },
 	};
 
 	const padStatus = {
@@ -35,22 +35,42 @@ mousepad = (function () {
 	let curOscStatus = {};
 
 	const modes = {
-		// amp: { bgcolor: '#e0e0ff', show: '.wave, .cursor, .info,  .speed-arrow' },
-		drag: { bgcolor: '#ffffff', show: '.wave, .cursor, .info' },
-		//speed: { bgcolor: '#f0f0ff', show: '.wave, .cursor, .info, .speed-arrow' },
-		motion: { bgcolor: '#fff0f0', show: '.wave, .motion-view, .info, .cursor, .motion-controls' },
-		effects: { bgcolor: '#fff0f0', show: '.wave, .effects-view, .info, .cursor, .effects-controls' },
-		settings: { bgcolor: '#ffffff', show: '.wave, .info, .settings-controls' }
+		drag: { bgcolor: '#ffffff', show: '.wave, .wavebar, .cursor, .cursorpoint' },
+		help: { bgcolor: '#fffff0', show: '.wave, .wavebar, .cursor, .cursorpoint, .help-on-line' },
+		motion: { bgcolor: '#fff0f0', show: '.wave, .wavebar, .cursor, .cursorpoint, .motion-controls' },
+		motion_temp: { bgcolor: '#fff0f0', show: '.wave, .wavebar, .cursor, .cursorpoint, .motion-controls' },
+		effects: { bgcolor: '#fff0f0', show: '.wave, .wavebar, .cursor, .cursorpoint, .effects-controls' },
+		effects_temp: { bgcolor: '#fff0f0', show: '.wave, .wavebar, .cursor, .cursorpoint, .effects-controls' },
+		// settings: { bgcolor: '#ffffff', show: '.wave, .wavebar, .settings-controls' }
 	};
 
 	let mode = null;
+	let dragInfo =
+		`- click and drag to move the cursor
+	- ctrl+click to move cursor instantly
+	- hold <shift> to set motion parameters`;
+	let showInfoCount = 0;
 	function setMode(_mode) {
-		if (mode == _mode)
+		if (!_mode)
 			return;
 
+		if (_mode == 'drag' && !isSuspended) {
+			if (showInfoCount++ < 5)
+				showInfo(dragInfo, true);
+		}
+		else
+			clearInfo();
+
+		if (mode == _mode)
+			return;
+		
 		mode = curstatus.mode = _mode;
+		$('body').attr('mode', mode);
+
+		let m2 = mode.replace('_temp', '');
+		console.log('m2=' + m2);
 		$('.padmode').removeClass('on');
-		$('.padmode[data-mode="' + mode + '"]').addClass('on');
+		$('.padmode[data-mode="' + m2 + '"]').addClass('on');
 		if (!modes[mode])
 			return;
 		padStatus.mode = mode;
@@ -58,10 +78,10 @@ mousepad = (function () {
 		$('.hideable').not(modes[mode].show).toggleClass('hidden', true);
 		$('.hideable').filter(modes[mode].show).toggleClass('hidden', false);
 
-		if (mode=='motion') {
-			designLinShape();
-			designLFOShape();
-		}
+		// if (mode == 'motion') {
+		// 	designLinShape();
+		// 	designLFOShape();
+		// }
 		checkStatusChange();
 	}
 
@@ -89,6 +109,8 @@ mousepad = (function () {
 
 
 	function initUI() {
+		initIrSelector();
+
 		$(document).on("keydown keyup", function (e) {
 			switch (e.key) {
 				case "Shift":
@@ -146,21 +168,29 @@ mousepad = (function () {
 			setMode(mode);
 		});
 
+		for (let axis of ['x', 'y']) {
+			let parname = 'speedmult' + axis;
+			let sel = $(`[par="${parname}"]`);
+			for (let val = 0; val <= 8; val++) {
+				sel.append(`<option value="${val}">${axis.toUpperCase()} = ${val}</option>`);
+			}
+			sel.val(1);
+		}
 
-		$('#traction').on('input', function () {
-			const traction = parseFloat($(this).val());
-			vocoderWorker.postMessage({ type: 'set-status', data: { traction } })
-		});
+		// $('#traction').on('input', function () {
+		// 	const traction = parseFloat($(this).val());
+		// 	vocoderWorker.postMessage({ type: 'set-status', data: { traction } })
+		// });
 
-		$('#luminosity').on('change', evt => {
-			padStatus.lum = 1 - $('#luminosity').val();
-			redrawCenterWaves();
-		})
+		// $('#luminosity').on('change', evt => {
+		// 	padStatus.lum = 1 - $('#luminosity').val();
+		// 	redrawCenterWaves();
+		// })
 
-		$('#contrast').on('change', evt => {
-			padStatus.cont = $('#contrast').val() - 0;
-			redrawCenterWaves();
-		});
+		// $('#contrast').on('change', evt => {
+		// 	padStatus.cont = $('#contrast').val() - 0;
+		// 	redrawCenterWaves();
+		// });
 
 		$('.motion-controls [par]').on('input change', function (evt) {
 			let par = $(this).attr('par');
@@ -170,13 +200,18 @@ mousepad = (function () {
 			data[par] = val;
 
 			vocoderWorker.postMessage({ type: 'set-status', data })
-			designLFOShape();
-			designLinShape();
+			updateMotionUI();
 		});
-		$('[name="delay-mode"], #left-delay, #right-delay, #delay-feedback, #delay-lopass, #delay-mix').on('input change', function (evt) {
-			console.log(' delay params');
-			updateDelayParams();
-		});
+
+
+
+
+		$('.effects-controls [par]').on('input change', updateEffectsParams);
+		$('[name="delay-mode"]').on('click', function (evt) {
+			let delayMode = $('[name="delay-mode"]:checked').val();
+			$par('delay-mode').val(delayMode).trigger('change');
+		})
+
 	}
 
 
@@ -190,13 +225,55 @@ mousepad = (function () {
 		}
 	}
 
+	function updateMotionParams() {
+		let params = $('.motion-controls [par]').toArray().map(x=>$(x).attr('par'));
+		let data = {};
+		for(let par of params) {
+			let val = $parval(par);
+			data[par] = val;
+		}
+		vocoderWorker.postMessage({ type: 'set-status', data })
+	}
 
+	function updateMotionUI() {
+		let p = $par("speedx");
+		let x = linearSpeedRescale(p.val() - 0);
+		$('.spaceright', p.parent()).text(x.toFixed(3) + ' *');
+
+		p = $par("speedy");
+		x = linearSpeedRescale(p.val() - 0);
+		$('.spaceright', p.parent()).text(x.toFixed(3) + ' *');
+
+		p = $par("traction");
+		x = Math.round((p.val() - 0) * 100).toFixed(1);
+		$('.spaceright', p.parent()).text(x + ' %');
+
+		p = $par("lfofreq");
+		x = lfoSpeedRescale(p.val() - 0);
+		$('.spaceright', p.parent()).text(x.toFixed(2) + ' Hz');
+
+		p = $par("lfoxamp");
+		x = lfoAmpRescale(p.val() - 0);
+		$('.spaceright', p.parent()).text(x.toFixed(3));
+
+		p = $par("lfoyamp");
+		x = lfoAmpRescale(p.val() - 0);
+		$('.spaceright', p.parent()).text(x.toFixed(3));
+
+		p = $par("lfodeltaph");
+		x = (p.val() - 0) * 180 / Math.PI;
+		$('.spaceright', p.parent()).text("±" + Math.round(x) + '°');
+
+		designLFOShape();
+		designLinShape();
+	}
 
 
 	function update(force) {
 		let mode = curstatus.mode;
 
-		$('.canvas-container').css('background-color', modes[mode].bgcolor);
+		//$('.canvas-container').css('background-color', modes[mode].bgcolor);
+
 		// if (mode == 'drag' && curstatus.shift) {
 		// 	setMode('speed');
 		// 	return;
@@ -205,14 +282,35 @@ mousepad = (function () {
 		// 	setMode('pos');
 		// 	return;
 		// }
+		
+		if (dragging) {
+			let targetx = (curstatus.x - space.left) / space.width;
+			let targety = -(curstatus.y - space.bottom) / space.height;
+			$par('targetx').val(targetx);
+			$par('targety').val(targety);
+			if (!curstatus.left)
+				dragging = false;
+			vocoderWorker.postMessage({ type: 'set-status', data: { targetx, targety, dragging } });
+			return;
+		}
+
 		if (curstatus.where == 'in') {
 			if (mode == 'drag') {
+				if (curstatus.shift) {
+					setMode('motion_temp');
+				}
+				// if (curstatus.alt) {
+				// 	setMode('effects_temp');
+				// }
 				if (curstatus.left && !curstatus.shift) {
 					dragging = true;
-					padStatus.mx = (curstatus.x - space.left) / space.width;
-					padStatus.my = -(curstatus.y - space.bottom) / space.height;
+					let targetx = (curstatus.x - space.left) / space.width;
+					let targety = -(curstatus.y - space.bottom) / space.height;
+					$par('targetx').val(targetx);
+					$par('targety').val(targety);
 					let forcepos = curstatus.control;
-					vocoderWorker.postMessage({ type: 'set-status', data: { targetx: padStatus.mx, targety: padStatus.my, dragging, forcepos } })
+					vocoderWorker.postMessage({ type: 'set-status', data: { targetx, targety, dragging, forcepos } })
+					clearInfo();
 				}
 				else {
 					dragging = false;
@@ -220,6 +318,23 @@ mousepad = (function () {
 				}
 			}
 		}
+		if (mode == 'motion_temp') {
+			if (!curstatus.shift) {
+				setMode('drag');
+			}
+		}
+		// if (mode=='effects_temp') {
+		// 	if (!curstatus.alt) {
+		// 		setMode('drag');
+		// 	}
+		// }
+	}
+
+	function forcePosition() {
+		let targetx = $parval('targetx');
+		let targety = $parval('targety');
+		vocoderWorker.postMessage({ type: 'set-status', data: { targetx, targety, dragging: true, forcepos:true } })
+		setTimeout(()=>vocoderWorker.postMessage({ type: 'set-status', data: { dragging: false, forcepos:false } }), 10)
 	}
 
 	function debounce(func, timeout = 300) {
@@ -277,8 +392,8 @@ mousepad = (function () {
 			height: w
 		})
 
-		$('#top-drop-bar').css({ top: topband.top, left: topband.left, width: topband.width, height:topband.height });
-		$('#left-drop-bar').css({ top: leftband.top, left: leftband.left, width: leftband.width, height:leftband.height });
+		$('#top-drop-bar').css({ top: topband.top, left: topband.left, width: topband.width, height: topband.height });
+		$('#left-drop-bar').css({ top: leftband.top, left: leftband.left, width: leftband.width, height: leftband.height });
 		$('.panel-controls').css({ paddingLeft: left, width: w });
 
 		for (let k in canvases) {
@@ -296,13 +411,15 @@ mousepad = (function () {
 			desc.ctx = desc.c.getContext('2d');
 			desc.ctx.clearRect(0, 0, w, w)
 		}
-		$('.subpanel').css({ paddingLeft: BANDW+1, paddingTop: BANDW+1 })
+		$('.subpanel').css({ paddingLeft: BANDW + 1, paddingTop: BANDW + 1 })
 		redraw();
+		$('body').css('opacity', 1);
 	}
 
 	function redraw() {
 		// clearWave();
 		canvases.wave.ctx.clearRect(0, 0, w, w);
+		canvases.wavebar.ctx.clearRect(0, 0, w, w);
 		redrawBandWave('x');
 		redrawBandWave('y');
 		redrawCenterWave('x');
@@ -346,7 +463,7 @@ mousepad = (function () {
 	}
 
 	function redrawBandWave(index) {
-		let c = canvases.wave.ctx;
+		let c = canvases.wavebar.ctx;
 		let data = waves[index].data;
 		if (!data)
 			return;
@@ -450,46 +567,66 @@ mousepad = (function () {
 		c.stroke();
 	}
 
-	function updateDelayParams() {
+	function updateEffectsParams() {
+
+		const revSendGain = $('[par="revsend"]').val() - 0;
+		if (reverbSendNode) {
+			let gain = revSendGain <= -35.5 ? 0 : dbToAmplitude(revSendGain);
+			reverbSendNode.gain.setTargetAtTime(gain, audioContext.currentTime, 0.01);
+		}
+		$('#reverb-value').text(revSendGain <= -35.5 ? '-' : revSendGain.toFixed(0) + ' dB');
+
+		async function loadIR(revTypeName) {
+			let url = 'ir/Samplicity - Bricasti IRs version 2023-10, left-right files, 44.1 Khz/' + revTypeName + '.wav';
+			const response = await fetch(url);
+			const arrayBuffer = await response.arrayBuffer();
+			reverbNode.buffer = await audioContext.decodeAudioData(arrayBuffer);
+		}
+
+		let revTypeName = $('[par="revtype"]').val();
+		if (revTypeName != updateEffectsParams.revTypeName) {
+			updateEffectsParams.revTypeName = revTypeName;
+			loadIR(revTypeName);
+		}
+
+
+
 		//[name="delay-mode"], #left-delay, #right-delay, #delay-feedback, #delay-lopass, #delay-mix'
-		let mode = $('[name="delay-mode"]:checked').val();
-		let ldelay = delayLengthRescale($('#left-delay').val()-0);
-		let rdelay = delayLengthRescale($('#right-delay').val()-0);
-		let feedback = $('#delay-feedback').val()-0;
-		let lopass = $('#delay-lopass').val()-0;
-		let mix = $('#delay-mix').val()-0;
-		vocoderOscillatorNode.port.postMessage({ type: 'set-delay', data: {
-				mode,
+		let delayMode = $par('delay-mode').val();
+		let ldelay = delayLengthRescale($('[par="ldelay"]').val() - 0);
+		let rdelay = delayLengthRescale($('[par="rdelay"]').val() - 0);
+		let feedback = $('[par="feedback"]').val() - 0;
+		let lopass = $('[par="lopass"]').val() - 0;
+		let mix = $('[par="delmix"]').val() - 0;
+
+		$('#left-delay-value').text(ldelay.toFixed(3) + ' ms');
+		$('#right-delay-value').text(rdelay.toFixed(3) + ' ms');
+		$('#delay-feedback-value').text(feedback.toFixed(3) + ' %');
+		$('#delay-lopass-value').text(alphaToCutoff(lopass).toFixed(1) + ' Hz');
+		$('#delay-mix-value').text(mix.toFixed(3) + ' %');
+
+		vocoderOscillatorNode.port.postMessage({
+			type: 'set-delay', data: {
+				mode: delayMode,
 				ldelay,
 				rdelay,
 				feedback,
 				lopass,
 				mix
-		}});
+			}
+		});
+
 	}
 
-	// function redrawSpeedCanvas() {
-	// 	let { left, top, width, height, cx, cy } = space;
-	// 	let c = canvases.speed.ctx;
-	// 	c.lineWidth = 1;
-	// 	c.strokeStyle = '#808080';
-	// 	c.clearRect(0, 0, w, w);
-
-	// 	line(c, left, cy, left + width, cy);
-	// 	line(c, cx, top, cx, top + height);
-
-	// 	drawArrow(c, cx, cy, curstatus.x, cy, { color: '#0056b3' })
-	// 	drawArrow(c, cx, cy, cx, curstatus.y, { color: '#0056b3' })
-	// }
 
 	function redrawInfo() {
 
 	}
 
 	const DSIZE = 130;
-	function designLFOShape() { 
-		const NPERCYCLE=120;
-		const NCYCLES=12;
+	function designLFOShape() {
+		const NPERCYCLE = 1000;
+		const NCYCLES = 1;
 		const GW = .85;
 		let canvas = $('#lfo-shape-canvas');
 		let w = canvas.width(), h = canvas.height();
@@ -498,9 +635,9 @@ mousepad = (function () {
 		let ctx = canvas[0].getContext('2d');
 		//const SPC = 5;
 		//let bbh = h - SPC * 2;
-		let bb =  rect(w-DSIZE, (h-DSIZE)/2, DSIZE, DSIZE);
+		let bb = rect(w - DSIZE, (h - DSIZE) / 2, DSIZE, DSIZE);
 
-		ctx.strokeStyle="gray";
+		ctx.strokeStyle = "gray";
 
 		ctx.beginPath();
 		ctx.moveTo(bb.left, bb.cy);
@@ -511,46 +648,50 @@ mousepad = (function () {
 		ctx.moveTo(bb.cx, bb.bottom);
 		ctx.lineTo(bb.cx, bb.top);
 		ctx.stroke();
-		
-		ctx.strokeStyle="#007bff";
-		ctx.fillStyle="#007bff";
-		let ph=0, step=Math.PI*2/NPERCYCLE;
-		let shape = $('[par="lfowave"]').val()-0;
-		let deltaph = $('[par="lfodeltaph"]').val()-0;
-		let steps = $('[par="steps"]').val()-0;
 
-		let x = lfowaveX(shape, ph);
-		let y = lfowaveY(shape, ph, deltaph);
+		ctx.strokeStyle = "#007bff";
+		ctx.fillStyle = "#007bff";
+		let ph = 0, step = Math.PI * 2 / NPERCYCLE;
+		let shape = $par("lfowave").val() - 0;
+		let deltaph = $par("lfodeltaph").val() - 0;
+		let steps = $par("steps").val() - 0;
+		let speedmultx = $par("speedmultx").val() - 0;
+		let speedmulty = $par("speedmulty").val() - 0;
 
-		ctx.beginPath();
-		ctx.moveTo(bb.cx+GW*x*DSIZE/2, bb.cy-GW*y*DSIZE/2);
-		for (let i=0; i<NPERCYCLE*NCYCLES; i++) {
+		let x = lfowaveX(shape, ph * speedmultx, deltaph);
+		let y = lfowaveY(shape, ph * speedmulty, deltaph);
+
+		for (let i = 0; i < NPERCYCLE * NCYCLES; i++) {
 			ph += step;
-			let x = lfowaveX(shape, ph);
-			let y = lfowaveY(shape, ph, deltaph);
-			let gx = bb.cx+GW*x*DSIZE/2;
-			let gy = bb.cy-GW*y*DSIZE/2;
-			ctx.lineTo(gx, gy);
+			let x = lfowaveX(shape, ph * speedmultx, deltaph);
+			let y = lfowaveY(shape, ph * speedmulty, deltaph);
+			let gx = bb.cx + GW * x * DSIZE / 2;
+			let gy = bb.cy - GW * y * DSIZE / 2;
+			// ctx.beginPath();
+			// //ctx.moveTo(bb.cx + GW * x * DSIZE / 2, bb.cy - GW * y * DSIZE / 2);
+			// ctx.moveTo(gx, gy);
+			// ctx.lineTo(gx, gy+1);
+			// ctx.stroke();
+			ctx.fillRect(gx, gy, 1, 1);
 		}
-		ctx.stroke();
 
-		if (steps>0) {
+		if (steps > 0) {
 			ph = 0;
-			for(let i=0; i<NCYCLES*steps; i++) {
-				let x = lfowaveX(shape, ph);
-				let y = lfowaveY(shape, ph, deltaph);
-				let gx = bb.cx+GW*x*DSIZE/2;
-				let gy = bb.cy-GW*y*DSIZE/2;
+			for (let i = 0; i < NCYCLES * steps; i++) {
+				let x = lfowaveX(shape, ph * speedmultx, deltaph);
+				let y = lfowaveY(shape, ph * speedmulty, deltaph);
+				let gx = bb.cx + GW * x * DSIZE / 2;
+				let gy = bb.cy - GW * y * DSIZE / 2;
 				ctx.beginPath();
 				ctx.arc(gx, gy, 4, 0, 2 * Math.PI);
 				ctx.fill();
-				ph += 2*Math.PI/steps;
+				ph += 2 * Math.PI / steps;
 			}
 		}
 		//ctx.strokeRect(bb.left, bb.top, bb.width, bb.height);
 	}
 
-	function designLinShape() { 
+	function designLinShape() {
 		const GW = .85;
 		let canvas = $('#lin-shape-canvas');
 		let w = canvas.width(), h = canvas.height();
@@ -558,9 +699,9 @@ mousepad = (function () {
 		canvas[0].height = h;
 		let ctx = canvas[0].getContext('2d');
 		const SPC = 5;
-		let bb =  rect(w-DSIZE, (h-DSIZE)/2, DSIZE, DSIZE);
+		let bb = rect(w - DSIZE, (h - DSIZE) / 2, DSIZE, DSIZE);
 
-		ctx.strokeStyle="gray";
+		ctx.strokeStyle = "gray";
 
 		ctx.beginPath();
 		ctx.moveTo(bb.left, bb.cy);
@@ -571,17 +712,19 @@ mousepad = (function () {
 		ctx.moveTo(bb.cx, bb.bottom);
 		ctx.lineTo(bb.cx, bb.top);
 		ctx.stroke();
-		
-		ctx.strokeStyle="#007bff";
-		ctx.fillStyle="#007bff";
 
-		let sx = linearSpeedRescale($('#x-speed').val()-0);
-		let sy = linearSpeedRescale($('#y-speed').val()-0);
+		ctx.strokeStyle = "#007bff";
+		ctx.fillStyle = "#007bff";
+
+		let vx = $par("speedx").val() - 0;
+		let vy = $par("speedy").val() - 0;
+		let sx = linearSpeedRescale(vx);
+		let sy = linearSpeedRescale(vy);
 		if (waveX)
-			sx = sx/waveX.length;
+			sx = sx / waveX.length;
 		if (waveY)
-			sy = sy/waveY.length;
-		if (sx!=0 || sy!=0) {
+			sy = sy / waveY.length;
+		if (sx != 0 || sy != 0) {
 			let angle = Math.atan2(sy, sx);
 			let x = bb.cx + Math.cos(angle) * GW * DSIZE / 2;
 			let y = bb.cy - Math.sin(angle) * GW * DSIZE / 2;
@@ -591,31 +734,64 @@ mousepad = (function () {
 
 	function showOscStatus(s) {
 		curOscStatus = s;
+		let x, y, lx, ly;
 		let c = canvases.cursor.ctx;
+		let cp = canvases.cursorpoint.ctx;
 		c.clearRect(0, 0, w, w);
+
 		c.lineWidth = 2;
 		c.strokeStyle = '#a00000';
 		c.fillStyle = '#a00000';
 
-		let { left, top, right, bottom, width, height } = space;
-		let x = left + s.posx * width;
-		let y = bottom - s.posy * height;
+		// center area
+		{
+			let { left, top, right, bottom, width, height } = space;
+			x = left + s.posx * width;
+			y = bottom - s.posy * height;
+			const limit01 = v => v < 0 ? v + 1 : (v > 1 ? v - 1 : v);
+			lx = left + limit01(s.posx + s.lfox) * width;
+			ly = bottom - limit01(s.posy + s.lfoy) * height;
 
-		c.beginPath();
-		c.moveTo(x, top);
-		c.lineTo(x, bottom);
-		c.stroke();
-		c.beginPath();
-		c.moveTo(left, y);
-		c.lineTo(right, y);
-		c.stroke();
+			c.beginPath();
+			c.moveTo(x, top);
+			c.lineTo(x, bottom);
+			c.stroke();
+			c.beginPath();
+			c.moveTo(left, y);
+			c.lineTo(right, y);
+			c.stroke();
+		}
 
-		let lx = left + (s.posx + s.lfox) * width;
-		let ly = bottom - (s.posy + s.lfoy) * height;
-		c.beginPath();
-		c.arc(lx, ly, 3, 0, 2 * Math.PI);
-		c.stroke();
-		c.fill();
+		// top band
+		{
+			let { left, top, right, bottom, width, height, cx, cy } = topband;
+			c.beginPath();
+			c.moveTo(lx, cy - height * .3);
+			c.lineTo(lx, cy + height * .3);
+			c.stroke();
+		}
+
+		// left band 
+		{
+			let { left, top, right, bottom, width, height, cx, cy } = leftband;
+			c.beginPath();
+			c.moveTo(cx - width * .3, ly);
+			c.lineTo(cx + width * .3, ly);
+			c.stroke();
+		}
+
+
+		cp.fillStyle = "rgba(0, 0, 0, 0.05)";
+		cp.globalCompositeOperation = "destination-out";
+		cp.fillRect(0, 0, w, w);
+		cp.globalCompositeOperation = "source-over";
+
+		cp.strokeStyle = '#a00000';
+		cp.fillStyle = '#a00000';
+		cp.beginPath();
+		cp.arc(lx, ly, 3, 0, 2 * Math.PI);
+		cp.stroke();
+		cp.fill();
 
 
 
@@ -646,6 +822,7 @@ mousepad = (function () {
 		}
 
 		if (dragging) {
+			let { left, top, right, bottom, width, height } = space;
 			c.save();
 			c.fillStyle = '#0056b3';
 			c.strokeStyle = '#0056b3';
@@ -761,16 +938,32 @@ mousepad = (function () {
 		canvases.info.jc.stop();
 		canvases.info.jc.fadeIn(0);
 		let c = canvases.info.ctx;
-		c.font = '30px sans-serif';
+		c.font = '20px sans-serif';
 		c.fillStyle = '#0056b3';
 		let x = 20 + space.left;
 		let y = 50 + space.top;
 		c.clearRect(0, 0, w, w);
 		for (let line of txt.split('\n')) {
 			c.fillText(line, x, y);
-			y += 50;
+			y += 30;
 		}
+	}
+
+	function clearInfo() {
 		canvases.info.jc.fadeOut(3000, () => canvases.info.jc.stop());
+	}
+	async function initIrSelector() {
+		let irs = await fetch('rev-ir.json').then(r => r.json());
+		let sel = $('[par="revtype"]');
+		let val;
+		for (let i = 0; i < irs.length; i++) {
+			let w = irs[i];
+			w = w.replace('.wav', '');
+			sel.append(`<option value="${w}">${w}</option>`);
+			if (i == 0)
+				val = w;
+		}
+		sel.val(val);
 	}
 
 
@@ -789,10 +982,15 @@ mousepad = (function () {
 		redrawInfo,
 		setWave,
 		setMode,
+		getMode: ()=>mode,
 		showOscStatus,
 		getStatus: () => padStatus,
 		setStatus: x => Object.assign(padStatus, x),
-		designLFOShape,
-		designLinShape
+		updateMotionUI,
+		updateEffectsParams,
+		updateMotionParams,
+		clearInfo,
+		forcePosition,
+
 	}
 })();

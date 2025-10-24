@@ -1,37 +1,60 @@
 //"use strict";
 
-const fftSize = 4096;
+const fftSize = 1024 * 4;
 const overlap = 4;
+
 let audioContext;
 let vocoderWorker;
 let waveX, waveY;
-
+let waveXname, waveYname;
 let oscInStatus = {};
 let oscOutStatus = {};
 let loadPresetDiv, loadXWaveDiv, loadYWaveDiv;
 let vocoderOscillatorNode;
+let reverbSendNode;
+let reverbNode;
+let presetName;
+let isSuspended = true;
+let demoWaves;
+let mergeMode = 'mix';
 
-function amplitudeToDb(amplitude) {
-	if (amplitude <= 0) {
-		return -96; // l'ampiezza nulla corrisponde a -∞ dB
-	}
-	return Math.max(-96, 20 * Math.log10(amplitude));
+const blue = '#007bff', lightGray = '#c0c0c0';
+const wavePrefix = 'waves/';
+
+const wlabel = x => x ? x.replace(/_/g, ' ').replace(/-/g, ' ') : ''
+//const $par = parameterName => $('[par="'+parameterName+'"]');
+function $par(parameterNames, container) {
+	let expList = parameterNames.split(',').map(x => `[par="${x.trim()}"]`);
+	return $(expList.join(','), container);
 }
 
-function dbToAmplitude(db) {
-	return Math.pow(10, db / 20);
+function $parval(name, container) {
+	let ctrl = $(`[par="${name}"]`, container);
+	let v = ctrl.val();
+	if (ctrl.attr('isString') === undefined)
+		return v - 0;
+	else
+		return v;
+}
+
+function log() {
+	let pars = ['main'];
+	for (let i = 0; i < arguments.length; i++) {
+		pars.push(arguments[i]);
+	}
+	console.log(...pars);
+}
+
+// Funzioni per mostrare e nascondere lo spinner
+function spinnerOn() {
+	$('#spinner-overlay').show();
+}
+
+function spinnerOff() {
+	$('#spinner-overlay').hide();
 }
 
 $(function () {
-	function log() {
-		let pars = ['main'];
-		for (let i = 0; i < arguments.length; i++) {
-			pars.push(arguments[i]);
-		}
-		console.log(...pars);
-	}
-
-
 	let oscCreated = Promise.withResolvers();
 	let oscInitialized = Promise.withResolvers();
 	let workerCreated = Promise.withResolvers();
@@ -39,21 +62,21 @@ $(function () {
 
 
 	let amplitudeNode;
-	let reverbNode;
-	let reverbSendNode;
 	let mainOutputNode;
 
 
 	const jsonTerminator = '###\n'
 
 	async function init() {
+
+		demoWaves = await fetch('waves/demoWaves.json').then(r => r.json())
 		await initUI();
-		initWaveSelector();
-		initIrSelector();
+		//initWaveSelector();
 		mousepad.init();
 		await initAudio();
 		onMergeModeChange();
-		await updateReverbIr();
+		mousepad.updateEffectsParams();
+		mousepad.updateMotionParams();
 		initKeys();
 	}
 
@@ -72,37 +95,42 @@ $(function () {
 		});
 
 
-		$('#slider-reverb').on('input', function () {
-			const value = parseFloat($(this).val());
-			if (reverbSendNode) {
-				let gain = value < -95.9 ? 0 : dbToAmplitude(value);
-				reverbSendNode.gain.setTargetAtTime(gain, audioContext.currentTime, 0.01);
-			}
-			$('#reverb-value').text(value.toFixed(0) + ' dB');
-		});
+		// $('#slider-reverb').on('input', function () {
+		// 	const value = parseFloat($(this).val());
+		// 	if (reverbSendNode) {
+		// 		let gain = value < -95.9 ? 0 : dbToAmplitude(value);
+		// 		reverbSendNode.gain.setTargetAtTime(gain, audioContext.currentTime, 0.01);
+		// 	}
+		// 	$('#reverb-value').text(value.toFixed(0) + ' dB');
+		// });
 
 
-		$('.wavename').on('change', function (evt) {
-			let url = $(this).val();
-			let index = $(this).attr('data-index');
-			loadAudio(url, index);
-		});
-		$('#merge-param, #merge-mode').on('change', onMergeModeChange);
-		$('#merge-param').on('input', onMergeModeChange);
+		// $('.wavename').on('change', function (evt) {
+		// 	let url = $(this).val();
+		// 	let index = $(this).attr('data-index');
+		// 	loadAudio(url, index);
+		// });
+		$par("merge-mode,merge-mix,contourResolution").on('change', onMergeModeChange);
+		$par("merge-mix,contourResolution").on('input', onMergeModeChange);
 
 		loadPresetDiv = $('#modal-load-preset').detach();
-		$('#save-preset').on('click', evt => savePreset());
+		$('#save-preset').on('click', function (evt) {
+			evt.stopPropagation();
+			evt.preventDefault();
+			savePreset();
+			return false;
+		});
 		$('#load-preset').on('click', evt => openModal(loadPresetDiv, "Load a preset", null, "Close"));
 		$('#load-preset-button', loadPresetDiv).on('click', async function (evt) {
 			let { name, content } = await loadFile("s25");
 			if (name != null) {
-				let filename = name.split('/').slice(-1)[0];
-				filename = filename.split('.');
-				filename = filename.slice(0, filename.length - 1).join('.');
-				$('#preset-area .name').text(filename);
-				restoreBytes(content);
+				let ok = restoreBytes(content);
+				if (ok) {
+					presetName = getFileName(name);
+					$('#preset-area .name').text(presetName);
+				}
+				mousepad.setMode('drag', true);
 				closeModals();
-
 			}
 		})
 		let presetlist = await fetch('presets/list.json');
@@ -121,19 +149,19 @@ $(function () {
 		});
 		loadXWaveDiv = $('#modal-load-wave').detach();
 		loadYWaveDiv = loadXWaveDiv.clone();
+
 		let wmodals = { x: loadXWaveDiv, y: loadYWaveDiv };
-		let wavelist = await fetch('waves/list.json');
-		wavelist = await wavelist.json();
 		for (let index in wmodals) {
 			let c = wmodals[index];
 			let wContainer = $('#select-wave', c);
-			for (let p of wavelist)
-				$(`<option value="${p.file}">${p.name}</option>`).appendTo(wContainer);
-
+			for (let p of demoWaves) {
+				let { file, name } = p;
+				$(`<option value="${file}">${name}</option>`).appendTo(wContainer);
+			}
 			wContainer.val(null).on('change', async function () {
 				let file = $(this).val();
 				if (file) {
-					let url = `waves/${file}`
+					let url = file.replace('./', wavePrefix);
 					await loadWave(index, url);
 					closeModals();
 				}
@@ -149,22 +177,86 @@ $(function () {
 			openModal(loadYWaveDiv, "Load Y wave", null, "Close");
 		});
 
-		initWaveDragAndDrop('x', $('.load-wave-drag-area', loadXWaveDiv));
-		initWaveDragAndDrop('y', $('.load-wave-drag-area', loadYWaveDiv));
-		initWaveDragAndDrop('x', $('#top-drop-bar'));
-		initWaveDragAndDrop('y', $('#left-drop-bar'));
-		initPresetDragAndDrop($('#load-preset-drag-area', loadPresetDiv));
+		let wx = loadXWaveDiv.add('#top-drop-bar,.file-input.wx');
+		initDragAndDrop(wx, onDropFile, onDropFileContent, 'wavex');
 
+		let wy = loadYWaveDiv.add('#left-drop-bar,.file-input.wy');
+		initDragAndDrop(wy, onDropFile, onDropFileContent, 'wavey');
+
+		// initWaveDragAndDrop('x', $('.load-wave-drag-area', loadXWaveDiv));
+		// initWaveDragAndDrop('y', $('.load-wave-drag-area', loadYWaveDiv));
+		// initWaveDragAndDrop('x', $('#top-drop-bar'));
+		// initWaveDragAndDrop('y', $('#left-drop-bar'));
+
+		let p = loadPresetDiv.add('#preset-area');
+		//initPresetDragAndDrop(p);
+		initDragAndDrop(p, onDropFile, onDropFileContent, 'preset');
+
+		let mmsel = $par("merge-mode");
+		for (let mm of mergeModes) {
+			let [value,label,tx,ty,tm] = mm;
+			$(`<option value="${value}">${label}</option>`).appendTo(mmsel);
+		}
+
+		//$('.help-on-line .content').load('help-ita.html')
+		$('.help-on-line .content').load('help-eng.html')
 	}
 
+	function onDropFile(file, params) {
+		if (params == 'wavex' || params == 'wavey') {
+			if (!file.type.startsWith("audio/")) {
+				alert("Il file non è un audio!");
+				return false;
+			}
+		}
+		spinnerOn();
+	}
+
+	function getFileName(path) {
+		try {
+			let p = path.split('/');
+			p = p[p.length - 1];
+			p = p.split('\\');
+			p = p[p.length - 1];
+			p = p.split('.');
+			p = p.slice(0, p.length - 1).join('.');
+			return p;
+		}
+		catch (e) {
+			console.log(e);
+			return '';
+		}
+	}
+
+	async function onDropFileContent(file, bytes, params) {
+		closeModals();
+		spinnerOn();
+		if (params == 'wavex') {
+			await setWave('x', bytes, getFileName(file.name));
+		}
+		if (params == 'wavey') {
+			spinnerOn();
+			await setWave('y', bytes, getFileName(file.name));
+		}
+		if (params == 'preset') {
+			let ok = restoreBytes(bytes);
+			if (ok) {
+				presetName = getFileName(file.name);
+				$('#preset-area .name').text(presetName);
+				mousepad.setMode('drag', true);
+			}
+		}
+		spinnerOff();
+	}
 	async function loadWave(index, url) {
-		let resp = await fetch(url);
-		let parts = url.split('/');
-		parts = parts[parts.length - 1]
-		parts = parts.split('.');
-		let name = parts.slice(0, parts.length - 1).join('.');
-		let buf = await resp.arrayBuffer();
-		await setWave(index, buf, name);
+		try {
+			spinnerOn();
+			let resp = await fetch(url);
+			let buf = await resp.arrayBuffer();
+			await setWave(index, buf, getFileName(url));
+		} finally {
+			spinnerOff();
+		}
 	}
 
 	function uiMessage(msg) {
@@ -175,7 +267,6 @@ $(function () {
 		}, 2000);
 		$('#status').text(msg);
 	}
-	let isSuspended = true;
 
 	async function initVocoderOscillator() {
 		log('in initVocoderOscillator');
@@ -238,8 +329,10 @@ $(function () {
 
 			uiMessage('AudioContext creato. Inizializzazione worker vocoder...');
 			const lib = initCommon(fftSize, overlap, audioContext.sampleRate);
-			Object.assign(window, lib);		
-	
+			Object.assign(window, lib);
+			mousepad.updateMotionUI();
+
+
 			await initVocoderWorker();
 			await initVocoderOscillator();
 
@@ -249,8 +342,6 @@ $(function () {
 
 			// Reverb
 			reverbNode = audioContext.createConvolver();
-			// loadImpulseResponse("ir/Samplicity - Bricasti IRs version 2023-10, left-right files, 48 Khz/1 Halls 05 Medium & Near, 48K L.wav", reverbNode);
-			updateReverbIr();
 
 			// Reverb Send
 			reverbSendNode = audioContext.createGain();
@@ -271,7 +362,7 @@ $(function () {
 			mainOutputNode.connect(audioContext.destination);
 
 			uiMessage('Pronto. Audio in esecuzione.');
-			$('.wavename').trigger('change');
+			//$('.wavename').trigger('change');
 
 		}
 		catch (e) {
@@ -281,19 +372,21 @@ $(function () {
 		}
 	}
 
-	async function updateReverbIr() {
-		let name = $('#reverb-type').val();
-		let url = 'ir/Samplicity - Bricasti IRs version 2023-10, left-right files, 44.1 Khz/' + name + '.wav';
-		const response = await fetch(url);
-		const arrayBuffer = await response.arrayBuffer();
-		reverbNode.buffer = await audioContext.decodeAudioData(arrayBuffer);
-	}
+	// async function updateReverbIr() {
+	// 	let name = $('#reverb-type').val();
+	// 	let url = 'ir/Samplicity - Bricasti IRs version 2023-10, left-right files, 44.1 Khz/' + name + '.wav';
+	// 	const response = await fetch(url);
+	// 	const arrayBuffer = await response.arrayBuffer();
+	// 	reverbNode.buffer = await audioContext.decodeAudioData(arrayBuffer);
+	// }
 
 	function togglePause() {
 		if (isSuspended) {
 			audioContext.resume();
 			$('#btn-pause-text').text('pause');
 			isSuspended = false;
+			sendAllParameters();
+
 		}
 		else {
 			audioContext.suspend();
@@ -302,6 +395,16 @@ $(function () {
 		}
 	}
 
+	function sendAllParameters() {
+		onMergeModeChange();
+		mousepad.setMode('drag');
+		mousepad.updateEffectsParams();
+		mousepad.updateMotionParams();
+		mousepad.updateMotionUI();
+		mousepad.forcePosition();
+
+	}
+	window.sendAllParameters = sendAllParameters;
 	async function onOscillatorMessage(evt) {
 		//log({ onOscillatorMessage: evt.data.type })
 		let d = evt.data;
@@ -362,24 +465,68 @@ $(function () {
 
 	}
 
+	let drawMeterMax = 0;
 	function drawMeters(data) {
-		drawMeter($('.meter .cx')[0], data.x, data.max);
-		drawMeter($('.meter .cy')[0], data.y, data.max);
-		drawMeter($('.meter .cxy')[0], data.merge, data.max);
+		drawMeterMax = Math.max(data.max,drawMeterMax*.999, .0001);
+		let drawColor = data.cx ? '#c0c0c0': '#007bff';
+		let mode = $par("merge-mode").val();
+		let entry = mergeModes.find(x=>x[0]==mode);
+		let [value,label,tx,ty,tm] = entry;
+
+		if (mode=='xcy') {
+			drawMeter($('.meter .cx')[0], data.x, tx, blue);
+			drawMeter($('.meter .cy')[0], data.y, ty, lightGray);
+			drawMeter($('.meter .cxy')[0], data.m, tm, blue);
+			//drawCountour($('.meter .cx')[0], data.cx, '#007bff');
+			drawCountour($('.meter .cy')[0], data.cy, blue);
+			//drawCountour($('.meter .cxy')[0], data.cm, '#007bff');
+		}
+		else if (mode=='cxy') {
+			drawMeter($('.meter .cx')[0], data.x, tx, lightGray);
+			drawMeter($('.meter .cy')[0], data.y, ty, blue);
+			drawMeter($('.meter .cxy')[0], data.m, tm, blue);
+			drawCountour($('.meter .cx')[0], data.cx, blue);
+			//drawCountour($('.meter .cy')[0], data.cy, '#007bff');
+			//drawCountour($('.meter .cxy')[0], data.cm, '#007bff');			
+		}
+		else {
+			drawMeter($('.meter .cx')[0], data.x, tx, blue);
+			drawMeter($('.meter .cy')[0], data.y, ty, blue);
+			drawMeter($('.meter .cxy')[0], data.m, tm, blue);
+			// drawCountour($('.meter .cx')[0], data.cx, '#007bff');
+			// drawCountour($('.meter .cy')[0], data.cy, '#007bff');
+			// drawCountour($('.meter .cxy')[0], data.cm, '#007bff');
+		}
 	}
 
-	function drawMeter(canvas, data, max) {
+	const toDB = x=> 20 * Math.log10(x);
+	const MINDB = -30
+	;
+	function drawMeter(canvas, data, title, color) {
+
 		let w = canvas.width, h = canvas.height;
 		let ctx = canvas.getContext('2d');
 		ctx.clearRect(0, 0, w, h);
-		ctx.strokeStyle = '#000040';
+		ctx.strokeStyle = color;
+		ctx.fillStyle = color;
 
-		max = 256;
+		ctx.font = "20px Arial";
+		ctx.textAlign = "right";  // allinea a destra rispetto alla x data
+		ctx.textBaseline = "top"; // il punto di riferimento verticale è il top del testo
+
+		ctx.strokeStyle = blue;
+		ctx.fillStyle = blue;
+		ctx.fillText(title, w - 5, 5);
+
+		ctx.strokeStyle = color;
+		ctx.fillStyle = color;
+
+		//max = 256;
+		const gmax = 0;
+		const gmin = MINDB;
 		for (let i = 0; i < data.length; i++) {
-			let ynorm = data[i] / max;
-			//ynorm = Math.max(Math.log(ynorm)*Math.log(.5), 0)
-			let ynormDb = 20 * Math.log10(ynorm);
-			let ypos = Math.max(Math.min(-ynormDb * 3, h), 0);
+			let ynorm = toDB(data[i]/drawMeterMax);
+			let ypos = (1-(ynorm-gmin)/(gmax-gmin)) * h;
 			ctx.beginPath();
 			ctx.moveTo(i, h);
 			ctx.lineTo(i, ypos);
@@ -387,38 +534,53 @@ $(function () {
 		}
 	}
 
-	async function initWaveSelector() {
-		let selectors = [$('.wavename.wx'), $('.wavename.wy')];
-		let waves = await fetch('waves.json').then(r => r.json())
-		for (let sel of selectors) {
-			sel.empty();
-			sel.append(`<option value="">none</option>`);
-			for (let w of waves) {
-				let [pref, name, url] = w;
-				if (name.endsWith('.wav') || name.endsWith('.flac'))
-					sel.append(`<option value="${url}">${pref} ${name}</option>`);
-
-			}
-
+	function drawCountour(canvas, data, color) {
+		if(!data)
+			return;
+		let w = canvas.width, h = canvas.height;
+		let ctx = canvas.getContext('2d');
+		ctx.strokeStyle = color;
+		ctx.fillStyle   = color;
+		//max = 256;
+		const gmax = 0;
+		const gmin = MINDB;
+		ctx.beginPath();
+		for (let i = 0; i < data.length; i++) {
+			let ynorm = toDB(data[i]/drawMeterMax);
+			let ypos = (1-(ynorm-gmin)/(gmax-gmin)) * h;
+			if (i==0)
+				ctx.moveTo(i, ypos);
+			else
+				ctx.lineTo(i, ypos);
 		}
+		ctx.stroke();
+
 	}
+	// async function initWaveSelector() {
+	// 	let selectors = [$('.wavename.wx'), $('.wavename.wy')];
+	// 	for (let sel of selectors) {
+	// 		sel.empty();
+	// 		sel.append(`<option value="">none</option>`);
+	// 		for (let w of demoWaves) {
+	// 			let [pref, name, url] = w;
+	// 			if (name.endsWith('.wav') || name.endsWith('.flac'))
+	// 				sel.append(`<option value="${url}">${pref} ${name}</option>`);
+	// 		}
+	// 	}
+	// }
 
-	async function initIrSelector() {
-		let irs = await fetch('rev-ir.json').then(r => r.json());
-		let sel = $('#reverb-type');
-		let val;
-		for (let i = 0; i < irs.length; i++) {
-			let w = irs[i];
-			w = w.replace('.wav', '');
-			sel.append(`<option value="${w}">${w}</option>`);
-			if (i == 0)
-				val = w;
-		}
-		sel.val(val);
-		sel.on('change', () => updateReverbIr());
+	function randomWave(index) {
+		let w = demoWaves[Math.floor(Math.random() * demoWaves.length)];
+		let { file, name } = w;
+		let url = file.replace('./', wavePrefix);
+		loadWave(index, url);
 	}
 
 	async function setWave(index, arrayBuffer, name) {
+		if (index == 'y')
+			waveYname = name;
+		else
+			waveXname = name;
 		let audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
 		if (audioBuffer.numberOfChannels > 1) {
 			console.warn("L'audio non è mono. Si utilizza solo il primo canale.");
@@ -427,12 +589,12 @@ $(function () {
 		if (index == 'y') {
 			waveY = monoChannelData.slice()
 			mousepad.setWave(index, waveY);
-			$(`.wy .name`).text(name);
+			$(`.wy .name`).text(wlabel(name));
 		}
 		else {
 			waveX = monoChannelData.slice();
 			mousepad.setWave(index, waveX);
-			$(`.wx .name`).text(name);
+			$(`.wx .name`).text(wlabel(name));
 		}
 
 		let payload = {
@@ -441,63 +603,77 @@ $(function () {
 			buffer: monoChannelData.buffer
 		};
 		vocoderWorker.postMessage(payload, [payload.buffer]);
+
 	}
 
-	async function loadAudio(url, index) {
-		if (!audioContext) return;
-		if (!url || url == '') return;
-		uiMessage('Caricamento audio ' + index.toUpperCase() + ' in corso...');
-		try {
-			let lib = 'the-libre-sample-pack/master'
-			let p = url.indexOf(lib);
-			if (p >= 0) {
-				let old = url;
-				url = 'wav/the-libre-sample-pack' + old.substring(p + lib.length);
-				console.log(`url changed from "${old}" to "${url}"`)
-			}
-			const response = await fetch(url);
-			if (!response.ok) throw new Error(`Errore HTTP: ${response.status}`);
-			const arrayBuffer = await response.arrayBuffer();
-			await setWave(index, arrayBuffer);
-			// let audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-			// if (audioBuffer.numberOfChannels > 1) {
-			// 	console.warn("L'audio non è mono. Si utilizza solo il primo canale.");
-			// }
-			// const monoChannelData = audioBuffer.getChannelData(0);
-			// if (index == 'y') {
-			// 	waveY = monoChannelData.slice()
-			// 	mousepad.setWave(index, waveY)
-			// }
-			// else {
-			// 	waveX = monoChannelData.slice();
-			// 	mousepad.setWave(index, waveX);
-			// }
+	// async function loadAudio(url, index) {
+	// 	if (!audioContext) return;
+	// 	if (!url || url == '') return;
+	// 	uiMessage('Caricamento audio ' + index.toUpperCase() + ' in corso...');
+	// 	try {
+	// 		let lib = 'the-libre-sample-pack/master'
+	// 		let p = url.indexOf(lib);
+	// 		if (p >= 0) {
+	// 			let old = url;
+	// 			url = 'wav/the-libre-sample-pack' + old.substring(p + lib.length);
+	// 			console.log(`url changed from "${old}" to "${url}"`)
+	// 		}
+	// 		const response = await fetch(url);
+	// 		if (!response.ok) throw new Error(`Errore HTTP: ${response.status}`);
+	// 		const arrayBuffer = await response.arrayBuffer();
+	// 		await setWave(index, arrayBuffer, url);
+	// 		// let audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+	// 		// if (audioBuffer.numberOfChannels > 1) {
+	// 		// 	console.warn("L'audio non è mono. Si utilizza solo il primo canale.");
+	// 		// }
+	// 		// const monoChannelData = audioBuffer.getChannelData(0);
+	// 		// if (index == 'y') {
+	// 		// 	waveY = monoChannelData.slice()
+	// 		// 	mousepad.setWave(index, waveY)
+	// 		// }
+	// 		// else {
+	// 		// 	waveX = monoChannelData.slice();
+	// 		// 	mousepad.setWave(index, waveX);
+	// 		// }
 
-			// let payload = {
-			// 	type: 'set-wave',
-			// 	index: index,
-			// 	buffer: monoChannelData.buffer
-			// };
-			// vocoderWorker.postMessage(payload, [payload.buffer]);
-		}
-		catch (error) {
-			uiMessage(`Errore nel caricamento dell'audio: ${error.message}`);
-			console.error(error); throw error;
-		}
-	}
-
-
+	// 		// let payload = {
+	// 		// 	type: 'set-wave',
+	// 		// 	index: index,
+	// 		// 	buffer: monoChannelData.buffer
+	// 		// };
+	// 		// vocoderWorker.postMessage(payload, [payload.buffer]);
+	// 	}
+	// 	catch (error) {
+	// 		uiMessage(`Errore nel caricamento dell'audio: ${error.message}`);
+	// 		console.error(error); throw error;
+	// 	}
+	// }
 
 	async function loadPreset(url) {
-		let resp = await fetch(url);
-		let buf = await resp.arrayBuffer();
-		restoreBytes(buf);
+		spinnerOn();
+		try {
+			let resp = await fetch(url);
+			let buf = await resp.arrayBuffer();
+			let ok = restoreBytes(buf);
+			if (ok) {
+				presetName = getFileName(url);
+				$('#preset-area .name').text(presetName);
+				mousepad.setMode('drag');
+			}
+		} finally {
+			spinnerOff();
+		}
 	}
 
 	function onMergeModeChange() {
-		let mode = $('#merge-mode').val();
-		let param = $('#merge-param').val();
-		vocoderWorker.postMessage({ type: 'set-status', data: { mergeMode: mode, mergeMix: param } })
+		mergeMode = $par("merge-mode").val();
+		let mergeMix = $par("merge-mix").val();
+		let contourResolution = $par("contourResolution").val();
+		vocoderWorker.postMessage({ type: 'set-status', data: { mergeMode, mergeMix, contourResolution } });
+		if (mergeMode=='xcy' || mergeMode=='cxy')
+			$('.control-group.res-group').show();
+		else
+			$('.control-group.res-group').hide();
 	}
 
 	function loadFile(acceptedExtensions = null) {
@@ -519,9 +695,11 @@ $(function () {
 					return { name: null, content: null }
 				}
 
+				spinnerOn();
 				const reader = new FileReader();
 				reader.onload = e => {
 					const arrayBuffer = e.target.result;
+					spinnerOff();
 					resolve({
 						name: file.name,
 						content: arrayBuffer
@@ -529,6 +707,7 @@ $(function () {
 					document.body.removeChild(input);
 				};
 				reader.onerror = err => {
+					spinnerOff();
 					reject(err);
 					document.body.removeChild(input);
 				};
@@ -541,79 +720,43 @@ $(function () {
 		});
 	}
 
-	function initWaveDragAndDrop(index, div) {
+	function initDragAndDrop(div, onFile, onFileContent, params) {
+		div.addClass('_drag_initialized_');
 		div.on('dragover', e => {
 			e.preventDefault();
-			div.toggleClass('dragover', true);
-			console.log({ dragover: e })
+			let container = $(e.target).closest('.draggable');
+			container.toggleClass('dragover', true);
+			//console.log({ dragover: e })
 		});
 
 		div.on('dragleave', e => {
 			e.preventDefault();
-			div.toggleClass('dragover', false);
+			let container = $(e.target).closest('.draggable');
+			container.toggleClass('dragover', false);
 		});
-
 
 		div.on('drop', async e => {
 			e.preventDefault();
+			let container = $(e.target).closest('.draggable');
+			container.toggleClass('dragover', false);
 			div.toggleClass('dragover', false);
 
 			const files = e.originalEvent.dataTransfer.files;
 			if (files.length > 0) {
 				const file = files[0];
-				if (!file.type.startsWith("audio/")) {
-					alert("Il file non è un audio!");
-					return;
+				if (onFile) {
+					let ret = onFile(file, params);
+					if (ret === false)
+						return;
 				}
 				const arrayBuffer = await file.arrayBuffer();
-				await setWave(index, arrayBuffer, file.name);
-				closeModals();
-				//const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-				// // Esempio: aggiungo il file al select come nuova opzione
-				// const option = document.createElement('option');
-				// option.textContent = file.name;
-				// option.value = file.name;
-				// select.appendChild(option);
-				// select.value = file.name;
-
-				// // Puoi anche leggere il contenuto del file
-				// const reader = new FileReader();
-				// reader.onload = () => {
-				// 	console.log("Contenuto del file:", reader.result);
-				// };
-				// reader.readAsText(file);
+				if (onFileContent) {
+					let ret = onFileContent(file, arrayBuffer, params);
+					if (ret === false)
+						return;
+				}
 			}
 		})
-	}
-
-
-	function initPresetDragAndDrop(div) {
-
-		div.on('dragover', e => {
-			e.preventDefault();
-			div.toggleClass('dragover', true);
-		});
-
-		div.on('dragleave', e => {
-			e.preventDefault();
-			div.toggleClass('dragover', false);
-		});
-
-
-		div.on('drop', async e => {
-			e.preventDefault();
-			div.toggleClass('dragover', false);
-
-			const files = e.originalEvent.dataTransfer.files;
-			if (files.length > 0) {
-				const file = files[0];
-
-				const arrayBuffer = await file.arrayBuffer();
-				restoreBytes(arrayBuffer);
-			}
-			closeModals();
-		})
-
 	}
 
 
@@ -623,7 +766,7 @@ $(function () {
 		for (let i = 0; i < fileMagic.length; i++) {
 			if (jsonBytes[i] != fileMagic.charCodeAt(i)) {
 				alert('File non valido');
-				return;
+				return false;
 			}
 		}
 		let jsonText = '', terminatorFound = false;
@@ -649,14 +792,20 @@ $(function () {
 		const yBuffer = arrayBuffer.slice(offset, offset + ysize);
 		waveY = new Float32Array(yBuffer);
 		restoreData(json);
+		setTimeout(sendAllParameters, 1);
+
+		return true;
 
 	}
 
 	function restoreData(obj) {
-		mousepad.setWave('x', waveX);
-		$('.wx .wavename').val(obj.xname);
-		mousepad.setWave('y', waveY);
-		$('.wy .wavename').val(obj.yname);
+		if (obj.version && obj.version == 2)
+			return restoreDataV2(obj);
+
+		mousepad.setWave('x', waveX, obj.xname);
+		$('.xwavename').text(wlabel(obj.xname));
+		mousepad.setWave('y', waveY, obj.yname);
+		$('.ywavename').text(wlabel(obj.yname));
 
 		let xpayload = {
 			type: 'set-wave',
@@ -674,22 +823,28 @@ $(function () {
 
 		$('#slider-amp').val(obj.amp).trigger('input');
 		$('#slider-reverb').val(obj.reverb).trigger('input');
-		$('#merge-mode').val(obj.mergeMode).trigger('input');
-		$('#merge-param').val(obj.mergeParam).trigger('input');
-		$('#reverb-type').val(obj.reverbType).trigger('change');
-		$('#traction').val(obj.osc.traction);
-		$('#luminosity').val(obj.pad.lum);
-		$('#contrast').val(obj.pad.contrast);
+		$par("merge-mode").val(obj.mergeMode).trigger('input');
+		$par("merge-mix").val(obj.mergeParam).trigger('input');
 
-		$('[par="lfofreq"]').val(obj.osc.lfofreq);
-		$('[par="lfoxamp"]').val(obj.osc.lfoxamp);
-		$('[par="lfoyamp"]').val(obj.osc.lfoyamp);
-		$('[par="lfodeltaph"]').val(obj.osc.lfodeltaph);
-		$('[par="lfodeltaph"]').val(obj.osc.lfodeltaph);
-		$('[par="lfowave"]').val(obj.osc.lfowave);
-		$('[par="lforatio"]').val(obj.osc.lforatio);
-		$('[par="steps"]').val(obj.osc.steps);
-
+		if (obj.motion) {
+			for (let par in obj.motion) {
+				if (obj.motion[par] !== null) {
+					$par(par).val(obj.motion[par]);
+				}
+			}
+		}
+		if (obj.effect) {
+			for (let par in obj.effect) {
+				if (obj.effect[par] !== null) {
+					if (par == 'delayMode') {
+						$(`[name="delay-mode"]`).prop('checked', false);
+						$(`[name="delay-mode"][value="${obj.effect[par]}"]`).prop('checked', true);
+					} else {
+						$par(par).val(obj.effect[par]);
+					}
+				}
+			}
+		}
 		if (obj.pad) {
 			mousepad.setStatus(obj.pad);
 		}
@@ -698,19 +853,63 @@ $(function () {
 			vocoderWorker.postMessage({ type: 'set-status', data: oscInStatus });
 		}
 		mousepad.redraw();
+		setTimeout(() => function () {
+			$('[par]').trigger('change');
+		});
+
+	}
+
+	function restoreDataV2(obj) {
+		mousepad.setWave('x', waveX, obj.xname);
+		$('.xwavename').text(wlabel(obj.xname));
+		mousepad.setWave('y', waveY, obj.yname);
+		$('.ywavename').text(wlabel(obj.yname));
+
+		let xpayload = {
+			type: 'set-wave',
+			index: 'x',
+			buffer: waveX.buffer
+		};
+		vocoderWorker.postMessage(xpayload);
+
+		let ypayload = {
+			type: 'set-wave',
+			index: 'y',
+			buffer: waveY.buffer
+		};
+		vocoderWorker.postMessage(ypayload);
+
+		let params = $('[par]').toArray();
+		for (let ctrl of params) {
+			let paramName = $(ctrl).attr('par');
+			let v = obj.par[paramName];
+			if (v === undefined)
+				console.log(`nel file manca il parametro "${paramName}"`)
+			else
+				$(ctrl).val('' + v);
+		}
+		mousepad.redraw();
+		setTimeout(() => function () {
+			$('[par]').trigger('change');
+			mousepad.forcePosition();
+		}, 1);
 
 	}
 
 	const fileMagic = '%S25P';
 
 	function savePreset() {
-		const now = new Date();
-		const pad = (num) => String(num).padStart(2, '0');
-		const timestamp = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}_${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}`;
-		let fileName = `preset_${timestamp}`;
-		fileName = prompt('preset name?', fileName);
-		if (!fileName)
-			return;
+		let fileName = presetName;
+		if (!fileName) {
+			const now = new Date();
+			const pad = (num) => String(num).padStart(2, '0');
+			// const timestamp = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}_${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}`;
+			const timestamp = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+			fileName = `preset_${timestamp}`;
+		}
+		// fileName = prompt('preset name?', fileName);
+		// if (!fileName)
+		// 	return;
 
 		let bytes = saveBytes();
 		const fileBlob = new Blob(
@@ -718,34 +917,83 @@ $(function () {
 			{ type: 'application/s25' }
 		);
 
+		let dataURL = URL.createObjectURL(fileBlob);
 		const link = document.createElement('a');
-		link.href = URL.createObjectURL(fileBlob);
+		link.href = dataURL;
+		link.target = "anotherWin";
 		link.download = fileName + '.s25';
 		document.body.appendChild(link);
+		link.addEventListener('click', (e) => {
+			e.stopPropagation();
+		}, { once: true });
+		// setTimeout(()=>{
+		// 	URL.revokeObjectURL(dataURL);
+		// 	document.body.removeChild(link);
+		// },10000)
 		link.click();
-		document.body.removeChild(link);
-		URL.revokeObjectURL(link.href);
 	}
 
 	function saveBytes() {
 		let wx = waveX || new Float32Array(0);
 		let wy = waveY || new Float32Array(0);
+		let xname = $('.xwavename').text();
+		let yname = $('.ywavename').text();
 
 		let d = {
-			amp: $('#slider-amp').val(),
-			reverb: $('#slider-reverb').val(),
-			mergeMode: $('#merge-mode').val(),
-			mergeParam: $('#merge-param').val(),
-			reverbType: $('#reverb-type').val()
-		}
-		Object.assign(d, {
+			version: 2,
 			xlength: wx.length,
-			xname: $('.wx input').val(),
+			xname,
 			ylength: wy.length,
-			yname: $('.wy input').val(),
-		});
-		d.pad = mousepad.getStatus();
-		d.osc = oscInStatus;
+			yname,
+			par: {}
+		}
+
+		// Object.assign(d, {
+		// 	xlength: wx.length,
+		// 	xname,
+		// 	ylength: wy.length,
+		// 	yname
+		// });
+		$('[par]').toArray().forEach(function (p) {
+			p = $(p);
+			let par = p.attr('par');
+			let val = p.val();
+			if (p.attr('isString') !== undefined)
+				d.par[par] = val;
+			else
+				d.par[par] = val - 0;
+		})
+		// let padStatus = mousepad.getStatus();
+		// d.par.targetx = padStatus.mx;
+		// d.par.targety = padStatus.my;
+		// d.motion = {
+		// 	speedx: $('[par="speedx"]').val() - 0,
+		// 	speedy: $('[par="speedy"]').val() - 0,
+		// 	traction: $('[par="traction"]').val() - 0,
+		// 	targetx: padStatus.mx,
+		// 	targety: padStatus.my,
+		// 	lfofreq: $('[par="lfofreq"]').val() - 0,
+		// 	lfoxamp: $('[par="lfoxamp"]').val() - 0,
+		// 	lfoyamp: $('[par="lfoyamp"]').val() - 0,
+		// 	lfodeltaph: $('[par="lfodeltaph"]').val() - 0,
+		// 	lfowave: $('[par="lfowave"]').val() - 0,
+		// 	lforatio: $('[par="lforatio"]').val() - 0,
+		// 	steps: $('[par="steps"]').val() - 0,
+		// 	speedmultx: $('[par="speedmultx"]').val() - 0,
+		// 	speedmulty: $('[par="speedmulty"]').val() - 0,
+		// }
+		// d.effect = {
+		// 	reverb: $('[par="revsend"]').val() - 0,
+		// 	revtype: $('[par="revtype"]').val() - 0,
+		// 	delayMode: $('[name="delay-mode"]:checked').val() - 0,
+		// 	ldelay: $('[par="ldelay"]').val() - 0,
+		// 	rdelay: $('[par="rdelay"]').val() - 0,
+		// 	feedback: $('[par="feedback"]').val() - 0,
+		// 	lopass: $('[par="lopass"]').val() - 0,
+		// 	delmix: $('[par="delmix"]').val() - 0,
+		// }
+		//d.pad = mousepad.getStatus();
+		//d.osc = oscInStatus;
 		let txt = fileMagic + '\n' + JSON.stringify(d, null, 2) + '\n' + jsonTerminator;
 		return concatenateBytes(txt, wx, wy);
 	}
@@ -807,26 +1055,28 @@ $(function () {
 		$(document).on('keydown', evt => {
 			// console.log({ evt: evt.key, c: cnt++ });
 			let c = (evt.key || '').toLowerCase();
-			if (('pdmes').indexOf(c) >= 0)
+			console.log(`key: [${c}]`)
+			if (('[p][d][m][e][s][x][y][#][f1][tab]').indexOf(c) >= 0)
 				evt.preventDefault();
 
-			if (c == 'p') togglePause();
-			//if (c == 'a') mousepad.setMode('amp');
+			if (c == 'p' || c == ' ') togglePause();
 			if (c == 'd') mousepad.setMode('drag');
-			if (c == 's') mousepad.setMode('settings');
+			// if (c == 's') mousepad.setMode('settings');
 			if (c == 'e') mousepad.setMode('effects');
 			if (c == 'm') mousepad.setMode('motion');
+			if (c == 'f1') mousepad.setMode('help');
+			if (c == 'x' && evt.altKey) randomWave('x');
+			if (c == 'y' && evt.altKey) randomWave('y');
+			if (c=='tab') {
+				const nextmode = { drag:'motion', motion:'effects', effects:'help', help: 'drag' };
+				mousepad.setMode(nextmode[mousepad.getMode()]);
+			}
 		});
 	}
 	$(() => init());
 
 	window.setpar = function (data) {
 		vocoderWorker.postMessage({ type: 'set-status', data })
-	}
-
-
-	window.vel = function (speedx, speedy) {
-		setpar({ speedx, speedy });
 	}
 
 

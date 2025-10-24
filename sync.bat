@@ -1,1 +1,0 @@
-aws s3 sync . s3://summer2025/beta  --profile paolo --exclude ".git/*" --exclude "old/*" --exclude ".vscode/*"
