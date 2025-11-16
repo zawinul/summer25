@@ -37,7 +37,7 @@ let inparams = {
 
 	lfowave: LFOWAVE_SINE,
 	lfodeltaph: 0,
-	
+
 	// contourBands:120, 
 	// contourSmooth: 5,
 	contourResolution: .5,
@@ -106,6 +106,7 @@ async function init() {
 }
 
 function incrementPosition() {
+	let enabled = inparams['enable-linear'] === undefined || inparams['enable-linear'];
 	outparams.maxdist = tractionRescale(inparams.traction);
 
 	if (inparams.dragging) {
@@ -125,7 +126,7 @@ function incrementPosition() {
 		outparams.posx = clip(outparams.posx + dx, 0, 1);
 		outparams.posy = clip(outparams.posy + dy, 0, 1);
 	}
-	else {
+	else if (enabled) {
 		let incx = linearSpeedRescale(inparams.speedx);
 		let incy = linearSpeedRescale(inparams.speedy);
 		outparams.incx = waveX ? incx * (fftSize / overlap) / waveX.len : 0;
@@ -137,14 +138,18 @@ function incrementPosition() {
 		if (outparams.posx >= 1) outparams.posx -= 1;
 		if (outparams.posy < 0) outparams.posy += 1;
 		if (outparams.posy >= 1) outparams.posy -= 1;
-
 	}
 
-	computeLfo();
 }
 
 let ph = 0;
 function computeLfo() {
+	let enabled = inparams['enable-cyclic'] === undefined || inparams['enable-cyclic'];
+	if (!enabled) {
+		outparams.lfox = 0;
+		outparams.lfoy = 0;
+		return;
+	}
 	let spedhz = outparams.lfoHz = lfoSpeedRescale(inparams.lfofreq);
 	let period = hopSize / sampleRate;
 	let lfospeed = spedhz * period * 2 * Math.PI;
@@ -166,29 +171,28 @@ function computeLfo() {
 
 
 function getGraphData(size, data) {
-	let ret = { max: 0 };
+	let ret = getGraphData.ret;
+	let pos = getGraphData.pos;
 	for (let key in data)
-		ret[key] = new Float32Array(size);
-	ret.max = 0;
-	// 	x: new Float32Array(size),
-	// 	y: new Float32Array(size),
-	// 	merge: new Float32Array(size),
-	// 	max: 0
-	// }
+		ret[key] = ret[key] || new Float32Array(size);
+
 	for (let key in data) {
 		let src = data[key];
-		let dst = ret[key] = new Float32Array(size).fill(0);
-
-		for (let j = 0; j < src.length; j++) {
-			let pos = Math.round(j * size / src.length);
-			let v = dst[pos] = Math.max(dst[pos], src[j]);
-			if (v > ret.max)
-				ret.max = v;
+		let dst = ret[key];
+		dst.fill(0);
+		if (src) {
+			for (let j = 1; j < src.length; j++) {
+				let p = pos[j];
+				if (p === undefined)
+					p = pos[j] = Math.round(Math.exp(Math.log(size) * Math.log(j) / Math.log(src.length)));
+				let v = dst[p] = Math.max(dst[p], src[j]);
+			}
 		}
 	}
 	return ret;
 }
-getGraphData.filteredMax = 0;
+getGraphData.ret = {};
+getGraphData.pos = [];
 
 let frameX, frameY, mergedFrame;
 function fillNextFrame(memory) {
@@ -220,7 +224,7 @@ function fillNextFrame(memory) {
 }
 
 let accx;
-let accy; 
+let accy;
 let cx, cy, cm;
 let drawData;
 const clip = (v, min, max) => Math.min(Math.max(v, min), max);
@@ -255,13 +259,26 @@ function mergeFrame(frame1, frame2) {
 
 	if (mode == 'cxy' || mode == 'xcy') {
 		//let contourBands = Math.round(Math.pow(fftSize/2, inparams.contourResolution));
-		let contourSmooth = 5;	
+		let contourSmooth = 5;
 		cx = calcolaProfiloSpettrale(frame1.magnitudes, inparams.contourResolution);
 		cy = calcolaProfiloSpettrale(frame2.magnitudes, inparams.contourResolution);
 		if (!cm)
 			cm = new Float32Array(cx.length);
-		for(let i=0;i<cx.length;i++)
-			cm[i] = cx[i]<.00001 ? 0 : cx[i]*Math.pow(cy[i]/cx[i],inparams.mergeMix);
+		let mult;
+		if (mode == 'xcy') {
+			for (let i = 0; i < cx.length; i++) {
+				mult = cx[i] < .00001 ? 0 : Math.pow(cy[i] / cx[i], inparams.mergeMix);
+				if (mult>1) mult = Math.pow(mult, .5);
+				cm[i] = cx[i] * mult;
+			}
+		}
+		else  {
+			for (let i = 0; i < cx.length; i++) {
+				mult = cy[i] < .00001 ? 0 : Math.pow(cx[i] / cy[i], 1-inparams.mergeMix);
+				if (mult>1) mult = Math.pow(mult, .5);
+				cm[i] = cy[i] * mult;
+			}
+		}
 		drawData.cx = cx;
 		drawData.cy = cy;
 		drawData.cm = cm;
@@ -312,16 +329,10 @@ function mergeFrame(frame1, frame2) {
 			magnitudes[i] = Math.pow(m1, 1 - inparams.mergeMix) * Math.pow(m2, inparams.mergeMix);
 		}
 		else if (mode == 'xcy') {
-			// let fact = cx[i] > 0 ? cy[i] / cx[i] : 1;
-			// //fact = Math.min(fact, 1);
-			// magnitudes[i] = m1 * Math.pow(fact, inparams.mergeMix);
-			magnitudes[i] = cx[i]<.00001 ? 0 : m1 * Math.min(cm[i]/cx[i], 3);
+			magnitudes[i] = cx[i] < .00001 ? m1 : m1 * cm[i] / cx[i];
 		}
 		else if (mode == 'cxy') {
-			// let fact = cy[i] > 0 ? cx[i] / cy[i] : 1;
-			//fact = Math.min(fact,1);
-			//magnitudes[i] = m2 * Math.pow(fact, 1 - inparams.mergeMix);
-			magnitudes[i] = cy[i]<.00001 ? 0 : m2 * Math.min(cm[i]/cy[i], 3);
+			magnitudes[i] = cy[i] < .00001 ? m2 : m2 * cm[i] / cy[i];
 		}
 		// else if (mode == 'xcy') {
 		// 	let fact = cy[i];
@@ -501,6 +512,11 @@ self.onmessage = async function (event) {
 			else
 				inparams[k] = d.data[k];
 		}
+		if (inparams.forcepos) {
+			outparams.posx = inparams.targetx;
+			outparams.posy = inparams.targety;
+
+		}
 	}
 
 
@@ -526,6 +542,7 @@ self.onmessage = async function (event) {
 		const t0 = now();
 		try {
 			incrementPosition();
+			computeLfo();
 			fillNextFrame(outBuffer);
 			//outparams.elapsed = now() - t0;
 		} catch (error) {

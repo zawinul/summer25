@@ -1,5 +1,7 @@
 <head>
     <script>
-        location.href='beta/index.html'
+        let url = new URL(window.location.href);
+        url.pathname = "/beta/index.html"
+        location.href = url.toString();
     </script>
 </head>

@@ -9,7 +9,6 @@ mousepad = (function () {
 	let w;
 	let mousex, mousey;
 	let dragging = false;
-
 	let canvases = {
 		wave: { class: 'wave', zIndex: 100 },
 		wavebar: { class: 'wavebar', zIndex: 100 },
@@ -54,7 +53,7 @@ mousepad = (function () {
 		if (!_mode)
 			return;
 
-		if (_mode == 'drag' && !isSuspended) {
+		if (_mode == 'drag' && !isSuspended && !player) {
 			if (showInfoCount++ < 5)
 				showInfo(dragInfo, true);
 		}
@@ -63,7 +62,7 @@ mousepad = (function () {
 
 		if (mode == _mode)
 			return;
-		
+
 		mode = curstatus.mode = _mode;
 		$('body').attr('mode', mode);
 
@@ -96,6 +95,7 @@ mousepad = (function () {
 		control: false,
 		alt: false,
 		meta: false,
+		inputType: 'mouse'
 	}
 
 	const savestatus = () => Object.assign(oldstatus, curstatus);
@@ -135,7 +135,13 @@ mousepad = (function () {
 			}
 		});
 
-		$(document).on("mousemove mousedown mouseup click", function (evt) {
+		$(document).on("mousemove mousedown mouseup click pointerdown pointermove pointercancel pointerup pointerout", function (evt) {
+			// console.log(`Mouse or pointer event: ${evt.type}`);
+			if (player && !presetListPage && mode=='drag') {
+				evt.preventDefault();
+				evt.stopPropagation();
+			}
+
 			let where = 'out';
 			let canvas = canvases.wave.jc;
 			if (!canvas)
@@ -158,9 +164,38 @@ mousepad = (function () {
 			curstatus.alt = evt.altKey;
 			curstatus.control = evt.ctrlKey;
 			curstatus.meta = evt.metaKey;
+			curstatus.pointerType = 'mouse';
 			checkStatusChange();
 		});
 
+		// $(document).on("pointerdown pointermove pointerup", function (evt) {
+		// 	evt.preventDefault();
+		// 	let where = 'out';
+		// 	let canvas = canvases.wave.jc;
+		// 	if (!canvas)
+		// 		return;
+		// 	let x = mousex = evt.clientX - canvas.offset().left;
+		// 	let y = mousey = evt.clientY - canvas.offset().top;
+		// 	if (leftband.contains(x, y))
+		// 		where = 'left';
+		// 	else if (topband.contains(x, y))
+		// 		where = 'top';
+		// 	else if (space.contains(x, y))
+		// 		where = 'in';
+
+		// 	// curstatus.left = (evt.buttons & 1) == 1;// || (evt.type == 'click') || (evt.type == 'mousedown');
+		// 	// curstatus.right = (evt.buttons & 2) == 2;
+		// 	curstatus.x = x;
+		// 	curstatus.y = y;
+		// 	curstatus.where = where;
+		// 	curstatus.shift = evt.shiftKey;
+		// 	curstatus.alt = evt.altKey;
+		// 	curstatus.control = evt.ctrlKey;
+		// 	curstatus.meta = evt.metaKey;
+		// 	curstatus.pointerType = evt.pointerType;
+		// 	//console.log(`Pointer event: ${evt.type}, type=${evt.pointerType}`, curstatus);
+		// 	checkStatusChange();
+		// })
 
 		$('.padmode').on('click', function () {
 			let mode = $(this).attr('data-mode');
@@ -194,7 +229,8 @@ mousepad = (function () {
 
 		$('.motion-controls [par]').on('input change', function (evt) {
 			let par = $(this).attr('par');
-			let val = $(this).val();
+			//let val = $(this).val();
+			let val = $parval(par);
 			// console.log(`set ${par}=${val}`);
 			let data = {};
 			data[par] = val;
@@ -210,7 +246,16 @@ mousepad = (function () {
 		$('[name="delay-mode"]').on('click', function (evt) {
 			let delayMode = $('[name="delay-mode"]:checked').val();
 			$par('delay-mode').val(delayMode).trigger('change');
-		})
+		});
+
+		$('.enable-feature').on('click', function (evt) {
+			let t = this;
+			setTimeout(function(){
+				let val = t.checked;
+				let dest = $(t).attr('dest');
+				$par(dest).val(val+'').trigger('change');
+			},10);
+		});
 
 	}
 
@@ -226,9 +271,9 @@ mousepad = (function () {
 	}
 
 	function updateMotionParams() {
-		let params = $('.motion-controls [par]').toArray().map(x=>$(x).attr('par'));
+		let params = $('.motion-controls [par]').toArray().map(x => $(x).attr('par'));
 		let data = {};
-		for(let par of params) {
+		for (let par of params) {
 			let val = $parval(par);
 			data[par] = val;
 		}
@@ -269,20 +314,15 @@ mousepad = (function () {
 	}
 
 
+	function setTarget(targetX, targetY) {
+		curstatus.x = space.left +targetX * space.width;
+		curstatus.y = space.bottom -targetY * space.height;
+		forcePosition();
+	}
+
 	function update(force) {
 		let mode = curstatus.mode;
 
-		//$('.canvas-container').css('background-color', modes[mode].bgcolor);
-
-		// if (mode == 'drag' && curstatus.shift) {
-		// 	setMode('speed');
-		// 	return;
-		// }
-		// if (mode == 'speed' && !curstatus.shift) {
-		// 	setMode('pos');
-		// 	return;
-		// }
-		
 		if (dragging) {
 			let targetx = (curstatus.x - space.left) / space.width;
 			let targety = -(curstatus.y - space.bottom) / space.height;
@@ -302,7 +342,8 @@ mousepad = (function () {
 				// if (curstatus.alt) {
 				// 	setMode('effects_temp');
 				// }
-				if (curstatus.left && !curstatus.shift) {
+				let act = curstatus.left || (curstatus.inputType == 'touch');
+				if (act && !curstatus.shift) {
 					dragging = true;
 					let targetx = (curstatus.x - space.left) / space.width;
 					let targety = -(curstatus.y - space.bottom) / space.height;
@@ -333,8 +374,8 @@ mousepad = (function () {
 	function forcePosition() {
 		let targetx = $parval('targetx');
 		let targety = $parval('targety');
-		vocoderWorker.postMessage({ type: 'set-status', data: { targetx, targety, dragging: true, forcepos:true } })
-		setTimeout(()=>vocoderWorker.postMessage({ type: 'set-status', data: { dragging: false, forcepos:false } }), 10)
+		vocoderWorker.postMessage({ type: 'set-status', data: { targetx, targety, dragging: true, forcepos: true } })
+		setTimeout(() => vocoderWorker.postMessage({ type: 'set-status', data: { dragging: false, forcepos: false } }), 2)
 	}
 
 	function debounce(func, timeout = 300) {
@@ -374,23 +415,42 @@ mousepad = (function () {
 	}
 
 	function reposition() {
-		let mousepadSpace = $('.pad-area');
-		let container = $('.canvas-container');
-		w = Math.min(mousepadSpace.width(), mousepadSpace.height()) - 5;
-		let left = (mousepadSpace.width() - w) / 2;
-		let top = (mousepadSpace.height() - w) / 2;
-		top = 0;
-		$('canvas.dynamic', container).remove();
+		let wh = window.outerHeight, ww = window.outerWidth;
+		let left, top;
+		let outer = $('.pad-area');
+		let inner = $('.canvas-container');
+		if (vertical) {
+			w = ww;
+			left = 0;
+			top = 0;
+		}
+		else {
+			w = Math.min(outer.width(), outer.height());
+			left = (outer.width() - w) / 2;
+			top = (outer.height() - w) / 2;
+		}
 
+		$('canvas.dynamic', inner).remove();
+
+		// $('.btn-fullscreen').css({ width: BANDW - 8, height: BANDW - 8 });
 		topband = rect(BANDW, 0, w - BANDW, BANDW);
 		leftband = rect(0, BANDW, BANDW, w - BANDW);
 		space = rect(BANDW, BANDW, w - BANDW, w - BANDW);
-		container.css({
+		inner.css({
 			left: left,
 			top: top,
 			width: w,
 			height: w
-		})
+		});
+		if (vertical)
+			outer.css({
+				left: left,
+				top: top,
+				width: w,
+				height: w,
+				minHeight: w
+			});
+
 
 		$('#top-drop-bar').css({ top: topband.top, left: topband.left, width: topband.width, height: topband.height });
 		$('#left-drop-bar').css({ top: leftband.top, left: leftband.left, width: leftband.width, height: leftband.height });
@@ -403,7 +463,7 @@ mousepad = (function () {
 				class="mousepad hideable" 
 				width="${w}" height="${w}" 
 				style="z-index:${desc.zIndex}"></canvas>`)
-				.appendTo(container)
+				.appendTo(inner)
 				.addClass('dynamic')
 				.addClass(desc.class);
 			desc.jc = jc;
@@ -569,18 +629,30 @@ mousepad = (function () {
 
 	function updateEffectsParams() {
 
-		const revSendGain = $('[par="revsend"]').val() - 0;
-		if (reverbSendNode) {
-			let gain = revSendGain <= -35.5 ? 0 : dbToAmplitude(revSendGain);
-			reverbSendNode.gain.setTargetAtTime(gain, audioContext.currentTime, 0.01);
-		}
+		const revSendGain = $parval("revsend");
+		let gain = revSendGain <= -35.5 ? 0 : dbToAmplitude(revSendGain);
+		if (!$parval('enable-reverb'))
+			gain = 0;
+		console.log({ dry: 1 - gain, wet: gain })
+		if (reverbWetNode)
+			reverbWetNode.gain.setTargetAtTime(gain, audioContext.currentTime, 0.01);
+		if (reverbDryNode)
+			reverbDryNode.gain.setTargetAtTime(1 - gain, audioContext.currentTime, 0.01);
+		// if (reverbSendNode) {
+		// 	let gain = revSendGain <= -35.5 ? 0 : dbToAmplitude(revSendGain);
+		// 	reverbSendNode.gain.setTargetAtTime(gain, audioContext.currentTime, 0.01);
+		// }
 		$('#reverb-value').text(revSendGain <= -35.5 ? '-' : revSendGain.toFixed(0) + ' dB');
 
 		async function loadIR(revTypeName) {
-			let url = 'ir/Samplicity - Bricasti IRs version 2023-10, left-right files, 44.1 Khz/' + revTypeName + '.wav';
-			const response = await fetch(url);
-			const arrayBuffer = await response.arrayBuffer();
-			reverbNode.buffer = await audioContext.decodeAudioData(arrayBuffer);
+			let leftURL = 'ir/48k-lr/' + revTypeName + ', 48K L.wav';
+			let rightURL = 'ir/48k-lr/' + revTypeName + ', 48K R.wav';
+			const lefrResponse = await fetch(leftURL);
+			const leftArrayBuffer = await lefrResponse.arrayBuffer();
+			const rightResponse = await fetch(rightURL);
+			const rightArrayBuffer = await rightResponse.arrayBuffer();
+			reverbLeftNode.buffer = await audioContext.decodeAudioData(leftArrayBuffer);
+			reverbRightNode.buffer = await audioContext.decodeAudioData(rightArrayBuffer);
 		}
 
 		let revTypeName = $('[par="revtype"]').val();
@@ -593,12 +665,14 @@ mousepad = (function () {
 
 		//[name="delay-mode"], #left-delay, #right-delay, #delay-feedback, #delay-lopass, #delay-mix'
 		let delayMode = $par('delay-mode').val();
-		let ldelay = delayLengthRescale($('[par="ldelay"]').val() - 0);
-		let rdelay = delayLengthRescale($('[par="rdelay"]').val() - 0);
-		let feedback = $('[par="feedback"]').val() - 0;
-		let lopass = $('[par="lopass"]').val() - 0;
-		let mix = $('[par="delmix"]').val() - 0;
-
+		let ldelay = delayLengthRescale($parval("ldelay"));
+		let rdelay = delayLengthRescale($parval("rdelay"));
+		let feedback = $parval("feedback");
+		let lopass = $parval("lopass");
+		let mix = $parval("delmix");
+		if (!$parval("enable-delay")) 
+			mix = 0;
+		
 		$('#left-delay-value').text(ldelay.toFixed(3) + ' ms');
 		$('#right-delay-value').text(rdelay.toFixed(3) + ' ms');
 		$('#delay-feedback-value').text(feedback.toFixed(3) + ' %');
@@ -794,8 +868,8 @@ mousepad = (function () {
 		cp.fill();
 
 
-
-		if (!dragging && waves.x.data && waves.y.data) {
+		let lin = $parval('enable-linear');
+		if (lin && !dragging && waves.x.data && waves.y.data) {
 			let gfx = waves.x.data ? oscOutStatus.incx / waves.x.data.length : -1;
 			let gfy = waves.y.data ? -oscOutStatus.incy / waves.y.data.length : -1;
 			let angle = Math.atan2(gfy, gfx);
@@ -952,19 +1026,44 @@ mousepad = (function () {
 	function clearInfo() {
 		canvases.info.jc.fadeOut(3000, () => canvases.info.jc.stop());
 	}
+
 	async function initIrSelector() {
-		let irs = await fetch('rev-ir.json').then(r => r.json());
+		let irs = await fetch('rev-ir-lr.json').then(r => r.json());
 		let sel = $('[par="revtype"]');
-		let val;
 		for (let i = 0; i < irs.length; i++) {
-			let w = irs[i];
-			w = w.replace('.wav', '');
-			sel.append(`<option value="${w}">${w}</option>`);
-			if (i == 0)
-				val = w;
+			sel.append(`<option value="${irs[i]}">${irs[i]}</option>`);
 		}
-		sel.val(val);
+		sel.val(irs[0]);
 	}
+
+
+	function setFullscreen(value) {
+		reposition();
+	}
+
+	// function onAnyPointerEvent(e) {
+	// 	if (e.type.startsWith('pointer')) {
+	// 		console.log(`Pointer event: ${e.type}, type=${e.pointerType}`, e);
+	// 	}
+
+	// }
+
+	// window.addEventListener('pointerdown', onAnyPointerEvent);
+	// window.addEventListener('pointermove', onAnyPointerEvent);
+	// window.addEventListener('pointerup', onAnyPointerEvent);
+	// window.addEventListener('pointercancel', onAnyPointerEvent);
+	// window.addEventListener('pointerenter', onAnyPointerEvent);
+	// window.addEventListener('pointerleave', onAnyPointerEvent);
+	// window.addEventListener('pointerover', onAnyPointerEvent);
+	// window.addEventListener('pointerout', onAnyPointerEvent);
+
+
+
+
+
+
+
+
 
 
 
@@ -982,7 +1081,7 @@ mousepad = (function () {
 		redrawInfo,
 		setWave,
 		setMode,
-		getMode: ()=>mode,
+		getMode: () => mode,
 		showOscStatus,
 		getStatus: () => padStatus,
 		setStatus: x => Object.assign(padStatus, x),
@@ -991,6 +1090,8 @@ mousepad = (function () {
 		updateMotionParams,
 		clearInfo,
 		forcePosition,
+		setFullscreen,
+		setTarget
 
 	}
 })();

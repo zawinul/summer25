@@ -12,6 +12,7 @@ const twoPi = 2 * Math.PI;
 
 const mergeModes = [
 	["mix", "X + Y", "X", "Y", "X+Y"],
+	["diff", "|X - Y|", "X", "Y", "|X-Y|"],
 	["min", "min(X,Y)", "X", "Y", "min(X,Y)"],
 	["max", "max(X,Y)", "X", "Y", "max(X,Y)"],
 	["dxmix", "ΔX + Y", "ΔX", "Y", "ΔX+Y"],

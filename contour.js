@@ -39,10 +39,12 @@ function calcolaProfiloSpettrale(fftMagnitudes, resolution) {
             currstop++;
             left=stops[currstop];
             right=stops[currstop+1];
-            yleft=avg[currstop]
-            yright=avg[currstop+1];
+            // yleft=avg[currstop]
+            // yright=avg[currstop+1];
             yleft=max[currstop]
             yright=max[currstop+1];
+            // yleft= (max[currstop] + avg[currstop]) / 2;
+            // yright= (max[currstop+1] + avg[currstop+1]) / 2;
         }
         let y = yleft + (yright - yleft) * (i - left) / (right - left);
         ret[i] = y;

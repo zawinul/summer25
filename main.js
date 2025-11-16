@@ -11,14 +11,20 @@ let oscInStatus = {};
 let oscOutStatus = {};
 let loadPresetDiv, loadXWaveDiv, loadYWaveDiv;
 let vocoderOscillatorNode;
-let reverbSendNode;
-let reverbNode;
+// let reverbSendNode;
+let reverbLeftNode, reverbRightNode;
+let reverbWetNode, reverbDryNode;
 let presetName;
 let isSuspended = true;
 let demoWaves;
 let mergeMode = 'mix';
+// let fullscreen = false;
+let player = false;
+let vertical = window.innerHeight > window.innerWidth;
+let presetListPage = false;
+let recorder;
 
-const blue = '#007bff', lightGray = '#c0c0c0';
+const blue = '#007bff', lightGray = '#c0c0c0', darkGray = '#606060';
 const wavePrefix = 'waves/';
 
 const wlabel = x => x ? x.replace(/_/g, ' ').replace(/-/g, ' ') : ''
@@ -31,10 +37,13 @@ function $par(parameterNames, container) {
 function $parval(name, container) {
 	let ctrl = $(`[par="${name}"]`, container);
 	let v = ctrl.val();
-	if (ctrl.attr('isString') === undefined)
-		return v - 0;
-	else
+	if (ctrl.attr('isString') !== undefined)
 		return v;
+	if (ctrl.attr('isBoolean') !== undefined)
+		return (v == '1' || v == 'true');
+
+	// is Number
+	return v - 0;
 }
 
 function log() {
@@ -54,6 +63,26 @@ function spinnerOff() {
 	$('#spinner-overlay').hide();
 }
 
+// function setFullscreen(value) {
+// 	fullscreen = value;
+// 	// if (fullscreen)
+// 	// 	document.documentElement.requestFullscreen();
+// 	// else
+// 	// 	document.exitFullscreen();
+// 	$('body').toggleClass('fullscreen', value);
+// 	setTimeout(() => mousepad.setFullscreen(value), 10);
+// }
+
+function getUrlParams() {
+	let p = {}
+	let urlParams = new URLSearchParams(window.location.search);
+	for (let param of urlParams.entries()) {
+		p[param[0]] = param[1];
+	}
+	return p;
+}
+const urlParams = getUrlParams();
+
 $(function () {
 	let oscCreated = Promise.withResolvers();
 	let oscInitialized = Promise.withResolvers();
@@ -61,8 +90,8 @@ $(function () {
 	let workerInitialized = Promise.withResolvers();
 
 
-	let amplitudeNode;
-	let mainOutputNode;
+	let reverbDryNode;
+	let masterGainNode;
 
 
 	const jsonTerminator = '###\n'
@@ -77,20 +106,19 @@ $(function () {
 		onMergeModeChange();
 		mousepad.updateEffectsParams();
 		mousepad.updateMotionParams();
+		// $('.btn-fullscreen.fs-open').on('click', () => setFullscreen(true));
+		// $('.btn-fullscreen.fs-close').on('click', () => setFullscreen(false));
+
 		initKeys();
 	}
 
 	async function initUI() {
 		$('#btn-pause').on('click', togglePause);
-		$('#slider-amp').on('input', function () {
+		$par('amp').on('input', function () {
 			const value = parseFloat($(this).val());
-			// if (amplitudeNode) {
-			// 	// Usiamo setTargetAtTime per un cambio di volume più morbido
-			// 	amplitudeNode.gain.setTargetAtTime(value, audioContext.currentTime, 0.01);
-			// }
 			let amp = dbToAmplitude(value);
-			vocoderWorker.postMessage({ type: 'set-status', data: { scale: amp } });
-
+			//vocoderWorker.postMessage({ type: 'set-status', data: { scale: amp } });
+			masterGainNode.gain.setTargetAtTime(amp, audioContext.currentTime, 0.01);
 			$('#amp-value').text(value.toFixed(1) + ' dB');
 		});
 
@@ -142,6 +170,7 @@ $(function () {
 		listContainer.val(null).on('change', async function () {
 			let file = $(this).val();
 			if (file) {
+
 				let url = `presets/${file}.s25`
 				await loadPreset(url);
 				closeModals();
@@ -194,12 +223,38 @@ $(function () {
 
 		let mmsel = $par("merge-mode");
 		for (let mm of mergeModes) {
-			let [value,label,tx,ty,tm] = mm;
+			let [value, label, tx, ty, tm] = mm;
 			$(`<option value="${value}">${label}</option>`).appendTo(mmsel);
 		}
 
-		//$('.help-on-line .content').load('help-ita.html')
-		$('.help-on-line .content').load('help-eng.html')
+		//$('.help-on-line .content').load('help/help-ita.html')
+		$('.help-on-line .content').load('help/help-eng.html');
+		// if (urlParams.fullscreen != undefined)
+		// 	setTimeout(()=>setFullscreen(true), 500);
+		if (urlParams.player != undefined) {
+			$('body').addClass('player');
+			player = true;
+		}
+		onResize();
+		if (urlParams.preset) {
+			async function f() {
+				await new Promise(resolve => setTimeout(resolve, 500));
+				await loadPresetByName(urlParams.preset);
+				await new Promise(resolve => setTimeout(resolve, 500));
+				if (urlParams.autoplay != undefined)
+					togglePause();
+			};
+			f(); // no await
+		}
+		if (urlParams.presetlist != undefined || (urlParams.player != undefined && urlParams.preset === undefined))
+			showPresetList();
+
+		$('#btn-rec').on('click', function (evt) {
+			let on = recorder.isRecording();
+			on = !on;
+			recorder.setRecording(on)
+			$('body').toggleClass('recording', on);
+		});
 	}
 
 	function onDropFile(file, params) {
@@ -271,6 +326,7 @@ $(function () {
 	async function initVocoderOscillator() {
 		log('in initVocoderOscillator');
 		await audioContext.audioWorklet.addModule('vocoder-osc.worklet.js');
+
 		vocoderOscillatorNode = new AudioWorkletNode(audioContext, 'phase-vocoder-processor', {
 			numberOfOutputs: 1,
 			outputChannelCount: [2] // <--- 
@@ -318,8 +374,6 @@ $(function () {
 		log('Worker vocoder inizializzato');
 	}
 
-
-
 	async function initAudio() {
 		if (audioContext) return;
 
@@ -336,30 +390,46 @@ $(function () {
 			await initVocoderWorker();
 			await initVocoderOscillator();
 
-			// Ampli
-			amplitudeNode = audioContext.createGain();
-			amplitudeNode.gain.value = 1;
-
-			// Reverb
-			reverbNode = audioContext.createConvolver();
 
 			// Reverb Send
-			reverbSendNode = audioContext.createGain();
-			reverbSendNode.gain.value = 0;
+			// reverbSendNode = audioContext.createGain();
+			// vocoderOscillatorNode.connect(reverbSendNode);
+			// reverbSendNode.gain.value = 1;
+
+			// Reverb
+			const reverbSplitter = audioContext.createChannelSplitter(2);
+			//reverbSendNode.connect(reverbSplitter);
+			vocoderOscillatorNode.connect(reverbSplitter);
+			reverbLeftNode = audioContext.createConvolver();
+			reverbRightNode = audioContext.createConvolver();
+			reverbSplitter.connect(reverbLeftNode, 0);
+			reverbSplitter.connect(reverbRightNode, 1);
+			const reverbMerger = audioContext.createChannelMerger(2);
+			reverbLeftNode.connect(reverbMerger, 0, 0);
+			reverbRightNode.connect(reverbMerger, 0, 1);
+
+			// rev dry
+			reverbDryNode = audioContext.createGain();
+			reverbDryNode.gain.value = 1;
+			vocoderOscillatorNode.connect(reverbDryNode);
+
+			// rev wet 
+			reverbWetNode = audioContext.createGain();
+			reverbWetNode.gain.value = 0;
+			reverbMerger.connect(reverbWetNode);
 
 			// main gain
-			mainOutputNode = audioContext.createGain();
-			mainOutputNode.gain.value = 1.0;
+			masterGainNode = audioContext.createGain();
+			reverbWetNode.connect(masterGainNode);
+			reverbDryNode.connect(masterGainNode);
+			masterGainNode.gain.value = 1.0;
 
-			vocoderOscillatorNode.connect(amplitudeNode);
-			amplitudeNode.connect(mainOutputNode);
-
-			vocoderOscillatorNode.connect(reverbSendNode);
-			reverbSendNode.connect(reverbNode);
-			reverbNode.connect(mainOutputNode);
+			// recorder
+			recorder = await initRecorder(audioContext, $('#show-recorder')[0]);
 
 			// exit
-			mainOutputNode.connect(audioContext.destination);
+			masterGainNode.connect(recorder.node);
+			recorder.node.connect(audioContext.destination);
 
 			uiMessage('Pronto. Audio in esecuzione.');
 			//$('.wavename').trigger('change');
@@ -386,6 +456,7 @@ $(function () {
 			$('#btn-pause-text').text('pause');
 			isSuspended = false;
 			sendAllParameters();
+			mousepad.forcePosition();
 
 		}
 		else {
@@ -465,45 +536,67 @@ $(function () {
 
 	}
 
-	let drawMeterMax = 0;
-	function drawMeters(data) {
-		drawMeterMax = Math.max(data.max,drawMeterMax*.999, .0001);
-		let drawColor = data.cx ? '#c0c0c0': '#007bff';
-		let mode = $par("merge-mode").val();
-		let entry = mergeModes.find(x=>x[0]==mode);
-		let [value,label,tx,ty,tm] = entry;
+	//let drawMeterMax = 0;
+	let drawMeterXMax = 0;
+	let drawMeterYMax = 0;
+	let drawMeterCMax = 0;
+	const MAX_DECAY = 1 - .003;
 
-		if (mode=='xcy') {
-			drawMeter($('.meter .cx')[0], data.x, tx, blue);
-			drawMeter($('.meter .cy')[0], data.y, ty, lightGray);
-			drawMeter($('.meter .cxy')[0], data.m, tm, blue);
-			//drawCountour($('.meter .cx')[0], data.cx, '#007bff');
-			drawCountour($('.meter .cy')[0], data.cy, blue);
-			//drawCountour($('.meter .cxy')[0], data.cm, '#007bff');
+	function drawMeters(data) {
+		// if (drawMeterMax == Infinity) // non so perché ma succede
+		// 	drawMeterMax = 1;
+		// drawMeterMax = Math.max(data.max, drawMeterMax * MAX_DECAY, .0001);
+
+		let x = data.x.reduce((max, x) => Math.max(max, x), 0);
+		let y = data.y.reduce((max, y) => Math.max(max, y), 0);
+		let c = data.m.reduce((max, m) => Math.max(max, m), 0);
+		drawMeterXMax = Math.max(x, drawMeterXMax * MAX_DECAY, .0001);
+		drawMeterYMax = Math.max(y, drawMeterYMax * MAX_DECAY, .0001);
+		drawMeterCMax = Math.max(c, drawMeterCMax * MAX_DECAY, .0001);
+		let drawColor = data.cx ? '#c0c0c0' : '#007bff';
+		let mode = $par("merge-mode").val();
+		let entry = mergeModes.find(x => x[0] == mode);
+		let [value, label, tx, ty, tm] = entry;
+
+		if (mode == 'xcy') {
+			drawMeter($('.meter .cx')[0], data.x, tx, blue, drawMeterXMax);
+			drawCountour($('.meter .cx')[0], data.cx, darkGray, drawMeterXMax);
+
+			drawMeter($('.meter .cy')[0], data.y, ty, lightGray, drawMeterYMax);
+			drawCountour($('.meter .cy')[0], data.cy, blue, drawMeterYMax);
+
+			drawMeter($('.meter .cxy')[0], data.m, tm, lightGray, drawMeterCMax);
+			drawCountour($('.meter .cxy')[0], data.cm, blue, drawMeterCMax);
 		}
-		else if (mode=='cxy') {
-			drawMeter($('.meter .cx')[0], data.x, tx, lightGray);
-			drawMeter($('.meter .cy')[0], data.y, ty, blue);
-			drawMeter($('.meter .cxy')[0], data.m, tm, blue);
-			drawCountour($('.meter .cx')[0], data.cx, blue);
-			//drawCountour($('.meter .cy')[0], data.cy, '#007bff');
+		else if (mode == 'cxy') {
+			drawMeter($('.meter .cx')[0], data.x, tx, lightGray, drawMeterXMax);
+			drawCountour($('.meter .cx')[0], data.cx, blue, drawMeterXMax);
+
+			drawMeter($('.meter .cy')[0], data.y, ty, blue, drawMeterYMax);
+			drawCountour($('.meter .cy')[0], data.cy, darkGray, drawMeterYMax);
+
+			drawMeter($('.meter .cxy')[0], data.m, tm, lightGray, drawMeterCMax);
+			drawCountour($('.meter .cxy')[0], data.cm, blue, drawMeterCMax);
 			//drawCountour($('.meter .cxy')[0], data.cm, '#007bff');			
 		}
 		else {
-			drawMeter($('.meter .cx')[0], data.x, tx, blue);
-			drawMeter($('.meter .cy')[0], data.y, ty, blue);
-			drawMeter($('.meter .cxy')[0], data.m, tm, blue);
+			drawMeter($('.meter .cx')[0], data.x, tx, blue, drawMeterXMax);
+			drawMeter($('.meter .cy')[0], data.y, ty, blue, drawMeterYMax);
+			drawMeter($('.meter .cxy')[0], data.m, tm, blue, drawMeterCMax);
 			// drawCountour($('.meter .cx')[0], data.cx, '#007bff');
 			// drawCountour($('.meter .cy')[0], data.cy, '#007bff');
 			// drawCountour($('.meter .cxy')[0], data.cm, '#007bff');
+			//drawCountour($('.meter .cxy')[0], data.cm, lightGray, drawMeterCMax);
+			//drawCountour($('.meter .cxy')[0], data.cm, '#007bff');			
 		}
 	}
 
-	const toDB = x=> 20 * Math.log10(x);
-	const MINDB = -30
-	;
-	function drawMeter(canvas, data, title, color) {
-
+	const toDB = x => 20 * Math.log10(x);
+	const MINDB = -12;
+	const LOG_Y = false;
+	function drawMeter(canvas, data, title, color, max) {
+		// if (max===undefined)
+		// 	max = drawMeterMax;
 		let w = canvas.width, h = canvas.height;
 		let ctx = canvas.getContext('2d');
 		ctx.clearRect(0, 0, w, h);
@@ -521,34 +614,46 @@ $(function () {
 		ctx.strokeStyle = color;
 		ctx.fillStyle = color;
 
-		//max = 256;
-		const gmax = 0;
-		const gmin = MINDB;
-		for (let i = 0; i < data.length; i++) {
-			let ynorm = toDB(data[i]/drawMeterMax);
-			let ypos = (1-(ynorm-gmin)/(gmax-gmin)) * h;
-			ctx.beginPath();
-			ctx.moveTo(i, h);
-			ctx.lineTo(i, ypos);
-			ctx.stroke();
+		if (LOG_Y) {
+			const gmax = 0;
+			const gmin = MINDB;
+			for (let i = 0; i < data.length; i++) {
+				let ynorm = toDB(data[i] / max);
+				let ypos = (1 - (ynorm - gmin) / (gmax - gmin)) * h;
+				ctx.beginPath();
+				ctx.moveTo(i, h);
+				ctx.lineTo(i, ypos);
+				ctx.stroke();
+			}
+		}
+		else {
+			for (let i = 0; i < data.length; i++) {
+				let ynorm = data[i] / max;
+				let ypos = (1 - ynorm) * h;
+				ctx.beginPath();
+				ctx.moveTo(i, h);
+				ctx.lineTo(i, ypos);
+				ctx.stroke();
+			}
+
 		}
 	}
 
-	function drawCountour(canvas, data, color) {
-		if(!data)
+	function drawCountour(canvas, data, color, max) {
+		if (!data)
 			return;
 		let w = canvas.width, h = canvas.height;
 		let ctx = canvas.getContext('2d');
 		ctx.strokeStyle = color;
-		ctx.fillStyle   = color;
+		ctx.fillStyle = color;
 		//max = 256;
 		const gmax = 0;
 		const gmin = MINDB;
 		ctx.beginPath();
 		for (let i = 0; i < data.length; i++) {
-			let ynorm = toDB(data[i]/drawMeterMax);
-			let ypos = (1-(ynorm-gmin)/(gmax-gmin)) * h;
-			if (i==0)
+			let ynorm = toDB(data[i] / max);
+			let ypos = (1 - (ynorm - gmin) / (gmax - gmin)) * h;
+			if (i == 0)
 				ctx.moveTo(i, ypos);
 			else
 				ctx.lineTo(i, ypos);
@@ -649,6 +754,39 @@ $(function () {
 	// 	}
 	// }
 
+	async function loadPresetByName(name) {
+		let presetlist = await fetch('presets/list.json');
+		presetlist = await presetlist.json();
+		let p = presetlist.find(x => x.name == name);
+		if (!p)
+			return;
+		let url = `presets/${p.file}.s25`
+		await loadPreset(url);
+	}
+
+
+	async function showPresetList() {
+		presetListPage = true;
+		let presetlist = await fetch('presets/list.json');
+		presetlist = await presetlist.json();
+		let pl = $('.preset-list').show().removeClass('hidden');
+
+		for (let p of presetlist) {
+			let li = $('<li></li>').appendTo($('ul', pl));
+			let a = $(`<a>${p.name}</a>`).appendTo(li);
+			const url = new URL(window.location.href);
+			url.searchParams.set('preset', p.name);
+			//url.searchParams.set('autoplay', '1');
+			url.searchParams.delete('presetlist');
+			a.attr('href', url.toString());
+		}
+		let p = presetlist.find(x => x.name == name);
+		if (!p)
+			return;
+		await loadPreset(url);
+	}
+
+
 	async function loadPreset(url) {
 		spinnerOn();
 		try {
@@ -670,7 +808,7 @@ $(function () {
 		let mergeMix = $par("merge-mix").val();
 		let contourResolution = $par("contourResolution").val();
 		vocoderWorker.postMessage({ type: 'set-status', data: { mergeMode, mergeMix, contourResolution } });
-		if (mergeMode=='xcy' || mergeMode=='cxy')
+		if (mergeMode == 'xcy' || mergeMode == 'cxy')
 			$('.control-group.res-group').show();
 		else
 			$('.control-group.res-group').hide();
@@ -791,73 +929,73 @@ $(function () {
 		let ysize = json.ylength * Float32Array.BYTES_PER_ELEMENT;
 		const yBuffer = arrayBuffer.slice(offset, offset + ysize);
 		waveY = new Float32Array(yBuffer);
-		restoreData(json);
+		restoreDataV2(json);
 		setTimeout(sendAllParameters, 1);
 
 		return true;
 
 	}
 
-	function restoreData(obj) {
-		if (obj.version && obj.version == 2)
-			return restoreDataV2(obj);
+	// function restoreData(obj) {
+	// 	if (obj.version && obj.version == 2)
+	// 		return restoreDataV2(obj);
 
-		mousepad.setWave('x', waveX, obj.xname);
-		$('.xwavename').text(wlabel(obj.xname));
-		mousepad.setWave('y', waveY, obj.yname);
-		$('.ywavename').text(wlabel(obj.yname));
+	// 	mousepad.setWave('x', waveX, obj.xname);
+	// 	$('.xwavename').text(wlabel(obj.xname));
+	// 	mousepad.setWave('y', waveY, obj.yname);
+	// 	$('.ywavename').text(wlabel(obj.yname));
 
-		let xpayload = {
-			type: 'set-wave',
-			index: 'x',
-			buffer: waveX.buffer
-		};
-		vocoderWorker.postMessage(xpayload);
+	// 	let xpayload = {
+	// 		type: 'set-wave',
+	// 		index: 'x',
+	// 		buffer: waveX.buffer
+	// 	};
+	// 	vocoderWorker.postMessage(xpayload);
 
-		let ypayload = {
-			type: 'set-wave',
-			index: 'y',
-			buffer: waveY.buffer
-		};
-		vocoderWorker.postMessage(ypayload);
+	// 	let ypayload = {
+	// 		type: 'set-wave',
+	// 		index: 'y',
+	// 		buffer: waveY.buffer
+	// 	};
+	// 	vocoderWorker.postMessage(ypayload);
 
-		$('#slider-amp').val(obj.amp).trigger('input');
-		$('#slider-reverb').val(obj.reverb).trigger('input');
-		$par("merge-mode").val(obj.mergeMode).trigger('input');
-		$par("merge-mix").val(obj.mergeParam).trigger('input');
+	// 	$par('amp').val(obj.amp);
+	// 	$par('amp').trigger('input');
+	// 	$par("merge-mode").val(obj.mergeMode).trigger('input');
+	// 	$par("merge-mix").val(obj.mergeParam).trigger('input');
 
-		if (obj.motion) {
-			for (let par in obj.motion) {
-				if (obj.motion[par] !== null) {
-					$par(par).val(obj.motion[par]);
-				}
-			}
-		}
-		if (obj.effect) {
-			for (let par in obj.effect) {
-				if (obj.effect[par] !== null) {
-					if (par == 'delayMode') {
-						$(`[name="delay-mode"]`).prop('checked', false);
-						$(`[name="delay-mode"][value="${obj.effect[par]}"]`).prop('checked', true);
-					} else {
-						$par(par).val(obj.effect[par]);
-					}
-				}
-			}
-		}
-		if (obj.pad) {
-			mousepad.setStatus(obj.pad);
-		}
-		if (obj.osc) {
-			Object.assign(oscInStatus, obj.osc);
-			vocoderWorker.postMessage({ type: 'set-status', data: oscInStatus });
-		}
-		mousepad.redraw();
-		setTimeout(() => function () {
-			$('[par]').trigger('change');
-		});
+	// 	if (obj.motion) {
+	// 		for (let par in obj.motion) {
+	// 			if (obj.motion[par] !== null) {
+	// 				$par(par).val(obj.motion[par]);
+	// 			}
+	// 		}
+	// 	}
+	// 	if (obj.effect) {
+	// 		for (let par in obj.effect) {
+	// 			if (obj.effect[par] !== null) {
+	// 				if (par == 'delayMode') {
+	// 					$(`[name="delay-mode"]`).prop('checked', false);
+	// 					$(`[name="delay-mode"][value="${obj.effect[par]}"]`).prop('checked', true);
+	// 				} else {
+	// 					$par(par).val(obj.effect[par]);
+	// 				}
+	// 			}
+	// 		}
+	// 	}
+	// 	if (obj.pad) {
+	// 		mousepad.setStatus(obj.pad);
+	// 	}
+	// 	if (obj.osc) {
+	// 		Object.assign(oscInStatus, obj.osc);
+	// 		vocoderWorker.postMessage({ type: 'set-status', data: oscInStatus });
+	// 	}
+	// 	mousepad.redraw();
+	// 	setTimeout(() => function () {
+	// 		$('[par]').trigger('change');
+	// 	});
 
-	}
+	// }
 
 	function restoreDataV2(obj) {
 		mousepad.setWave('x', waveX, obj.xname);
@@ -888,8 +1026,10 @@ $(function () {
 			else
 				$(ctrl).val('' + v);
 		}
+		mousepad.setTarget(obj.par.targetx, obj.par.targety);
 		mousepad.redraw();
-		setTimeout(() => function () {
+		setTimeout(function () {
+			$('[par]').trigger('input');
 			$('[par]').trigger('change');
 			mousepad.forcePosition();
 		}, 1);
@@ -903,7 +1043,7 @@ $(function () {
 		if (!fileName) {
 			const now = new Date();
 			const pad = (num) => String(num).padStart(2, '0');
-			// const timestamp = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}_${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}`;
+
 			const timestamp = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
 			fileName = `preset_${timestamp}`;
 		}
@@ -963,37 +1103,7 @@ $(function () {
 			else
 				d.par[par] = val - 0;
 		})
-		// let padStatus = mousepad.getStatus();
-		// d.par.targetx = padStatus.mx;
-		// d.par.targety = padStatus.my;
-		// d.motion = {
-		// 	speedx: $('[par="speedx"]').val() - 0,
-		// 	speedy: $('[par="speedy"]').val() - 0,
-		// 	traction: $('[par="traction"]').val() - 0,
-		// 	targetx: padStatus.mx,
-		// 	targety: padStatus.my,
-		// 	lfofreq: $('[par="lfofreq"]').val() - 0,
-		// 	lfoxamp: $('[par="lfoxamp"]').val() - 0,
-		// 	lfoyamp: $('[par="lfoyamp"]').val() - 0,
-		// 	lfodeltaph: $('[par="lfodeltaph"]').val() - 0,
-		// 	lfowave: $('[par="lfowave"]').val() - 0,
-		// 	lforatio: $('[par="lforatio"]').val() - 0,
-		// 	steps: $('[par="steps"]').val() - 0,
-		// 	speedmultx: $('[par="speedmultx"]').val() - 0,
-		// 	speedmulty: $('[par="speedmulty"]').val() - 0,
-		// }
-		// d.effect = {
-		// 	reverb: $('[par="revsend"]').val() - 0,
-		// 	revtype: $('[par="revtype"]').val() - 0,
-		// 	delayMode: $('[name="delay-mode"]:checked').val() - 0,
-		// 	ldelay: $('[par="ldelay"]').val() - 0,
-		// 	rdelay: $('[par="rdelay"]').val() - 0,
-		// 	feedback: $('[par="feedback"]').val() - 0,
-		// 	lopass: $('[par="lopass"]').val() - 0,
-		// 	delmix: $('[par="delmix"]').val() - 0,
-		// }
-		//d.pad = mousepad.getStatus();
-		//d.osc = oscInStatus;
+
 		let txt = fileMagic + '\n' + JSON.stringify(d, null, 2) + '\n' + jsonTerminator;
 		return concatenateBytes(txt, wx, wy);
 	}
@@ -1055,41 +1165,73 @@ $(function () {
 		$(document).on('keydown', evt => {
 			// console.log({ evt: evt.key, c: cnt++ });
 			let c = (evt.key || '').toLowerCase();
-			console.log(`key: [${c}]`)
-			if (('[p][d][m][e][s][x][y][#][f1][tab]').indexOf(c) >= 0)
+			console.log(`key: [${c}]`, evt.shiftKey)
+			if (('[p][d][m][e][s][x][y][#][f1][#][tab]').indexOf(c) >= 0)
 				evt.preventDefault();
 
-			if (c == 'p' || c == ' ') togglePause();
-			if (c == 'd') mousepad.setMode('drag');
-			// if (c == 's') mousepad.setMode('settings');
-			if (c == 'e') mousepad.setMode('effects');
-			if (c == 'm') mousepad.setMode('motion');
-			if (c == 'f1') mousepad.setMode('help');
 			if (c == 'x' && evt.altKey) randomWave('x');
-			if (c == 'y' && evt.altKey) randomWave('y');
-			if (c=='tab') {
-				const nextmode = { drag:'motion', motion:'effects', effects:'help', help: 'drag' };
+			else if (c == '#')
+				$('.debug-monitor').toggleClass('hidden');
+			else if (c == 'y' && evt.altKey) randomWave('y');
+			else if (c == 'x' && evt.shiftKey) openModal(loadXWaveDiv, "Load X wave", null, "Close");
+			else if (c == 'y' && evt.shiftKey) openModal(loadYWaveDiv, "Load Y wave", null, "Close");
+			else if (c == 'p' && evt.shiftKey) $('#load-preset').trigger('click')
+
+			else if (c == 'p' || c == ' ') togglePause();
+			else if (c == 'd') mousepad.setMode('drag');
+			// if (c == 's') mousepad.setMode('settings');
+			else if (c == 'e') mousepad.setMode('effects');
+			else if (c == 'm') mousepad.setMode('motion');
+			else if (c == 'f1') mousepad.setMode('help');
+			else if (c == 'tab') {
+				const nextmode = { drag: 'motion', motion: 'effects', effects: 'help', help: 'drag' };
 				mousepad.setMode(nextmode[mousepad.getMode()]);
 			}
 		});
 	}
-	$(() => init());
 
-	window.setpar = function (data) {
-		vocoderWorker.postMessage({ type: 'set-status', data })
+
+	window.addEventListener("resize", onResize);
+	let resizeTimeout = null;
+
+	function onResize() {
+		clearTimeout(resizeTimeout);
+		resizeTimeout = setTimeout(() => {
+			vertical = window.innerHeight > window.innerWidth;
+			$('body').toggleClass('vertical', vertical);
+			// if (vertical && !fullscreen)
+			// 	setFullscreen(true);
+
+
+			// this.setTimeout(function () {
+			// 	mousepad.reposition();
+			// 	console.log("Resize concluso:", window.innerWidth, "x", window.innerHeight);
+			// });
+
+		})
 	}
 
+	$(() => init());
+
+})();
 
 
-	$(document).ready(function () {
-		$("#dropdownBtn").on("click", function (e) {
-			e.stopPropagation(); // evita la propagazione del click
-			$("#dropdownMenu").toggleClass("hidden");
-		});
 
-		// Chiudi il menu se clicchi fuori
-		$(document).on("click", function () {
-			$("#dropdownMenu").addClass("hidden");
-		});
-	});
-});
+window.setpar = function (data) {
+	vocoderWorker.postMessage({ type: 'set-status', data })
+}
+
+
+
+// $(document).ready(function () {
+// 	$("#dropdownBtn").on("click", function (e) {
+// 		e.stopPropagation(); // evita la propagazione del click
+// 		$("#dropdownMenu").toggleClass("hidden");
+// 	});
+
+// 	// Chiudi il menu se clicchi fuori
+// 	$(document).on("click", function () {
+// 		$("#dropdownMenu").addClass("hidden");
+// 	});
+// });
+// });

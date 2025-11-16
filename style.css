@@ -4,9 +4,31 @@ body {
   display: flex;
   flex-flow: row;
   min-height: 100vh;
+  width: 100vw;
   margin: 0;
 }
 .hidden {
+  display: none;
+}
+.btn-fullscreen {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  z-index: 300;
+  font-size: 30px;
+  padding: 0;
+  line-height: 0px;
+}
+.btn-fullscreen.fs-close {
+  display: none;
+}
+.fullscreen .btn-fullscreen.fs-close {
+  display: block;
+}
+.btn-fullscreen.fs-open {
+  display: block;
+}
+.fullscreen .btn-fullscreen.fs-open {
   display: none;
 }
 .container {
@@ -16,11 +38,35 @@ body {
   width: 280px;
   max-width: 500px;
   text-align: center;
-  display: flex;
-  flex-direction: column;
+}
+.vertical .container {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 .container .controls {
   margin: 20px 0;
+  width: 100%;
+}
+.container .controls button.play,
+.container .controls button.rec {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  margin: 5px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+}
+.recording .container .controls button.rec kbd {
+  background-color: #ff4d4d;
+}
+.container .controls #show-recorder {
+  width: 100%;
+  height: 20px;
+  border: 1px solid #a0a0a0;
+  border-radius: 2px;
 }
 .container div.volume {
   display: inline;
@@ -34,16 +80,6 @@ body {
   width: 80px;
   font-family: 'Courier New', Courier, monospace;
   font-size: 12px;
-}
-.container button.play {
-  background-color: #007bff;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  margin: 5px;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 16px;
 }
 h1 {
   color: #1a1a1a;
@@ -104,7 +140,6 @@ button.padmode.padmode.on {
 }
 .panel {
   flex: 1;
-  height: 100vh;
   display: flex;
   flex-direction: column;
 }
@@ -138,6 +173,10 @@ button.padmode.padmode.on {
 [mode="motion"] .panel .canvas-container canvas.dynamic.wave {
   opacity: 0.2;
 }
+.player[mode="drag"] .panel .canvas-container canvas.dynamic {
+  border: 0;
+  touch-action: none;
+}
 .panel .canvas-container .subpanel {
   width: 100%;
   height: 100%;
@@ -158,6 +197,11 @@ button.padmode.padmode.on {
 }
 [mode="motion"] .panel .canvas-container .subpanel .content {
   background-color: rgba(255, 255, 255, 0.65);
+}
+.panel .canvas-container .subpanel .content .enable-feature {
+  width: 1.25em;
+  height: 1.25em;
+  margin-left: 6px;
 }
 .panel .canvas-container .subpanel .content .control-group {
   display: flex;
@@ -187,7 +231,7 @@ button.padmode.padmode.on {
 .panel .canvas-container .subpanel .lfoshape {
   position: relative;
   padding: 10px 0;
-  min-height: 140px;
+  min-height: 90px;
 }
 .panel .canvas-container .subpanel .lfoshape * {
   z-index: 2;
@@ -426,4 +470,38 @@ kbd {
   to {
     transform: rotate(360deg);
   }
+}
+body#the-body.fullscreen .no-fullscreen {
+  display: none;
+}
+body#the-body.player {
+  width: 100vw;
+  overflow: hidden;
+  height: 100vh;
+  max-width: 100vw;
+  max-height: 100vh;
+}
+body#the-body.player canvas.info {
+  display: none;
+}
+body#the-body.player.vertical {
+  display: block;
+  flex-direction: column;
+}
+body#the-body.player .no-fullscreen {
+  display: none;
+}
+.preset-list {
+  display: block;
+  position: absolute;
+  left: 0;
+  top: 0;
+  background-color: white;
+  width: 100%;
+  height: 100%;
+  z-index: 999;
+  padding: 10px;
+}
+.preset-list.hidden {
+  display: none;
 }

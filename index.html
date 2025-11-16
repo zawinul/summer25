@@ -6,30 +6,34 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>Summer 25</title>
 	<link rel="stylesheet" id="main-css" href="style.css">
-	<link rel="stylesheet" id="help-css" href="help.css">
+	<link rel="stylesheet" id="help-css" href="help/help.css">
 </head>
 
-<body style="opacity:0">
+<body id="the-body" style="opacity:0">
 
+	<!-- <button class="btn-fullscreen fs-open">🗖</button>
+	<button class="btn-fullscreen fs-close">🗗</button> -->
 	<div class="container">
 
 
 
 		<h1>Summer 25</h1>
-		<p>Ph Vocoder interpolation.</p>
+		<p class="no-fullscreen">A Phase Vocoder interpolation lab.</p>
 
 
 
 		<div class="left-panel">
 
 			<div class="controls">
+				<canvas id="show-recorder"></canvas>
 				<button id="btn-pause" class="play"><kbd>P</kbd> <span id="btn-pause-text">play</span></button>
+				<button id="btn-rec" class="rec"><kbd>R</kbd> <span id="btn-rec-text">record</span></button>
 			</div>
 
 			<div class="control-group">
 				<!-- <label>Ampl</label> -->
 				<div class="volume">🕩</div>
-				<input type="range" id="slider-amp" par="amp" min="-36" max="36" value="0" step=".5" list="amp-ticks">
+				<input type="range" par="amp" min="-36" max="36" value="0" step=".5" list="amp-ticks">
 				<div class="volume">🕪</div>
 				<datalist id="amp-ticks">
 					<option value="-36"></option>
@@ -43,7 +47,7 @@
 				<div id="amp-value">0.0 dB</div>
 			</div>
 
-			<div id="preset-area" class="file-input draggable"
+			<div id="preset-area" class="file-input draggable no-fullscreen"
 				title="you can drag&drop here&#13;your preset file (.s25)">
 				<div class="row">
 					<label>Preset</label>
@@ -56,7 +60,7 @@
 			</div>
 
 
-			<div class="file-input wx draggable" title="you can drag&drop here&#13;your X wave file">
+			<div class="file-input wx draggable no-fullscreen" title="you can drag&drop here&#13;your X wave file">
 				<div class="row">
 					<label>X wave</label>
 					<button id="load-x-wave" title="">💾 load</button>
@@ -67,7 +71,7 @@
 			</div>
 
 
-			<div class="file-input wy draggable" title="you can drag&drop here&#13;your Y wave file">
+			<div class="file-input wy draggable no-fullscreen" title="you can drag&drop here&#13;your Y wave file">
 				<div class="row">
 					<label>Y wave</label>
 					<button id="load-y-wave" title="">💾 load</button>
@@ -78,7 +82,7 @@
 			</div>
 
 
-			<div class="file-input altro">
+			<div class="file-input altro no-fullscreen">
 
 				<div class="control-group">
 					<label>Combine mode</label>
@@ -120,13 +124,14 @@
 				<div class="control-group res-group">
 					<label style="font-weight: normal;">resolution</label>
 					<div class="side-label">lo</div>
-					<input type="range" par="contourResolution" min="0" max="1" value=".5" step=".01" list="merge-mix-ticks">
+					<input type="range" par="contourResolution" min="0" max="1" value=".5" step=".01"
+						list="merge-mix-ticks">
 					<div class="side-label">hi</div>
 				</div>
 			</div>
 		</div>
 
-		<div class="meters">
+		<div class="meters no-fullscreen">
 			<div class="meter file-input">
 				<canvas class="cx"></canvas>
 			</div>
@@ -142,7 +147,7 @@
 	</div>
 
 	<div class="panel">
-		<div class="panel-controls">
+		<div class="panel-controls no-fullscreen">
 			<!-- <button id="btn-move-left">Move Left</button>
 			<button id="btn-move-right">Move Right</button> -->
 
@@ -158,8 +163,7 @@
 		<div class="pad-area">
 
 			<div class="canvas-container">
-
-				<div class="motion-controls subpanel hideable">
+				<div class="motion-controls subpanel hideable no-fullscreen">
 					<div class="content">
 						<h3>Manual</h3>
 						<div class="control-group">
@@ -169,8 +173,10 @@
 							<input type="hidden" par="targetx" value="0">
 							<input type="hidden" par="targety" value="0">
 						</div>
+						<div class="vspace" style="height: 25px;">&nbsp;</div>
+						<h3>Linear <input type="checkbox" checked class="enable-feature linear" dest="enable-linear"></h3>
+						<input type="hidden" par="enable-linear" value="true" isBoolean>
 
-						<h3>Linear</h3>
 						<div class="lfoshape">
 							<div class="control-group">
 								<label class="indent">X speed</label>
@@ -201,7 +207,8 @@
 
 						</div>
 
-						<h3>Cyclic</h3>
+						<h3>Cyclic <input type="checkbox" checked class="enable-feature cyclic" dest="enable-cyclic"></h3>
+						<input type="hidden" par="enable-cyclic" value="true" isBoolean>
 
 						<div class="lfoshape">
 							<div class="control-group">
@@ -293,9 +300,13 @@
 					</div>
 				</div>
 
-				<div class="effects-controls subpanel hideable">
+				<div class="effects-controls subpanel hideable no-fullscreen">
 					<div class="content">
-						<h3>Delay</h3>
+						<h3>Delay
+						<input type="checkbox" checked class="enable-feature delay" dest="enable-delay"></h3>
+						<input type="hidden" par="enable-delay" value="true" isBoolean>
+
+
 						<div class="control-group">
 							<label>Delay mode</label>
 							<input type="radio" name="delay-mode" value="1" checked style="margin-left: 0px"> Parallel
@@ -329,13 +340,15 @@
 							<span class="text" id="delay-mix-value"></span>
 						</div>
 
-						<h3>Reverb</h3>
+						<h3>Reverb
+						<input type="checkbox" checked class="enable-feature reverb" dest="enable-reverb"></h3>
+						<input type="hidden" par="enable-reverb" value="true" isBoolean>
 						<div class="control-group">
 							<label>Rev Type</label>
 							<select par="revtype" isString></select>
 						</div>
 						<div class="control-group">
-							<label>Rev Send</label>
+							<label>Dry-Wet</label>
 							<input type="range" par="revsend" min="-36" max="0" value="-36" step="0.5">
 							<span class="text" id="reverb-value"></span>
 						</div>
@@ -407,7 +420,7 @@
 		</ul>
 	</div>
 
-	<pre class="debug-monitor hidden"></pre>
+	<pre class="debug-monitor"></pre>
 
 	<!-- Spinner overlay -->
 	<div id="spinner-overlay" style="display: none;">
@@ -416,11 +429,17 @@
 		</div>
 	</div>
 
+	<div class="preset-list hidden">
+		<h3 style="padding-left:20px">Summer25 preset list</h3>
+		<ul></ul>
+	</div>
+
 	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 	<script src="fft.js"></script>
 	<script src="common.js"></script>
 	<script src="main.js"></script>
 	<script src="mousepad.js"></script>
+	<script src="record.js"></script>
 
 </body>
 
