@@ -15,7 +15,7 @@ mousepad = (function () {
 		cursor: { class: 'cursor', zIndex: 120 },
 		cursorpoint: { class: 'cursorpoint', zIndex: 120 },
 		info: { class: 'info', zIndex: 130 },
-		spectre: { class: 'spectre', zIndex: 140 }
+		spectre: { class: 'spectre', zIndex: 310 }
 	};
 
 	const padStatus = {

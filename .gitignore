@@ -6,6 +6,8 @@
 *.m4a
 *.ogg
 
+presets/
+
 # Directory con impulse response (troppo pesanti per git)
 ir/
 wav/
