@@ -1,45 +1,111 @@
-<div class="paper">
+<div class="paper" lang="eng">
+
+    <div class="switch">
+        <img src="help/flag-it.svg" alt="🇮🇹" lang="ita" title="jump to the italian manual">
+        <img src="help/flag-en.svg" alt="🇺🇸" lang="eng" title="jump to the english manual">
+    </div>
+   
     <header>
-        <h1>Summer 25</h1>
+        <h1>Summer25</h1>
         <p class="authors">Paolo Andrenacci</p>
-        <!-- <p class="affiliations"><sup>1</sup> Dipartimento di Fisica Teorica, Università degli Studi di Bologna</p>
-        <p class="affiliations"><sup>2</sup> Istituto di Scienze Gastronomiche, Accademia Culinaria di Roma</p> -->
+        <a href="mailto:paolo.andrenacci@gmail.com">paolo.andrenacci@gmail.com</a>
+        <!-- <p class="affiliations"><sup>1</sup> aaa bbb ccc ddd</p>
+        <p class="affiliations"><sup>2</sup> eee fff ggg</p> -->
     </header>
 
     <section class="abstract">
         <h2>Overview</h2>
-        <p>Summer 25 is a web application developed in the summer of 2025 to experiment with real-time browser audio, using the phase vocoder synthesis and resynthesis technique, and the interactive spectral combination of two sounds. Additional features were integrated during development.</p>
-        <p>The application is not intended for professional use, although it can produce interesting sound combinations. Instead, it is designed as a recreational or educational tool to allow even novice users to experiment with sound synthesis.</p>
-        <p>It use two sounds which are mapped to the X and Y axes of the workspace. By moving the mouse, you can select a point within the X sound and the Y sound. At that point, the spectrum is calculated via phase vocoder analysis, the two spectra are combined in various ways, and the result is resynthesized in real-time.</p>
+        <p>Summer25 is a web application developed in the summer of 2025, born as an experiment and proposed as a recreational or educational tool.
+        </p>
     </section>
 
     <div class="main-content">
         <section>
-            <h2>Usage</h2>
-            <p>First, load two audio files, one for the X-axis and one for the Y-axis. WAV, MP3, and OGG formats are supported. The application handles both short sounds (samples) and full musical tracks. Some sample files are available in the application (use the "load" button in the "X Wave" and "Y Wave" sections on the left). You can also load your own files from your disk using the "load" buttons or by dragging and dropping them into their respective sections or into the strips above and to the left of the main panel.</p>
+            <h2>Quick Try</h2>
+            <p>To get an idea of what Summer25 can do before delving into the manual, you can use one of these
+                two options:.
+            <ul>
+                <li>Load one of the example presets from the <b>Preset</b> box on the left, press <kbd>P</kbd> to play it,
+                    then drag the mouse while holding the left button in the central square area.</li>
+                <li>Load two random audio files, one for the X-axis and one for the Y-axis by pressing Alt-<kbd>X</kbd> and Alt-<kbd>Y</kbd>, 
+                    enter <i>drag</i> mode with <kbd>D</kbd> and start
+                    experimenting directly as above (<kbd>P</kbd> and then drag).</li>
+                    <i>Note: you can continue to change samples on the fly during the test.</i>
+            </ul>
+            </p>
 
-            <p>Once the files are loaded, press the Play button at the top left to start the synthesis and move within the main panel while holding down the left mouse button.</p>
+        </section>
+
+        <section>
+            <h2>Overview</h2>
+            <p>Summer25 was created to experiment with real-time browser audio,
+                using the synthesis and resynthesis technique called "Phase Vocoder". 
+                The main goal is the interactive spectral combination of two sounds called X and Y. 
+                Additional features were integrated during development.
+            </p>
+            <p>The application is not intended for professional use, although it can produce interesting
+                sound combinations. It is conceived instead as a recreational or educational tool to encourage even
+                less experienced users to experiment with sound synthesis.</p>
+            <p>It uses two sounds that are mapped onto the X and Y axes of the workspace. By moving the mouse, it is
+                possible to select a point within the X sound and the Y sound. At that point, the spectrum is
+                calculated via phase vocoder analysis, the two spectra are combined in various ways, and the result
+                is resynthesized in real time.</p>
+        </section>
+
+        <section>
+            <h2>Usage</h2>
+            <p>First, load two audio files, one for the X-axis and one for the Y-axis. The
+                WAV, MP3, and OGG formats are supported. The application handles both short sounds (samples) and complete musical tracks. Some
+                example files are available in the application (use the "load" button in the "X Wave"
+                and "Y Wave" sections on the left). It is also possible to load your own files from the disk using the
+                "load" buttons or by dragging and dropping them from your file system into the respective sections or into the strips above and to the left of the main
+                panel.</p>
+
+            <p>Once the files are loaded, press the Play button at the top left to start the synthesis and move
+                within the main panel while holding down the left mouse button.</p>
         </section>
 
         <section>
             <h2>Drag</h2>
+            <img src="help/snapdrag-annotated.png" alt="Drag" width="600" >
         </section>
 
         <section>
             <h2>Motion</h2>
-            <p>By varying the <i>x,y</i> coordinates within the main panel, you can move through the spectrum of the two sounds. Slow movements allow for spectral exploration, while broader movements can create modulations and melodic effects.</p>
-            <p>There are three movement types: <i>manual</i>, <i>linear</i>, and <i>cyclic</i>. The three modes are active simultaneously, and their effects are summed.</p> 
+            <p>By varying the <i>x,y</i> coordinates within the main panel, it is possible to move through the
+                spectrum of the two sounds. Slow movements allow for spectral exploration, while broader movements
+                can create modulations and melodic effects.</p>
+            <p>There are three types of movement: <i>manual</i>, <i>linear</i>, and <i>cyclic</i>. The three modes are
+                active simultaneously, and their effects are cumulative.</p>
             The details for these modes can be configured in the "Motion" panel, accessible with the M key.
             <p>
-                <i>Manual</i>: The <i>x,y</i> point is moved manually with the mouse. The "traction" parameter adjusts the responsiveness to mouse movements. Low values result in smoother transitions between points.<br>
-                <i>Linear</i>: The <i>x,y</i> point moves in a straight line at a constant speed. The x and y speed components can be set independently. At a speed of 1x, the point moves along that direction at the sample's original playback speed.<br>
-                <i>Cyclic</i>: The <i>x,y</i> point is changed cyclically. The X Ampl and Y Ampl parameters control the modulation amplitude. For the other parameters, refer to the graph next to them for an intuitive exploration.
+                <i>Manual</i>: The <i>x,y</i> point is moved manually with the mouse. The "traction" parameter
+                adjusts the responsiveness to mouse movements. Low values result in smoother transitions between
+                points.<br>
+                <i>Linear</i>: The <i>x,y</i> point moves in a straight line at a constant speed. The x and y
+                velocity components can be set independently. At a speed of 1x, the point moves along
+                that direction at the original playback speed of the sample.<br>
+                <i>Cyclic</i>: The <i>x,y</i> point is modified cyclically. The X Ampl and Y Ampl parameters
+                control the amplitude of the modulation. For the other parameters, refer to the graph next to
+                them for an intuitive exploration.
             </p>
 
-            
+
         </section>
 
         <section>
+            <h2>Effects</h2>
+            <p>to do</p>
+        </section>
+
+        <section>
+            <h2>Record</h2>
+            <p>to do</p>
+        </section>
+
+
+        <section>
+            <h2>Shortcuts</h2>
 
             <table>
                 <caption><strong>Table 1:</strong> Shortcuts.</caption>
@@ -51,24 +117,28 @@
                 </thead>
                 <tbody>
                     <tr>
-                        <td>d, m, e, F1</td>
-                        <td>Open the Drag, Motion, Effects, and Help panels, respectively</td>
+                        <td><kbd>D</kbd>, <kbd>M</kbd>, <kbd>E</kbd>, <kbd>F1</kbd></td>
+                        <td>Open the <i>Drag</i>, <i>Motion</i>, <i>Effects</i>, and <i>Help</i> panels, respectively</td>
                     </tr>
                     <tr>
-                        <td>Tab</td>
-                        <td>Cycle through the Drag, Motion, and Effects panels</td>
+                        <td><kbd>Tab</kbd></td>
+                        <td>Cycle through the <i>Drag</i>, <i>Motion</i>, and <i>Effects</i> panels</td>
                     </tr>
                     <tr>
-                        <td>X, Y</td>
+                        <td><kbd>X</kbd>, <kbd>Y</kbd></td>
                         <td>Load a sound from the app or disk onto the X or Y axis, respectively</td>
                     </tr>
                     <tr>
-                        <td>Alt+x, Alt+y</td>
+                        <td><kbd>Alt</kbd>+<kbd>X</kbd>, <kbd>Alt</kbd>+<kbd>Y</kbd></td>
                         <td>Load a random sound from the app onto the X or Y axis, respectively</td>
                     </tr>
                     <tr>
-                        <td>P</td>
-                        <td>Load a preset from the app demo or from a file</td>
+                        <td><kbd>P</kbd></td>       
+                        <td>Play/pause the output audio</td>
+                    </tr>
+                    <tr>
+                        <td><kbd>R</kbd></td>       
+                        <td>Start/stop recording the output audio</td>
                     </tr>
                 </tbody>
             </table>
@@ -76,13 +146,14 @@
 
         <section class="references">
             <h2>Credits</h2>
-            <!-- <ol>
-                <li>Einstein, A., Podolsky, B., & Rosen, N. (1935). Can Quantum-Mechanical Description of Physical Reality Be Considered Complete?. <i>Physical Review</i>, 47(10), 777.</li>
-                <li>Maillard, L. C. (1912). Action des acides aminés sur les sucres; formation des mélanoïdines par voie méthodique. <i>Comptes Rendus de l'Académie des Sciences</i>, 154, 66-68.</li>
-                 <li>Illy, A., & Viani, R. (Eds.). (2005). <i>Espresso coffee: the science of quality</i>. Elsevier academic press.</li>
-            </ol> -->
+            <ol>
+                <li>this program uses the open source library fft.js by @indutny was used <a href="https://github.com/indutny/fft.js">https://github.com/indutny/fft.js</a></li>
+                <li>some example samples come from <a href="https://freesound.org/">https://freesound.org/</a>, others from <a href="https://philharmonia.co.uk/resources/sound-samples/">https://philharmonia.co.uk/resources/sound-samples/</a>, others from <a href="https://pixabay.com/it/sound-effects/">https://pixabay.com/it/sound-effects/</a></li>
+                <li>all the IRs used for the reverb come from <a href="https://samplicity.com/bricasti-m7-impulse-response-files/">https://samplicity.com/bricasti-m7-impulse-response-files/</a></li>
+            </ol>
+            I believe I have always respected the usage limits indicated on the respective sites, but I am ready to remove the content upon request in case of disputes.
         </section>
 
-        
+
     </div>
 </div>

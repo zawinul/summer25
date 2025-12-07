@@ -15,6 +15,7 @@ mousepad = (function () {
 		cursor: { class: 'cursor', zIndex: 120 },
 		cursorpoint: { class: 'cursorpoint', zIndex: 120 },
 		info: { class: 'info', zIndex: 130 },
+		spectre: { class: 'spectre', zIndex: 140 }
 	};
 
 	const padStatus = {
@@ -40,6 +41,7 @@ mousepad = (function () {
 		motion_temp: { bgcolor: '#fff0f0', show: '.wave, .wavebar, .cursor, .cursorpoint, .motion-controls' },
 		effects: { bgcolor: '#fff0f0', show: '.wave, .wavebar, .cursor, .cursorpoint, .effects-controls' },
 		effects_temp: { bgcolor: '#fff0f0', show: '.wave, .wavebar, .cursor, .cursorpoint, .effects-controls' },
+		spectre: { bgcolor: '#fff0f0', show: '.spectre' },
 		// settings: { bgcolor: '#ffffff', show: '.wave, .wavebar, .settings-controls' }
 	};
 
@@ -81,6 +83,9 @@ mousepad = (function () {
 		// 	designLinShape();
 		// 	designLFOShape();
 		// }
+
+		if (mode=='spectre')
+			spectreCanvas();
 		checkStatusChange();
 	}
 
@@ -135,38 +140,39 @@ mousepad = (function () {
 			}
 		});
 
-		$(document).on("mousemove mousedown mouseup click pointerdown pointermove pointercancel pointerup pointerout", function (evt) {
-			// console.log(`Mouse or pointer event: ${evt.type}`);
-			if (player && !presetListPage && mode=='drag') {
-				evt.preventDefault();
-				evt.stopPropagation();
-			}
+		// $(document).on("mousemove mousedown mouseup click pointerdown pointermove pointercancel pointerup pointerout", function (evt) {
+		// 	// console.log(`Mouse or pointer event: ${evt.type}`);
+			
+		// 	if (player && !presetListPage && mode == 'drag') {
+		// 		evt.preventDefault();
+		// 		evt.stopPropagation();
+		// 	}
 
-			let where = 'out';
-			let canvas = canvases.wave.jc;
-			if (!canvas)
-				return;
-			let x = mousex = evt.clientX - canvas.offset().left;
-			let y = mousey = evt.clientY - canvas.offset().top;
-			if (leftband.contains(x, y))
-				where = 'left';
-			else if (topband.contains(x, y))
-				where = 'top';
-			else if (space.contains(x, y))
-				where = 'in';
+		// 	let where = 'out';
+		// 	let canvas = canvases.wave.jc;
+		// 	if (!canvas)
+		// 		return;
+		// 	let x = mousex = evt.clientX - canvas.offset().left;
+		// 	let y = mousey = evt.clientY - canvas.offset().top;
+		// 	if (leftband.contains(x, y))
+		// 		where = 'left';
+		// 	else if (topband.contains(x, y))
+		// 		where = 'top';
+		// 	else if (space.contains(x, y))
+		// 		where = 'in';
 
-			curstatus.left = (evt.buttons & 1) == 1;// || (evt.type == 'click') || (evt.type == 'mousedown');
-			curstatus.right = (evt.buttons & 2) == 2;
-			curstatus.x = x;
-			curstatus.y = y;
-			curstatus.where = where;
-			curstatus.shift = evt.shiftKey;
-			curstatus.alt = evt.altKey;
-			curstatus.control = evt.ctrlKey;
-			curstatus.meta = evt.metaKey;
-			curstatus.pointerType = 'mouse';
-			checkStatusChange();
-		});
+		// 	curstatus.left = (evt.buttons & 1) == 1;// || (evt.type == 'click') || (evt.type == 'mousedown');
+		// 	curstatus.right = (evt.buttons & 2) == 2;
+		// 	curstatus.x = x;
+		// 	curstatus.y = y;
+		// 	curstatus.where = where;
+		// 	curstatus.shift = evt.shiftKey;
+		// 	curstatus.alt = evt.altKey;
+		// 	curstatus.control = evt.ctrlKey;
+		// 	curstatus.meta = evt.metaKey;
+		// 	curstatus.pointerType = 'mouse';
+		// 	checkStatusChange();
+		// });
 
 		// $(document).on("pointerdown pointermove pointerup", function (evt) {
 		// 	evt.preventDefault();
@@ -250,23 +256,30 @@ mousepad = (function () {
 
 		$('.enable-feature').on('click', function (evt) {
 			let t = this;
-			setTimeout(function(){
+			setTimeout(function () {
 				let val = t.checked;
 				let dest = $(t).attr('dest');
-				$par(dest).val(val+'').trigger('change');
-			},10);
+				$par(dest).val(val + '').trigger('change');
+			}, 10);
 		});
 
+		for (let i = -12; i <= 12; i++)
+			$(`<option value="${i}" label="${i}"></option>`).appendTo('#transpose-values');
 	}
 
 
 	function checkStatusChange() {
+		let needsUpdate = false;
 		for (var k in curstatus) {
 			if (curstatus[k] != oldstatus[k]) {
-				update();
-				savestatus();
-				debugStatus();
+				needsUpdate = true;
+				break;
 			}
+		}
+		if (needsUpdate) {
+			update();
+			savestatus();
+			debugStatus();
 		}
 	}
 
@@ -315,8 +328,8 @@ mousepad = (function () {
 
 
 	function setTarget(targetX, targetY) {
-		curstatus.x = space.left +targetX * space.width;
-		curstatus.y = space.bottom -targetY * space.height;
+		curstatus.x = space.left + targetX * space.width;
+		curstatus.y = space.bottom - targetY * space.height;
 		forcePosition();
 	}
 
@@ -349,8 +362,12 @@ mousepad = (function () {
 					let targety = -(curstatus.y - space.bottom) / space.height;
 					$par('targetx').val(targetx);
 					$par('targety').val(targety);
-					let forcepos = curstatus.control;
-					vocoderWorker.postMessage({ type: 'set-status', data: { targetx, targety, dragging, forcepos } })
+					let data = { targetx, targety, dragging };
+					if (curstatus.control) {
+						data.forcex = true;
+						data.forcey = true;
+					}
+					vocoderWorker.postMessage({ type: 'set-status', data })
 					clearInfo();
 				}
 				else {
@@ -358,6 +375,19 @@ mousepad = (function () {
 					vocoderWorker.postMessage({ type: 'set-status', data: { dragging } })
 				}
 			}
+		}
+
+		if (curstatus.where == 'left' && curstatus.left && !oldstatus.left) { 
+			let targety = -(curstatus.y - space.bottom) / space.height;
+			vocoderWorker.postMessage({ type: 'set-status', data: {targety, forcey: true} })
+			console.log('just clicked on left');
+		}
+
+
+		if (curstatus.where == 'top' && curstatus.left && !oldstatus.left) { 
+			let targetx = (curstatus.x - space.left) / space.width;
+			vocoderWorker.postMessage({ type: 'set-status', data: {targetx, forcex: true} })
+			console.log('just clicked on top '+targetx);
 		}
 		if (mode == 'motion_temp') {
 			if (!curstatus.shift) {
@@ -374,8 +404,7 @@ mousepad = (function () {
 	function forcePosition() {
 		let targetx = $parval('targetx');
 		let targety = $parval('targety');
-		vocoderWorker.postMessage({ type: 'set-status', data: { targetx, targety, dragging: true, forcepos: true } })
-		setTimeout(() => vocoderWorker.postMessage({ type: 'set-status', data: { dragging: false, forcepos: false } }), 2)
+		vocoderWorker.postMessage({ type: 'set-status', data: { targetx, targety, dragging: false, forcex: true, forcey: true } });
 	}
 
 	function debounce(func, timeout = 300) {
@@ -425,9 +454,14 @@ mousepad = (function () {
 			top = 0;
 		}
 		else {
-			w = Math.min(outer.width(), outer.height());
+			w = Math.min(outer.width(), outer.height()) - 30;
+			let bottom = (outer.height() - w) / 2;
+			if (bottom < 30)
+				bottom = 30;
+			top = outer.height() - w - bottom;
+			if (top < 0)
+				top = 0;
 			left = (outer.width() - w) / 2;
-			top = (outer.height() - w) / 2;
 		}
 
 		$('canvas.dynamic', inner).remove();
@@ -629,36 +663,17 @@ mousepad = (function () {
 
 	function updateEffectsParams() {
 
-		const revSendGain = $parval("revsend");
-		let gain = revSendGain <= -35.5 ? 0 : dbToAmplitude(revSendGain);
+		const revDryWet = $parval("revsend") - 0;
+		let balance = revDryWet <= -35.5 ? 0 : dbToAmplitude(revDryWet);
 		if (!$parval('enable-reverb'))
-			gain = 0;
-		console.log({ dry: 1 - gain, wet: gain })
-		if (reverbWetNode)
-			reverbWetNode.gain.setTargetAtTime(gain, audioContext.currentTime, 0.01);
-		if (reverbDryNode)
-			reverbDryNode.gain.setTargetAtTime(1 - gain, audioContext.currentTime, 0.01);
-		// if (reverbSendNode) {
-		// 	let gain = revSendGain <= -35.5 ? 0 : dbToAmplitude(revSendGain);
-		// 	reverbSendNode.gain.setTargetAtTime(gain, audioContext.currentTime, 0.01);
-		// }
-		$('#reverb-value').text(revSendGain <= -35.5 ? '-' : revSendGain.toFixed(0) + ' dB');
-
-		async function loadIR(revTypeName) {
-			let leftURL = 'ir/48k-lr/' + revTypeName + ', 48K L.wav';
-			let rightURL = 'ir/48k-lr/' + revTypeName + ', 48K R.wav';
-			const lefrResponse = await fetch(leftURL);
-			const leftArrayBuffer = await lefrResponse.arrayBuffer();
-			const rightResponse = await fetch(rightURL);
-			const rightArrayBuffer = await rightResponse.arrayBuffer();
-			reverbLeftNode.buffer = await audioContext.decodeAudioData(leftArrayBuffer);
-			reverbRightNode.buffer = await audioContext.decodeAudioData(rightArrayBuffer);
-		}
+			balance = 0;
+		reverb.setDryWet(balance);
+		$('#reverb-value').text(revDryWet <= -35.5 ? '-' : revDryWet.toFixed(0) + ' dB');
 
 		let revTypeName = $('[par="revtype"]').val();
 		if (revTypeName != updateEffectsParams.revTypeName) {
 			updateEffectsParams.revTypeName = revTypeName;
-			loadIR(revTypeName);
+			reverb.loadIR(revTypeName);
 		}
 
 
@@ -670,14 +685,18 @@ mousepad = (function () {
 		let feedback = $parval("feedback");
 		let lopass = $parval("lopass");
 		let mix = $parval("delmix");
-		if (!$parval("enable-delay")) 
+		if (!$parval("enable-delay"))
 			mix = 0;
-		
+
 		$('#left-delay-value').text(ldelay.toFixed(3) + ' ms');
 		$('#right-delay-value').text(rdelay.toFixed(3) + ' ms');
 		$('#delay-feedback-value').text(feedback.toFixed(3) + ' %');
 		$('#delay-lopass-value').text(alphaToCutoff(lopass).toFixed(1) + ' Hz');
 		$('#delay-mix-value').text(mix.toFixed(3) + ' %');
+
+		$('#transpose-x-value').text($parval('transposeX'));
+		$('#transpose-y-value').text($parval('transposeY'));
+		$('#transpose-m-value').text($parval('transposeM'));
 
 		vocoderOscillatorNode.port.postMessage({
 			type: 'set-delay', data: {
@@ -686,10 +705,17 @@ mousepad = (function () {
 				rdelay,
 				feedback,
 				lopass,
-				mix
+				mix,
 			}
 		});
 
+		vocoderWorker.postMessage({
+			type: 'set-status', data: {
+				transposeX: $parval('transposeX'),
+				transposeY: $parval('transposeY'),
+				transposeM: $parval('transposeM'),
+			}
+		});
 	}
 
 
@@ -869,7 +895,7 @@ mousepad = (function () {
 
 
 		let lin = $parval('enable-linear');
-		if (lin && !dragging && waves.x.data && waves.y.data) {
+		if (lin /*&& !dragging*/ && waves.x.data && waves.y.data) {
 			let gfx = waves.x.data ? oscOutStatus.incx / waves.x.data.length : -1;
 			let gfy = waves.y.data ? -oscOutStatus.incy / waves.y.data.length : -1;
 			let angle = Math.atan2(gfy, gfx);
@@ -1056,13 +1082,6 @@ mousepad = (function () {
 	// window.addEventListener('pointerleave', onAnyPointerEvent);
 	// window.addEventListener('pointerover', onAnyPointerEvent);
 	// window.addEventListener('pointerout', onAnyPointerEvent);
-
-
-
-
-
-
-
 
 
 

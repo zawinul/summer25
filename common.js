@@ -7,19 +7,25 @@ const LFOWAVE_SAW_UP = 3;
 const LFOWAVE_SAW_DOWN = 4;
 const LFOWAVE_SQUARE = 5;
 
+const VOCODER_DRY_OUTPUT = 0;
+const VOCODER_WET_OUTPUT = 1;
+const RECORDER_DRY_INPUT = 0;
+const RECORDER_WET_INPUT = 1;
+
+
 const pi = Math.PI;
 const twoPi = 2 * Math.PI;
 
 const mergeModes = [
 	["mix", "X + Y", "X", "Y", "X+Y"],
-	["diff", "|X - Y|", "X", "Y", "|X-Y|"],
-	["min", "min(X,Y)", "X", "Y", "min(X,Y)"],
-	["max", "max(X,Y)", "X", "Y", "max(X,Y)"],
+	// ["diff", "|X - Y|", "X", "Y", "|X-Y|"],
+	// ["min", "min(X,Y)", "X", "Y", "min(X,Y)"],
+	// ["max", "max(X,Y)", "X", "Y", "max(X,Y)"],
 	["dxmix", "ΔX + Y", "ΔX", "Y", "ΔX+Y"],
 	["dymix", "X + ΔY", "X", "ΔY", "X+ΔY"],
 	["dxdymix", "ΔX + ΔY", "ΔX", "ΔY", "ΔX+ΔY"],
 	["xcy", "X * contour[Y]", "X", "contour(Y)", "X*contour(Y)"],
-	["cxy", "contour[X] * Y", "contour(X)", "Y", "contour(X)*Y"]
+	["cxy", "Y * contour[X]", "contour(X)", "Y", "contour(X)*Y"]
 ];
 
 function lfowave(shape, rad, deltaph) { // -PI < rad <PI
@@ -60,8 +66,6 @@ function normalize(x) {
 
 
 function initCommon(fftSize, overlap, sampleRate) {
-
-	let debugdump = {}
 
 	const doPhaseVocoder = true;
 	const simplifiedPhaseVocoder = true;
@@ -111,89 +115,27 @@ function initCommon(fftSize, overlap, sampleRate) {
 		// const freqDeviationHz = (phaseDeviation * sampleRate) / (twoPi * hopSize);
 		const freqDeviationHz = (phaseDeviation / twoPi) * hopSizeHz;
 
-		let freq = binCenterFreqHz[k] + freqDeviationHz;
+		let freq = binCenterFreqHz[band] + freqDeviationHz;
 		return freq;
 	}
 
-	function frequencyToPhaseDelta(frequency, band) {
+	function frequencyToBand(f) {
+		return Math.round(f/freqPerBin);
+	}
+
+	function bandToFrequency(band) {
+		return band*freqPerBin;
+	}
+
+	function frequencyToPhaseDelta(frequency) {
+		const band = frequencyToBand(frequency);
 		let freqDeviationHz = frequency - binCenterFreqHz[band];
 		let phaseDeviation = twoPi * freqDeviationHz / hopSizeHz;
 		let expectedPhaseDelta = twoPi * hopSize * band / fftSize;
 		let phaseDelta = expectedPhaseDelta + phaseDeviation;
-		return phaseDelta;
+		return { band, phaseDelta };
 	}
 
-	function complexSpectrumToPhaseVocoder(complexSpectrum) {
-		const magnitudes = new Float32Array(fftSize / 2 + 1);
-		const currentPhases = new Float32Array(fftSize / 2 + 1);
-		const frequencies = new Float32Array(fftSize / 2 + 1);
-
-		for (let k = 0; k < fftSize / 2 + 1; k++) {
-			const re = complexSpectrum[2 * k];
-			const im = complexSpectrum[2 * k + 1];
-
-			magnitudes[k] = Math.sqrt(re * re + im * im);
-			currentPhases[k] = Math.atan2(im, re);
-
-			// Calcola la differenza di fase rispetto al frame precedente
-			let phaseDelta = currentPhases[k] - lastPhases[k];
-
-			// Questa è la variazione di fase che ci aspetteremmo se la frequenza
-			// del segnale fosse esattamente al centro del bin della FFT.
-			let expectedPhaseDelta = twoPi * hopSize * k / fftSize;
-
-			// 6. "Scarta" la fase (Phase Unwrapping)
-			// Sottraiamo la variazione attesa e normalizziamo il risultato tra -π e +π
-			// per trovare la deviazione reale dalla frequenza del bin.
-			let phaseDeviation = phaseDelta - expectedPhaseDelta;
-			phaseDeviation = phaseDeviation - twoPi * Math.round(phaseDeviation / twoPi);
-
-			// const hopSize = windowSize / overlap;
-			// const hopSizeSec = hopSize / sampleRate;
-			// const hopSizeHz = sampleRate / hopSize;
-
-
-			// 7. Calcola la frequenza reale
-			// La frequenza reale è la frequenza del bin più la deviazione,
-			// convertita da radianti a Hz.
-			// const freqDeviationHz = (phaseDeviation * sampleRate) / (twoPi * hopSize);
-			const freqDeviationHz = (phaseDeviation / twoPi) * hopSizeHz;
-
-			frequencies[k] = binCenterFreqHz[k] + freqDeviationHz;
-
-			// --- FINE LOGICA CHIAVE ---
-		}
-		lastPhases = currentPhases;
-		return { magnitudes, frequencies };
-
-	}
-
-	function phaseVocoderToComplexSpectrum(magnitudes, frequencies) {
-
-		//const currentPhases = new Float32Array(fftSize / 2 + 1);
-		const complexSpectrum = fft.createComplexArray();
-
-		// 1. Ricostruisci la fase e converti da polare a cartesiano
-		for (let k = 0; k < magnitudes.length; k++) {
-
-
-			let freqDeviationHz = frequencies[k] - binCenterFreqHz[k];
-			let phaseDeviation = twoPi * freqDeviationHz / hopSizeHz;
-			let expectedPhaseDelta = twoPi * hopSize * k / fftSize;
-			let phaseDelta = expectedPhaseDelta + phaseDeviation;
-			let currentPhase = lastPhases[k] + phaseDelta;
-			if (currentPhase > twoPi)
-				currentPhase -= twoPi;
-			else if (currentPhase < -twoPi)
-				currentPhase += twoPi;
-			lastPhases[k] = currentPhase;
-			complexSpectrum[2 * k] = magnitudes[k] * Math.cos(currentPhase);
-			complexSpectrum[2 * k + 1] = magnitudes[k] * Math.sin(currentPhase);
-		}
-
-		return complexSpectrum;
-
-	}
 
 	function simplified_complexSpectrumToPhaseVocoder(complexSpectrum) {
 		const magnitudes = new Float32Array(fftSize / 2 + 1);
@@ -230,7 +172,7 @@ function initCommon(fftSize, overlap, sampleRate) {
 
 	}
 
-	function simplifiedAnalysisAtPoint(signal, point, debugdump) {
+	function simplifiedAnalysisAtPoint(signal, point) {
 		const len = signal.length;
 		const modlen = x => { while (x < 0) x += len; while (x >= len) x -= len; return x; };
 		let window = simplifiedAnalysisAtPoint.window;
@@ -239,9 +181,6 @@ function initCommon(fftSize, overlap, sampleRate) {
 
 		let start1 = modlen(Math.round(point + len - windowSize / 2 - hopSize / 2));
 		let start2 = modlen(start1 + hopSize);
-		debugdump.start1 = start1;
-		debugdump.start2 = start2;
-		debugdump.point = point;
 
 		// if (start1 < 0) {
 		// 	start2 = start2 - start1;
@@ -273,7 +212,7 @@ function initCommon(fftSize, overlap, sampleRate) {
 			}
 			return { magnitudes, phases }
 		});
-		debugdump.analized = analized;
+
 		let magnitudes = [], deltaPh = [];
 		for (let i = 0; i < fftSize / 2 + 1; i++) {
 			magnitudes[i] = analized[1].magnitudes[i];
@@ -286,8 +225,67 @@ function initCommon(fftSize, overlap, sampleRate) {
 			if (Number.isNaN(magnitudes[i]))
 				magnitudes[i] = 0;
 		}
-		debugdump.aDeltaPh = deltaPh;
+
 		return { magnitudes, deltaPh };
+	}
+
+	function transpose(magnitudes, deltaPh, freqFunction) {
+
+		let outm = transpose.outm;
+		if (!outm)
+			outm = transpose.outm = new Float32Array(magnitudes.length);
+		let outph = transpose.outph;
+		if (!outph)
+			outph = new Float32Array(deltaPh.length);
+
+		outm.fill(0);
+		outph.fill(0);
+
+		for(let srcBand = 0; srcBand < magnitudes.length; srcBand++) {
+			let freq = phaseDeltaToFrequency(deltaPh[srcBand], srcBand);
+			const newFreq = freqFunction(freq, srcBand);
+			let {band, phaseDelta} = frequencyToPhaseDelta(newFreq);
+
+			if (magnitudes[srcBand] == 0)
+				continue;
+
+			outph[band] = (phaseDelta*magnitudes[srcBand] + outph[band]*outm[band])/(outm[band] + magnitudes[srcBand]);
+			outm[band] += magnitudes[srcBand];
+		}
+		for(let i=0;i<outm.length;i++) {		
+			magnitudes[i] = outm[i];
+			deltaPh[i] = outph[i];
+		}
+	}
+
+	
+	function spectralTransform(magnitudes, deltaPh, transpFunction, ...transpFunctionArguments) {
+
+		let outm = spectralTransform.outm;
+		if (!outm)
+			outm = spectralTransform.outm = new Float32Array(magnitudes.length);
+		let outph = spectralTransform.outph;
+		if (!outph)
+			outph = new Float32Array(deltaPh.length);
+
+		outm.fill(0);
+		outph.fill(0);
+
+		for(let srcBand = 0; srcBand < magnitudes.length; srcBand++) {
+			let freq = phaseDeltaToFrequency(deltaPh[srcBand], srcBand);
+			let { a, f} = transpFunction(freq, magnitudes[srcBand], srcBand, ...transpFunctionArguments);
+			let {band, phaseDelta} = frequencyToPhaseDelta(f);
+
+			if (a == 0)
+				continue;
+
+			outph[band] = (phaseDelta*a + outph[band]*outm[band])/(outm[band] + a);
+			outm[band] += a;
+		}
+		for(let i=0;i<outm.length;i++) {		
+			magnitudes[i] = outm[i];
+			deltaPh[i] = outph[i];
+		}
 	}
 
 	function simplifiedResynthesize(frame, outArea) {
@@ -383,11 +381,15 @@ function initCommon(fftSize, overlap, sampleRate) {
 		fft, fftSize, windowSize, overlap, hopSize,
 		doPhaseVocoder, simplifiedPhaseVocoder,
 		simplifiedAnalysisAtPoint, simplifiedResynthesize,
-		complexSpectrumToPhaseVocoder, phaseVocoderToComplexSpectrum,
+		// complexSpectrumToPhaseVocoder, phaseVocoderToComplexSpectrum,
 		simplified_complexSpectrumToPhaseVocoder, simplified_phaseVocoderToComplexSpectrum,
 		frequencyToPhaseDelta,
+		bandToFrequency,
+		transpose,
+		
+		
+		spectralTransform,
 		resetPhases,
-		debugdump,
 		linearSpeedRescale,
 		lfoAmpRescale,
 		delayLengthRescale,

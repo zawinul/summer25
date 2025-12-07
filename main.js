@@ -3,6 +3,7 @@
 const fftSize = 1024 * 4;
 const overlap = 4;
 
+
 let audioContext;
 let vocoderWorker;
 let waveX, waveY;
@@ -11,9 +12,6 @@ let oscInStatus = {};
 let oscOutStatus = {};
 let loadPresetDiv, loadXWaveDiv, loadYWaveDiv;
 let vocoderOscillatorNode;
-// let reverbSendNode;
-let reverbLeftNode, reverbRightNode;
-let reverbWetNode, reverbDryNode;
 let presetName;
 let isSuspended = true;
 let demoWaves;
@@ -23,9 +21,12 @@ let player = false;
 let vertical = window.innerHeight > window.innerWidth;
 let presetListPage = false;
 let recorder;
-
+let reverb;
 const blue = '#007bff', lightGray = '#c0c0c0', darkGray = '#606060';
 const wavePrefix = 'waves/';
+
+let voc_requested = 0;
+let voc_received = 0;
 
 const wlabel = x => x ? x.replace(/_/g, ' ').replace(/-/g, ' ') : ''
 //const $par = parameterName => $('[par="'+parameterName+'"]');
@@ -83,14 +84,13 @@ function getUrlParams() {
 }
 const urlParams = getUrlParams();
 
-$(function () {
+(function () {
 	let oscCreated = Promise.withResolvers();
 	let oscInitialized = Promise.withResolvers();
 	let workerCreated = Promise.withResolvers();
 	let workerInitialized = Promise.withResolvers();
 
 
-	let reverbDryNode;
 	let masterGainNode;
 
 
@@ -123,21 +123,7 @@ $(function () {
 		});
 
 
-		// $('#slider-reverb').on('input', function () {
-		// 	const value = parseFloat($(this).val());
-		// 	if (reverbSendNode) {
-		// 		let gain = value < -95.9 ? 0 : dbToAmplitude(value);
-		// 		reverbSendNode.gain.setTargetAtTime(gain, audioContext.currentTime, 0.01);
-		// 	}
-		// 	$('#reverb-value').text(value.toFixed(0) + ' dB');
-		// });
 
-
-		// $('.wavename').on('change', function (evt) {
-		// 	let url = $(this).val();
-		// 	let index = $(this).attr('data-index');
-		// 	loadAudio(url, index);
-		// });
 		$par("merge-mode,merge-mix,contourResolution").on('change', onMergeModeChange);
 		$par("merge-mix,contourResolution").on('input', onMergeModeChange);
 
@@ -227,10 +213,19 @@ $(function () {
 			$(`<option value="${value}">${label}</option>`).appendTo(mmsel);
 		}
 
-		//$('.help-on-line .content').load('help/help-ita.html')
-		$('.help-on-line .content').load('help/help-eng.html');
-		// if (urlParams.fullscreen != undefined)
-		// 	setTimeout(()=>setFullscreen(true), 500);
+		let content = $('.help-on-line .content');
+		$.get("help/help-ita.html", function (data) {
+			content.append(data);
+		});
+		$.get("help/help-eng.html", function (data) {
+			content.append(data);
+		});
+		// content.load('help/help-ita.html');
+		// content.load('help/help-eng.html');
+		content.on('click', '.switch img', function () {
+			let lang = $(this).attr('lang');
+			content.attr('lang', lang);
+		});
 		if (urlParams.player != undefined) {
 			$('body').addClass('player');
 			player = true;
@@ -249,14 +244,33 @@ $(function () {
 		if (urlParams.presetlist != undefined || (urlParams.player != undefined && urlParams.preset === undefined))
 			showPresetList();
 
-		$('#btn-rec').on('click', function (evt) {
-			let on = recorder.isRecording();
-			on = !on;
-			recorder.setRecording(on)
-			$('body').toggleClass('recording', on);
+		$('#btn-rec').on('click', toggleRecording);
+
+		$('#rec-clear').on('click', function (evt) {
+			recorder.clear();
 		});
+		$('#rec-save').on('click', function (evt) {
+
+		});
+		$('#rec-to-x').on('click', function (evt) {
+			recorder.setRecording(false);
+			$('body').toggleClass('recording', false);
+			setWaveFromRecorder('x');
+		});
+		$('#rec-to-y').on('click', function (evt) {
+			recorder.setRecording(false);
+			$('body').toggleClass('recording', false);
+			setWaveFromRecorder('y');
+		});
+
 	}
 
+	function toggleRecording() {
+		let on = recorder.isRecording();
+		on = !on;
+		recorder.setRecording(on)
+		$('body').toggleClass('recording', on);
+	}
 	function onDropFile(file, params) {
 		if (params == 'wavex' || params == 'wavey') {
 			if (!file.type.startsWith("audio/")) {
@@ -303,6 +317,7 @@ $(function () {
 		}
 		spinnerOff();
 	}
+
 	async function loadWave(index, url) {
 		try {
 			spinnerOn();
@@ -314,22 +329,18 @@ $(function () {
 		}
 	}
 
-	function uiMessage(msg) {
-		if (uiMessage.timeout)
-			clearTimeout(uiMessage.timeout);
-		uiMessage.timeout = setTimeout(() => {
-			$('#status').text('');
-		}, 2000);
-		$('#status').text(msg);
-	}
-
 	async function initVocoderOscillator() {
 		log('in initVocoderOscillator');
 		await audioContext.audioWorklet.addModule('vocoder-osc.worklet.js');
 
+		let outputChannelCount = [];
+		outputChannelCount[VOCODER_DRY_OUTPUT] = 1;
+		outputChannelCount[VOCODER_WET_OUTPUT] = 2;
+
 		vocoderOscillatorNode = new AudioWorkletNode(audioContext, 'phase-vocoder-processor', {
-			numberOfOutputs: 1,
-			outputChannelCount: [2] // <--- 
+			numberOfInputs: 0,
+			numberOfOutputs: 2,
+			outputChannelCount
 		});
 		vocoderOscillatorNode.port.onmessage = evt => onOscillatorMessage(evt);
 		await oscCreated.promise;
@@ -356,7 +367,6 @@ $(function () {
 
 		vocoderWorker.onerror = function (error) {
 			console.error('Errore worker:', error);
-			uiMessage('Errore nel worker vocoder');
 		};
 
 
@@ -381,74 +391,36 @@ $(function () {
 			audioContext = new (window.AudioContext || window.webkitAudioContext)();
 			await audioContext.suspend();
 
-			uiMessage('AudioContext creato. Inizializzazione worker vocoder...');
 			const lib = initCommon(fftSize, overlap, audioContext.sampleRate);
 			Object.assign(window, lib);
 			mousepad.updateMotionUI();
 
+			reverb = await initReverb(audioContext);
 
 			await initVocoderWorker();
 			await initVocoderOscillator();
 
 
-			// Reverb Send
-			// reverbSendNode = audioContext.createGain();
-			// vocoderOscillatorNode.connect(reverbSendNode);
-			// reverbSendNode.gain.value = 1;
-
-			// Reverb
-			const reverbSplitter = audioContext.createChannelSplitter(2);
-			//reverbSendNode.connect(reverbSplitter);
-			vocoderOscillatorNode.connect(reverbSplitter);
-			reverbLeftNode = audioContext.createConvolver();
-			reverbRightNode = audioContext.createConvolver();
-			reverbSplitter.connect(reverbLeftNode, 0);
-			reverbSplitter.connect(reverbRightNode, 1);
-			const reverbMerger = audioContext.createChannelMerger(2);
-			reverbLeftNode.connect(reverbMerger, 0, 0);
-			reverbRightNode.connect(reverbMerger, 0, 1);
-
-			// rev dry
-			reverbDryNode = audioContext.createGain();
-			reverbDryNode.gain.value = 1;
-			vocoderOscillatorNode.connect(reverbDryNode);
-
-			// rev wet 
-			reverbWetNode = audioContext.createGain();
-			reverbWetNode.gain.value = 0;
-			reverbMerger.connect(reverbWetNode);
 
 			// main gain
 			masterGainNode = audioContext.createGain();
-			reverbWetNode.connect(masterGainNode);
-			reverbDryNode.connect(masterGainNode);
 			masterGainNode.gain.value = 1.0;
 
 			// recorder
 			recorder = await initRecorder(audioContext, $('#show-recorder')[0]);
 
-			// exit
-			masterGainNode.connect(recorder.node);
-			recorder.node.connect(audioContext.destination);
-
-			uiMessage('Pronto. Audio in esecuzione.');
-			//$('.wavename').trigger('change');
+			vocoderOscillatorNode.connect(reverb.inputNode, VOCODER_WET_OUTPUT, 0);
+			vocoderOscillatorNode.connect(recorder.node, VOCODER_DRY_OUTPUT, RECORDER_DRY_INPUT);
+			reverb.outputNode.connect(masterGainNode);
+			masterGainNode.connect(recorder.node, 0, RECORDER_WET_INPUT);
+			masterGainNode.connect(audioContext.destination);
 
 		}
 		catch (e) {
 			log(e);
-			uiMessage('Errore: ' + e);
 			alert('Errore: ' + e);
 		}
 	}
-
-	// async function updateReverbIr() {
-	// 	let name = $('#reverb-type').val();
-	// 	let url = 'ir/Samplicity - Bricasti IRs version 2023-10, left-right files, 44.1 Khz/' + name + '.wav';
-	// 	const response = await fetch(url);
-	// 	const arrayBuffer = await response.arrayBuffer();
-	// 	reverbNode.buffer = await audioContext.decodeAudioData(arrayBuffer);
-	// }
 
 	function togglePause() {
 		if (isSuspended) {
@@ -480,6 +452,7 @@ $(function () {
 		//log({ onOscillatorMessage: evt.data.type })
 		let d = evt.data;
 		if (d.type == 'new-frame-request') {
+			voc_requested++;
 			vocoderWorker.postMessage({ type: 'new-frame-request' });
 		}
 		if (d.type == 'created') {
@@ -522,6 +495,8 @@ $(function () {
 				type: 'graph-data-request',
 				size: size
 			});
+			voc_received++;
+			//console.log(`voc_requested: ${voc_requested}, voc_received: ${voc_received}`)
 
 		}
 		if (d.type == 'graph-data') {
@@ -681,6 +656,28 @@ $(function () {
 		loadWave(index, url);
 	}
 
+	async function setWaveFromRecorder(index) {
+		const data = recorder.getDryRecord();
+		if (data.length <= 0)
+			return;
+		if (index == 'y') {
+			waveY = data.slice();
+			mousepad.setWave(index, waveY);
+		}
+		else {
+			waveX = data.slice();
+			mousepad.setWave(index, waveX);
+		}
+
+		let payload = {
+			type: 'set-wave',
+			index: index,
+			buffer: data.buffer
+		};
+		vocoderWorker.postMessage(payload, [payload.buffer]);
+
+	}
+
 	async function setWave(index, arrayBuffer, name) {
 		if (index == 'y')
 			waveYname = name;
@@ -714,7 +711,6 @@ $(function () {
 	// async function loadAudio(url, index) {
 	// 	if (!audioContext) return;
 	// 	if (!url || url == '') return;
-	// 	uiMessage('Caricamento audio ' + index.toUpperCase() + ' in corso...');
 	// 	try {
 	// 		let lib = 'the-libre-sample-pack/master'
 	// 		let p = url.indexOf(lib);
@@ -749,7 +745,6 @@ $(function () {
 	// 		// vocoderWorker.postMessage(payload, [payload.buffer]);
 	// 	}
 	// 	catch (error) {
-	// 		uiMessage(`Errore nel caricamento dell'audio: ${error.message}`);
 	// 		console.error(error); throw error;
 	// 	}
 	// }
@@ -931,6 +926,7 @@ $(function () {
 		waveY = new Float32Array(yBuffer);
 		restoreDataV2(json);
 		setTimeout(sendAllParameters, 1);
+		vocoderWorker.postMessage({ type: 'set-status', data: { clearDelay: true } })
 
 		return true;
 
@@ -1097,11 +1093,8 @@ $(function () {
 		$('[par]').toArray().forEach(function (p) {
 			p = $(p);
 			let par = p.attr('par');
-			let val = p.val();
-			if (p.attr('isString') !== undefined)
-				d.par[par] = val;
-			else
-				d.par[par] = val - 0;
+			let val = $parval(par);
+			d.par[par] = val;
 		})
 
 		let txt = fileMagic + '\n' + JSON.stringify(d, null, 2) + '\n' + jsonTerminator;
@@ -1187,6 +1180,7 @@ $(function () {
 				const nextmode = { drag: 'motion', motion: 'effects', effects: 'help', help: 'drag' };
 				mousepad.setMode(nextmode[mousepad.getMode()]);
 			}
+			else if (c == 'r') toggleRecording();
 		});
 	}
 
@@ -1216,22 +1210,8 @@ $(function () {
 })();
 
 
-
 window.setpar = function (data) {
 	vocoderWorker.postMessage({ type: 'set-status', data })
 }
 
 
-
-// $(document).ready(function () {
-// 	$("#dropdownBtn").on("click", function (e) {
-// 		e.stopPropagation(); // evita la propagazione del click
-// 		$("#dropdownMenu").toggleClass("hidden");
-// 	});
-
-// 	// Chiudi il menu se clicchi fuori
-// 	$(document).on("click", function () {
-// 		$("#dropdownMenu").addClass("hidden");
-// 	});
-// });
-// });

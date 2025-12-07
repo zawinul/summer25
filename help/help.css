@@ -146,8 +146,32 @@
 .paper .references li {
   margin-bottom: 8px;
 }
+.paper kbd {
+  background-color: #ddd;
+  border: 1px solid #b6bec6;
+  border-radius: 2px;
+  padding: 1px 3px;
+  border-right: 1px solid #aaa;
+  border-bottom: 1px solid #aaa;
+  font-weight: bold;
+}
+.paper .switch {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+}
+.paper[lang="ita"] .switch img[lang="ita"] {
+  display: none;
+}
+.paper[lang="eng"] .switch img[lang="eng"] {
+  display: none;
+}
 .paper .main-content {
   column-count: 1;
 }
-/* Evita che alcuni elementi vengano spezzati tra le colonne */
-/* Media Query per rendere il layout a colonna singola su schermi piccoli */
+.content[lang="ita"] .paper[lang="eng"] {
+  display: none;
+}
+.content[lang="eng"] .paper[lang="ita"] {
+  display: none;
+}

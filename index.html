@@ -18,16 +18,14 @@
 
 
 		<h1>Summer 25</h1>
-		<p class="no-fullscreen">A Phase Vocoder interpolation lab.</p>
+		<!-- <p class="no-fullscreen">A Phase Vocoder interpolation lab.</p> -->
 
 
 
 		<div class="left-panel">
 
 			<div class="controls">
-				<canvas id="show-recorder"></canvas>
 				<button id="btn-pause" class="play"><kbd>P</kbd> <span id="btn-pause-text">play</span></button>
-				<button id="btn-rec" class="rec"><kbd>R</kbd> <span id="btn-rec-text">record</span></button>
 			</div>
 
 			<div class="control-group">
@@ -118,7 +116,6 @@
 						<option value=".75"></option>
 						<option value="1"></option>
 					</datalist>
-					<!-- <span id="reverb-value"></span> -->
 				</div>
 
 				<div class="control-group res-group">
@@ -142,7 +139,18 @@
 				<canvas class="cxy"></canvas>
 			</div>
 		</div>
-		<div id="status"></div>
+
+		<div class="controls recorder-controls">
+			<div class="buttons">
+				<button id="btn-rec" class="rec"><kbd>R</kbd> <span>record</span></button>
+				<button id="rec-clear" class="rec">clear</button>
+				<button id="rec-to-x" class="rec">to X</button>
+				<button id="rec-to-y" class="rec">to Y</button>
+				<button id="rec-save" class="rec">💾 save</button>
+			</div>
+			<canvas id="show-recorder"></canvas>
+		</div>
+
 
 	</div>
 
@@ -174,7 +182,9 @@
 							<input type="hidden" par="targety" value="0">
 						</div>
 						<div class="vspace" style="height: 25px;">&nbsp;</div>
-						<h3>Linear <input type="checkbox" checked class="enable-feature linear" dest="enable-linear"></h3>
+						<h3>Linear <input type="checkbox" checked class="enable-feature linear" dest="enable-linear"
+								isBoolean>
+						</h3>
 						<input type="hidden" par="enable-linear" value="true" isBoolean>
 
 						<div class="lfoshape">
@@ -207,7 +217,9 @@
 
 						</div>
 
-						<h3>Cyclic <input type="checkbox" checked class="enable-feature cyclic" dest="enable-cyclic"></h3>
+						<h3>Cyclic <input type="checkbox" checked class="enable-feature cyclic" dest="enable-cyclic"
+								isBoolean>
+						</h3>
 						<input type="hidden" par="enable-cyclic" value="true" isBoolean>
 
 						<div class="lfoshape">
@@ -302,8 +314,35 @@
 
 				<div class="effects-controls subpanel hideable no-fullscreen">
 					<div class="content">
+						<h3>Transpose
+							<input type="checkbox" checked class="enable-feature transpose" dest="enable-transpose"
+								isBoolean>
+						</h3>
+						<input type="hidden" par="enable-transpose" value="true" isBoolean>
+						<div class="control-group">
+							<label>X</label>
+							<input type="range" par="transposeX" min="-12" max="12" value="0" step="0.05" list="transpose-values">
+							<span class="text" id="transpose-x-value"></span>
+						</div>
+						<div class="control-group">
+							<label>Y</label>
+							<input type="range" par="transposeY" min="-12" max="12" value="0" step="0.05" list="transpose-values">
+							<span class="text" id="transpose-y-value"></span>
+						</div>
+						<div class="control-group">
+							<label>Out</label>
+							<input type="range" par="transposeM" min="-12" max="12" value="0" step="0.05" list="transpose-values">
+							<span class="text" id="transpose-m-value"></span>
+						</div>
+
+						<datalist id="transpose-values">
+							<option value="-12" label="-12"></option>
+							<option value="0" label="0"></option>
+							<option value="12" label="12"></option>
+						</datalist>
 						<h3>Delay
-						<input type="checkbox" checked class="enable-feature delay" dest="enable-delay"></h3>
+							<input type="checkbox" checked class="enable-feature delay" dest="enable-delay" isBoolean>
+						</h3>
 						<input type="hidden" par="enable-delay" value="true" isBoolean>
 
 
@@ -341,7 +380,8 @@
 						</div>
 
 						<h3>Reverb
-						<input type="checkbox" checked class="enable-feature reverb" dest="enable-reverb"></h3>
+							<input type="checkbox" checked class="enable-feature reverb" dest="enable-reverb" isBoolean>
+						</h3>
 						<input type="hidden" par="enable-reverb" value="true" isBoolean>
 						<div class="control-group">
 							<label>Rev Type</label>
@@ -357,30 +397,26 @@
 
 				</div>
 
-				<div class="help-on-line subpanel hideable">
+				
+				<div class="spectre-controls subpanel hideable no-fullscreen">
 					<div class="content">
-						abcd
+
+					</div>
+
+				</div>
+
+				<div class="help-on-line subpanel hideable">
+					<div class="content" lang="eng">
 					</div>
 				</div>
 
 				<div id="top-drop-bar" class="drop-wave-bar draggable"
-					title="you can drag&drop here&#13;your X wave file"></div>
+					title="you can drag&drop here&#13;your X wave file">
+				</div>
+
 				<div id="left-drop-bar" class="drop-wave-bar draggable"
-					title="you can drag&drop here&#13;your Y wave file"></div>
-				<!-- <div class="settings-controls subpanel hideable">
-					<div class="content">
-						<div class="control-group">
-							<label>Luminosity</label>
-							<input type="range" id="luminosity" min="0" max="1" value=".3" step=".005">
-						</div>
-						<div class="control-group">
-							<label>Contrast</label>
-							<input type="range" id="contrast" min="0" max="1" value=".3" step=".005">
-						</div>
-					</div>
-
-				</div> -->
-
+					title="you can drag&drop here&#13;your Y wave file">
+				</div>
 			</div>
 		</div>
 	</div>
@@ -420,7 +456,7 @@
 		</ul>
 	</div>
 
-	<pre class="debug-monitor"></pre>
+	<pre class="debug-monitor hidden"></pre>
 
 	<!-- Spinner overlay -->
 	<div id="spinner-overlay" style="display: none;">
@@ -440,6 +476,8 @@
 	<script src="main.js"></script>
 	<script src="mousepad.js"></script>
 	<script src="record.js"></script>
+	<script src="reverb.js"></script>
+	<script src="spectre-canvas.js"></script>
 
 </body>
 

@@ -150,21 +150,42 @@
     .references li {
         margin-bottom: 8px;
     }
+
+
+
+    kbd {
+        background-color: #ddd;
+        border: 1px solid #b6bec6;
+        border-radius: 2px;
+        padding: 1px 3px;
+        border-right: 1px solid #aaa;
+        border-bottom: 1px solid #aaa;
+        font-weight: bold;
+    }
+
+    .switch {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+    }
+
+    &[lang="ita"] .switch img[lang="ita"] {
+        display: none;
+    }
+
+    &[lang="eng"] .switch img[lang="eng"] {
+        display: none;
+    }
 }
 
 .paper .main-content {
     column-count: 1;
 }
 
-/* Evita che alcuni elementi vengano spezzati tra le colonne */
+.content[lang="ita"] .paper[lang="eng"] {
+    display: none;
+}
 
-/* Media Query per rendere il layout a colonna singola su schermi piccoli */
-// @media (max-width: 768px) {
-//     .paper .main-content {
-//         column-count: 1;
-//     }
-
-//     .paper {
-//         padding: 20px;
-//     }
-// }
+.content[lang="eng"] .paper[lang="ita"] {
+    display: none;
+}

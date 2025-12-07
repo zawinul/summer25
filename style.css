@@ -48,8 +48,7 @@ body {
   margin: 20px 0;
   width: 100%;
 }
-.container .controls button.play,
-.container .controls button.rec {
+.container .controls button.play {
   background-color: #007bff;
   color: white;
   border: none;
@@ -59,10 +58,33 @@ body {
   cursor: pointer;
   font-size: 16px;
 }
-.recording .container .controls button.rec kbd {
+.container .controls.recorder-controls {
+  width: 266px;
+  border: 1px solid #aaa;
+  padding: 8px 6px;
+  background-color: #f0f0f0;
+  border-radius: 3px;
+}
+.container .controls.recorder-controls .buttons {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+.container .controls.recorder-controls .buttons button.rec {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 4px 4px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+}
+.recording .container .controls.recorder-controls button.rec kbd {
   background-color: #ff4d4d;
 }
-.container .controls #show-recorder {
+.container .controls.recorder-controls #show-recorder {
   width: 100%;
   height: 20px;
   border: 1px solid #a0a0a0;
@@ -133,11 +155,6 @@ button.padmode.padmode.on {
 .container select {
   width: 200px;
 }
-#status {
-  margin-top: 20px;
-  color: #666;
-  font-style: italic;
-}
 .panel {
   flex: 1;
   display: flex;
@@ -177,6 +194,10 @@ button.padmode.padmode.on {
   border: 0;
   touch-action: none;
 }
+.panel .canvas-container canvas.dynamic.spectre {
+  border: 2px solid red;
+  z-index: 301;
+}
 .panel .canvas-container .subpanel {
   width: 100%;
   height: 100%;
@@ -185,6 +206,9 @@ button.padmode.padmode.on {
   left: 0;
   top: 0;
   z-index: 200;
+}
+.panel .canvas-container .subpanel.help-on-line {
+  z-index: 301;
 }
 .panel .canvas-container .subpanel.help-on-line .content {
   overflow: auto;

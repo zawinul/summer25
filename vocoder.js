@@ -4,7 +4,10 @@ importScripts("fft.js");
 importScripts("common.js");
 importScripts("contour.js");
 
-
+let requested = false;
+let computing = false;
+let n_requested = 0;
+let n_delivered = 0;
 
 
 let sampleRate;
@@ -20,7 +23,6 @@ let window;
 let inparams = {
 	targetx: 0,
 	targety: 0,
-	forcepos: false,
 	dragging: false,
 	traction: 0,
 	mergeMix: .5,
@@ -43,7 +45,11 @@ let inparams = {
 	contourResolution: .5,
 
 	scale: 1,
-	steps: 0
+	steps: 0,
+
+	transposeX: 0,
+	transposeY: 0,
+	transposeM: 0,
 }
 
 let outparams = {
@@ -112,7 +118,7 @@ function incrementPosition() {
 	if (inparams.dragging) {
 		let dx = inparams.targetx - outparams.posx;
 		let dy = inparams.targety - outparams.posy;
-		if ((inparams.traction < 1) && !inparams.forcepos) {
+		if (inparams.traction < 1) {
 			const dist = Math.sqrt(dx * dx + dy * dy);
 			outparams.dist = dist;
 			let md = outparams.maxdist;
@@ -196,13 +202,22 @@ getGraphData.pos = [];
 
 let frameX, frameY, mergedFrame;
 function fillNextFrame(memory) {
-	//log('fnf', outparams.posx, outparams.posy);
 	if (waveY == emptyWave && waveY == emptyWave) {
 		memory.fill(0);
 		return;
 	}
 	frameX = waveX.getAnalizedFrame(outparams.posx + outparams.lfox, memory);
 	frameY = waveY.getAnalizedFrame(outparams.posy + outparams.lfoy, memory);
+
+	if (inparams.transposeX != 0) {
+		const fact = Math.pow(2, inparams.transposeX/12);
+		transpose(frameX.magnitudes, frameX.deltaPh, f=>f*fact);
+	}
+	if (inparams.transposeY != 0) {
+		const fact = Math.pow(2, inparams.transposeY/12);
+		transpose(frameY.magnitudes, frameY.deltaPh, f=>f*fact);
+	}
+
 
 
 	if (waveX == emptyWave)
@@ -218,9 +233,36 @@ function fillNextFrame(memory) {
 	if (mergedFrame.deltaPh)
 		mergedFrame.deltaPh[fftSize / 2] = 0;
 
+	// if (inparams.transposeM != 0) {
+	// 	const fact = Math.pow(2, inparams.transposeM/12);
+	// 	transpose(mergedFrame.magnitudes, mergedFrame.deltaPh, f=>f*fact);
+	// }
+
+	spectralTransform(mergedFrame.magnitudes, mergedFrame.deltaPh, segmentSpectralTransform, {points:[[.45,.55],[.55,.45]]});
+	
 	simplifiedResynthesize(mergedFrame, memory);
+
 	for (let i = 0; i < memory.length; i++)
 		memory[i] *= inparams.scale;
+}
+
+function segmentSpectralTransform(freq, amp, band, params) {
+	let fmin = bandToFrequency(1);
+	let fmax = bandToFrequency(sampleRate/2);
+	let logf = Math.log(freq/fmin)/Math.log(fmax/fmin);
+	let ampOut = 0, freqOut=freq;
+	const points = params.points;
+	for(let i=0;i<points.length-1;i++) {
+		let [x1,y1] = points[i];
+		let [x2,y2] = points[i+1];
+		if (logf>=x1 && logf<=x2) {
+			let logFOut = y1+(logf-x1)*(y2-y1)/(x2-x1);
+			freqOut = fmin*Math.pow(fmax/fmin, logFOut);
+			ampOut = amp;
+			break;
+		}
+	}
+	return {a:ampOut, f: freqOut}
 }
 
 let accx;
@@ -268,14 +310,14 @@ function mergeFrame(frame1, frame2) {
 		if (mode == 'xcy') {
 			for (let i = 0; i < cx.length; i++) {
 				mult = cx[i] < .00001 ? 0 : Math.pow(cy[i] / cx[i], inparams.mergeMix);
-				if (mult>1) mult = Math.pow(mult, .5);
+				//if (mult > 1) mult = Math.pow(mult, .5);
 				cm[i] = cx[i] * mult;
 			}
 		}
-		else  {
+		else {
 			for (let i = 0; i < cx.length; i++) {
-				mult = cy[i] < .00001 ? 0 : Math.pow(cx[i] / cy[i], 1-inparams.mergeMix);
-				if (mult>1) mult = Math.pow(mult, .5);
+				mult = cy[i] < .00001 ? 0 : Math.pow(cx[i] / cy[i], 1 - inparams.mergeMix);
+				//if (mult > 1) mult = Math.pow(mult, .5);
 				cm[i] = cy[i] * mult;
 			}
 		}
@@ -365,12 +407,6 @@ function mergeFrame(frame1, frame2) {
 	// 		magnitudes[i] = out[i];
 	// }
 
-	// debug
-	outparams.maxout = 0;
-	for (let i = 0; i < len; i++) {
-		if (magnitudes[i] > outparams.maxout)
-			outparams.maxout = magnitudes[i];
-	}
 
 
 	return mergeFrameSpace;
@@ -427,7 +463,7 @@ function setwave(index, buffer) {
 		let ph = Math.round(left + normPh * (right - left));
 		ph = ph % len;
 		//log('gaf', ph );
-		return simplifiedAnalysisAtPoint(data, ph, debugdump);
+		return simplifiedAnalysisAtPoint(data, ph);
 	}
 	let w = { data, len, left, right, getAnalizedFrame, ph };
 	if (index == 'y')
@@ -452,37 +488,6 @@ function initInterpolationPoints(sampleRate, fftSize) {
 
 	return { keys, counts };
 }
-
-// function quadraticInterpolation(points, x) {
-// 	// Trova l'indice del punto più vicino a x
-// 	let nearest = 0;
-// 	for (let i = 1; i < points.length; i++) {
-// 		if (Math.abs(x - points[i].x) < Math.abs(x - points[nearest].x)) {
-// 			nearest = i;
-// 		}
-// 	}
-
-// 	// select 3 point around nearest
-// 	let inizio;
-// 	if (nearest === 0) {
-// 		inizio = 0;
-// 	} else if (nearest === points.length - 1) {
-// 		inizio = points.length - 3;
-// 	} else {
-// 		inizio = nearest - 1;
-// 	}
-
-// 	const p0 = points[inizio];
-// 	const p1 = points[inizio + 1];
-// 	const p2 = points[inizio + 2];
-
-// 	// Lagrange polynome for 3 points
-// 	const L0 = ((x - p1.x) * (x - p2.x)) / ((p0.x - p1.x) * (p0.x - p2.x));
-// 	const L1 = ((x - p0.x) * (x - p2.x)) / ((p1.x - p0.x) * (p1.x - p2.x));
-// 	const L2 = ((x - p0.x) * (x - p1.x)) / ((p2.x - p0.x) * (p2.x - p1.x));
-
-// 	return p0.y * L0 + p1.y * L1 + p2.y * L2;
-// }
 
 self.onmessage = async function (event) {
 	const d = event.data;
@@ -512,10 +517,13 @@ self.onmessage = async function (event) {
 			else
 				inparams[k] = d.data[k];
 		}
-		if (inparams.forcepos) {
+		if (inparams.forcex) {
 			outparams.posx = inparams.targetx;
+			delete inparams.forcex;
+		}
+		if (inparams.forcey) {
 			outparams.posy = inparams.targety;
-
+			delete inparams.forcey;
 		}
 	}
 
@@ -539,36 +547,13 @@ self.onmessage = async function (event) {
 		}
 	}
 	if (type == 'new-frame-request') {
-		const t0 = now();
-		try {
-			incrementPosition();
-			computeLfo();
-			fillNextFrame(outBuffer);
-			//outparams.elapsed = now() - t0;
-		} catch (error) {
-			outparams.error = error.message;
-			self.postMessage({
-				type: 'error',
-				data: {
-					error: error.message,
-					filename: error.filename,
-					lineno: error.lineno
-				}
-			});
+		n_requested++; 
+		requested = true;
+		if (!computing) {
+			requested = false;
+			processAndSendLoop();
 		}
-
-		self.postMessage({
-			type: 'new-frame',
-			data: outBuffer,
-		});
-		self.postMessage({
-			type: 'osc-in-status',
-			data: inparams
-		});
-		self.postMessage({
-			type: 'osc-out-status',
-			data: outparams
-		});
+		return;
 	}
 
 	self.postMessage({
@@ -579,6 +564,63 @@ self.onmessage = async function (event) {
 		}
 	});
 };
+
+async function processAndSendLoop() {
+	while(true) {
+		try {
+			processing = true;
+			processAndSend();
+		} catch (error) {
+			console.log(error);
+		}
+		processing = false;
+		// svuoto eventualmente la coda dei messaggi
+		await new Promise(resolve=>setTimeout(resolve,0));
+
+		if (requested)
+			console.log('time overlap');
+		else 
+			break;
+	}
+}
+
+function processAndSend() {
+	try {
+		incrementPosition();
+		computeLfo();
+		fillNextFrame(outBuffer);
+		//outparams.elapsed = now() - t0;
+	} catch (error) {
+		outparams.error = error.message;
+		self.postMessage({
+			type: 'error',
+			data: {
+				error: error.message,
+				filename: error.filename,
+				lineno: error.lineno
+			}
+		});
+	}
+	n_delivered++;
+
+	self.postMessage({
+		type: 'new-frame',
+		data: outBuffer,
+	});
+	self.postMessage({
+		type: 'osc-in-status',
+		data: inparams
+	});
+
+
+	outparams.n_requested = n_requested;
+	outparams.n_delivered = n_delivered;	
+	self.postMessage({
+		type: 'osc-out-status',
+		data: outparams
+	});
+}
+
 
 self.postMessage({
 	type: 'created',

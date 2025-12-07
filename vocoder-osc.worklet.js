@@ -1,6 +1,9 @@
+
 console.log('in vocoder oscillator worklet');
-// import { FFT } from './fft.js';
-// import { init } from './common.js';
+
+const VOCODER_DRY_OUTPUT = 0;
+const VOCODER_WET_OUTPUT = 1;
+
 let sampleRate;
 let delSize;
 let lbuff;
@@ -77,6 +80,8 @@ class Vocoder extends AudioWorkletProcessor {
 		if (d.type === 'set') {
 			//log('set', d.value);
 			Object.assign(this, d.value);
+			if (d.clearDelay)
+				clearDelay();
 		}
 		if (d.type === 'new-frame') {
 			this.lastFrame.set(d.data)
@@ -86,7 +91,6 @@ class Vocoder extends AudioWorkletProcessor {
 		}
 		if (d.type === 'set-delay') {
 			Object.assign(delParams, d.data);
-			console.log({dalData:d.data})
 		}
 	}
 
@@ -100,19 +104,22 @@ class Vocoder extends AudioWorkletProcessor {
 	 * @returns {boolean} - true per mantenere attivo il processore
 	 */
 	process(inputs, outputs, parameters) {
-		// Prendiamo il primo (e unico) output buffer
-		const output = outputs[0];
-		const channelL = output[0];
-		const channelR = output[1];
+		const dryOutput = outputs[VOCODER_DRY_OUTPUT];
+		const wetOuput = outputs[VOCODER_WET_OUTPUT];
+		const wetLeft = wetOuput[0];
+		const wetRight = wetOuput[1];
+		const dryMono = dryOutput[0];
 
-		for (let i = 0; i < channelL.length; i++) {
+		for (let i = 0; i < wetLeft.length; i++) {
 			let oscOutSample = 0;
 			for (let outFrame of this.outFrames)
 				oscOutSample += outFrame.getSample();
 
+			dryMono[i] = oscOutSample;
+
 			let delOut = delay(oscOutSample);
-			channelL[i] = delOut[0];
-			channelR[i] = delOut[1];
+			wetLeft[i] = delOut[0];
+			wetRight[i] = delOut[1];
 		}
 		return true; // Continua a processare
 	}
@@ -184,5 +191,9 @@ function delay(input) {
 	return [outl, outr];
 }
 
+function clearDelay() {
+	lbuff.fill(0);
+	rbuff.fill(0);
+}
 
 registerProcessor('phase-vocoder-processor', Vocoder);

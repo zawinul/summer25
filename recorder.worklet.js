@@ -1,3 +1,6 @@
+const RECORDER_DRY_INPUT = 0;
+const RECORDER_WET_INPUT = 1;
+
 class RecorderProcessor extends AudioWorkletProcessor {
     constructor() {
         super();
@@ -22,32 +25,25 @@ class RecorderProcessor extends AudioWorkletProcessor {
         };
     }
 
-    process(inputs, outputs) {
-        const input = inputs[0] || [];
-        const output = outputs[0] || [];
+    process(inputs /*, outputs */) {
+        const dryIn = inputs[RECORDER_DRY_INPUT] || [];   // atteso 1 canale (mono)
+        const wetIn = inputs[RECORDER_WET_INPUT] || [];   // attesi 2 canali (stereo)
 
-        const chs = Math.min(input.length, output.length);
-        for (let ch = 0; ch < chs; ch++) {
-            output[ch].set(input[ch]);
-        }
-        for (let ch = chs; ch < output.length; ch++) {
-            output[ch].fill(0);
-        }
+        if (this.recording && !this.paused) {
+            const blockSize = dryIn[0]?.length || wetIn[0]?.length || 128;
 
-        // Invio dei campioni al main thread quando attivo
-        if (this.recording && !this.paused && input.length > 0) {
-            const blockSize = input[0]?.length || 128;
-            const left = input[0] || new Float32Array(blockSize);
-            const right = input[1] || left; // se mono, duplica sul destro
+            // Dry mono: prendi solo il primo canale disponibile
+            const dry = dryIn[0] || new Float32Array(blockSize);
 
-            // Copie per sicurezza (evita mutazioni)
-            const leftCopy = left.slice();
-            const rightCopy = right.slice();
+            // Wet stereo: gestisci fallback se manca R
+            const wetL = wetIn[0] || new Float32Array(blockSize);
+            const wetR = wetIn[1] || wetL;
 
             this.port.postMessage({
                 type: 'data',
-                left: leftCopy,
-                right: rightCopy
+                dry: dry.slice(),
+                wetL: wetL.slice(),
+                wetR: wetR.slice()
             });
         }
 

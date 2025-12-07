@@ -1,49 +1,114 @@
-<div class="paper">
+<div class="paper" lang="ita">
+
+    <div class="switch">
+        <img src="help/flag-it.svg" alt="🇮🇹" lang="ita" title="salta al manuale in italiano">
+        <img src="help/flag-en.svg" alt="🇺🇸" lang="eng" title="jump to the english manual">
+    </div>
+   
     <header>
-        <h1>Summer 25</h1>
+        <h1>Summer25</h1>
         <p class="authors">Paolo Andrenacci</p>
-        <!-- <p class="affiliations"><sup>1</sup> Dipartimento di Fisica Teorica, Università degli Studi di Bologna</p>
-        <p class="affiliations"><sup>2</sup> Istituto di Scienze Gastronomiche, Accademia Culinaria di Roma</p> -->
+        <a href="mailto:paolo.andrenacci@gmail.com">paolo.andrenacci@gmail.com</a>
+        <!-- <p class="affiliations"><sup>1</sup> aaa bbb ccc ddd</p>
+        <p class="affiliations"><sup>2</sup> eee fff ggg</p> -->
     </header>
 
     <section class="abstract">
-        <h2>Cos'è e cosa fa</h2>
-        <p>Summer 25 è un'applicazione web nata durante l'estate 2025 per sperimentare l'audio in real time all'interno del browser, la tecnica di sintesi e resintesi chiamata pase vocoder e la combinazione spettrale interattiva di due suoni. Altre idee si sono poi aggiunte durante lo sviluppo.</p>
-        <p>L'applicazione non ha pretese di utilizzo professionale anche si riesce a ottenere combinazioni sonore interessati ma è pensata piuttosto come strumento ricreativo o didattico per permettere di giocare con la sintesi anche a utenti occasionali.</p>
-        <p>I due suoni sono mappati rispettivamente sull'asse X e sull'asse Y dell'area di lavoro. Muovendosi con il mouse è possibile selezionare un punto all'interno del suono X e del suono Y. In quel punto verrà calcolato lo spettro tramite l'analisi phase vocoder, i due spettri verranno combinati tra loro in varie modalità e il risultato verrà risintetizzato. Tutto questo avviene in realtime.</p>
+        <h2>Panoramica</h2>
+        <p>Summer25 è un'applicazione web sviluppata nell'estate del 2025 nata come esperimento e proposto come strumento ricreativo o didattico.
+        </p>
     </section>
 
     <div class="main-content">
         <section>
-            <h2>Utilizzo</h2>
-            Per prima cosa occorre caricare due file audio, uno per l'asse X e uno per l'asse Y. Si possono caricare file audio in formato WAV, MP3, o OGG. L'applicazione funziona sia con suoni brevi come campioni che con interi brani musicali. Alcuni file di esempio sono presenti nell'applicazione (utilizzare il taso "load" nelle sezioni "X Wave" e "Y Wave" a sinistra). Si possono caricare anche file propri da disco sia tramite i tasti "load" che attraverso drag&drop nelle rispettive sezioni o nella striscia sopra e a sinistra del pannello centrale.
+            <h2>Prova al volo</h2>
+            <p>Per rendersi conto di cosa può fare Summer25 prima di addentrarsi nel manuale puoi usare una di queste
+                due possibilità:.
+            <ul>
+                <li>Carica uno dei preset di esempio dal riquadro <b>Preset</b> a sinistra, premi <kbd>P</kbd> per riprodurlo,
+                    poi scorri col mouse premendo il bottone di sinistra nell'area quadrata centrale.</li>
+                <li>Carica due file audio casuali, uno per l'asse X e uno per l'asse Y premendo Alt-<kbd>X</kbd> e Alt-<kbd>Y</kbd>, 
+                    entra in modalità <i>drag</i> con <kbd>D</kbd> e inizia
+                    a sperimentare direttamente come sopra (<kbd>P</kbd> e poi drag).</li>
+                    <i>Nota: puoi continuare a cambiare al volo i campioni durante la prova.</i>
+            </ul>
+            </p>
 
-            <p>Una volta caricati i file premere il tasto Play in alto a sinistra per avviare la sintesi e muoversi nel pannello centrale tenendo il tasto sinistro del mouse premuto.</p>
+        </section>
+
+        <section>
+            <h2>Panoramica</h2>
+            <p>Summer25 è nata per sperimentare l'audio del browser in
+                tempo reale, utilizzando la tecnica di sintesi e risintesi denominata  "Phase Vocoder". 
+                L'obiettivo principale è la combinazione spettrale interattiva di due suoni chiamati X e Y. 
+                Funzionalità aggiuntive sono state integrate durante lo sviluppo.
+            </p>
+            <p>L'applicazione non è pensata per un uso professionale, sebbene possa produrre combinazioni sonore
+                interessanti. È invece concepita come uno strumento ricreativo o didattico per invogliare anche gli
+                utenti meno esperti a sperimentare la sintesi sonora.</p>🇮
+            <p>Utilizza due suoni che vengono mappati sugli assi X e Y dell'area di lavoro. Muovendo il mouse, è
+                possibile selezionare un punto all'interno del suono X e del suono Y. In quel punto, lo spettro viene
+                calcolato tramite l'analisi phase vocoder, i due spettri vengono combinati in vari modi e il risultato
+                viene risintetizzato in tempo reale.</p>
+        </section>
+
+        <section>
+            <h2>Utilizzo</h2>
+            <p>Per prima cosa, carica due file audio, uno per l'asse X e uno per l'asse Y. Sono supportati i formati
+                WAV, MP3 e OGG. L'applicazione gestisce sia suoni brevi (campioni) sia brani musicali completi. Alcuni
+                file di esempio sono disponibili nell'applicazione (utilizzare il pulsante "load" nelle sezioni "X Wave"
+                e "Y Wave" a sinistra). È inoltre possibile caricare i propri file dal disco utilizzando i pulsanti
+                "load" o trascinandoli (drag & drop) dal proprio file system nelle rispettive sezioni o nelle strisce sopra e a sinistra del pannello
+                principale.</p>
+
+            <p>Una volta caricati i file, premere il pulsante Play in alto a sinistra per avviare la sintesi e muoversi
+                all'interno del pannello principale tenendo premuto il pulsante sinistro del mouse.</p>
         </section>
 
         <section>
             <h2>Drag</h2>
+            <img src="help/snapdrag-annotated.png" alt="Drag" width="400" height="300">
         </section>
 
         <section>
             <h2>Motion</h2>
-            <p>Variando le coordinate del punto <i>x,y</i> all'interno del pannello centrale è possibile spostarsi all'interno dello spettro dei due suoni. Con movimenti lenti si può fare una ricerca spettrale mentre con movimenti più ampi si possono sperimentare modulazioni ed effetti melodici</p>
-            <p>I movimenti sono di tre tipi: <i>manual</i>,<i>linear</i>, <i>cyclic</i>.
-            Le tre modalità agiscono contemporaneamente e il loro effetto si somma.</p> 
-            I dettagli delle tre modalità si configurane nel pannello "Motion" a cui si accede con il tasto M sopra al pannello.
+            <p>Variando le coordinate <i>x,y</i> all'interno del pannello principale, è possibile muoversi attraverso lo
+                spettro dei due suoni. Movimenti lenti consentono l'esplorazione spettrale, mentre movimenti più ampi
+                possono creare modulazioni ed effetti melodici.</p>
+            <p>Esistono tre tipi di movimento: <i>manuale</i>, <i>lineare</i> e <i>ciclico</i>. Le tre modalità sono
+                attive contemporaneamente e i loro effetti si sommano.</p>
+            I dettagli per queste modalità possono essere configurati nel pannello "Motion", accessibile con il tasto M.
             <p>
-                <i>Manual</i>: il punto <i>x,y</i> viene mosso manualmente con il mouse. Il parametro "traction" permette di regolare la reattività ai movimenti del mouse. Con valori bassi il punto si muove lentamente permettendo transizioni dolci tra un punto e l'altro.
-                <i>Linear</i>: il punto <i>x,y</i> viene mosso in linea retta a velocità costante. E' possibile scegliere indipendentemente la componente x e y della velocità. Quando la velocità è 1* in una direzione, il punto si muove lungo quella direzione alla velocità originale del campione. 
-                <i>Cyclic</i>: il punto <i>x,y</i> viene cambiato in in maniera ciclica. I parametri X Ampl e Y Ampl regolano l'ampiezza della modulazione. Per gli altri parametri fare riferimento al grafico a destra dei parametri stessi per una esplorazione intuitiva.
+                <i>Manual</i>: Il punto <i>x,y</i> viene spostato manualmente con il mouse. Il parametro "traction"
+                regola la reattività ai movimenti del mouse. Valori bassi si traducono in transizioni più fluide tra i
+                punti.<br>
+                <i>Linear</i>: Il punto <i>x,y</i> si muove in linea retta a velocità costante. Le componenti di
+                velocità x e y possono essere impostate indipendentemente. A una velocità di 1x, il punto si muove lungo
+                quella direzione alla velocità di riproduzione originale del campione.<br>
+                <i>Cyclic</i>: Il punto <i>x,y</i> viene modificato ciclicamente. I parametri X Ampl e Y Ampl
+                controllano l'ampiezza della modulazione. Per gli altri parametri, fare riferimento al grafico accanto a
+                essi per un'esplorazione intuitiva.
             </p>
 
-            
+
         </section>
 
         <section>
+            <h2>Effects</h2>
+            <p>to do</p>
+        </section>
+
+        <section>
+            <h2>Record</h2>
+            <p>to do</p>
+        </section>
+
+
+        <section>
+            <h2>Shortcuts</h2>
 
             <table>
-                <caption><strong>Tabella 1:</strong> shortcut.</caption>
+                <caption><strong>Tabella 1:</strong> Scorciatoie.</caption>
                 <thead>
                     <tr>
                         <th>Tasti</th>
@@ -52,49 +117,43 @@
                 </thead>
                 <tbody>
                     <tr>
-                        <td>D, M, E, F1</td>
-                        <td>Aprono rispettivamente il pannello Drag, Motion, Effects, Help</td>
-                    </tr>
-                    <!-- <tr>
-                        <td>D</td>
-                        <td>Apre il pannello Drag</td>
+                        <td><kbd>D</kbd>, <kbd>M</kbd>, <kbd>E</kbd>, <kbd>F1</kbd></td>
+                        <td>Apri rispettivamente i pannelli <i>Drag</i>, <i>Motion</i>, <i>Effects</i> e <i>Help</i></td>
                     </tr>
                     <tr>
-                        <td>M</td>
-                        <td>Apre il pannello Motion</td>
+                        <td><kbd>Tab</kbd></td>
+                        <td>Scorri tra i pannelli <i>Drag</i>, <i>Motion</i> e <i>Effects</i></td>
                     </tr>
                     <tr>
-                        <td>E</td>
-                        <td>Apre il pannello Effects</td>
+                        <td><kbd>X</kbd>, <kbd>Y</kbd></td>
+                        <td>Carica un suono dall'app o dal disco sull'asse X o Y, rispettivamente</td>
                     </tr>
                     <tr>
-                        <td>F1</td>
-                        <td>Apre il pannello Help</td>
-                    </tr> -->
-                    <tr>
-                        <td>Tab</td>
-                        <td>Ruota tra i tre pannelli precedenti</td>
+                        <td><kbd>Alt</kbd>+<kbd>X</kbd>, <kbd>Alt</kbd>+<kbd>Y</kbd></td>
+                        <td>Carica un suono casuale dall'app sull'asse X o Y, rispettivamente</td>
                     </tr>
                     <tr>
-                        <td>X, Y</td>
-                        <td>Carica un suono da app o da disco rispettivamente su X o su Y</td>
+                        <td><kbd>P</kbd></td>       
+                        <td>Avvia/sospende la riproduzione dell'audio in uscita</td>
                     </tr>
                     <tr>
-                        <td>Alt+X, Alt+Y</td>
-                        <td>Carica un suono scelto casualmente tra quelli presenti in app  rispettivamente su X o su Y</td>
+                        <td><kbd>R</kbd></td>       
+                        <td>Avvia/sospende la registrazione dell'audio in uscita</td>
                     </tr>
                 </tbody>
             </table>
         </section>
 
-        
         <section class="references">
-            <h2>Riferimenti</h2>
+            <h2>Credits</h2>
             <ol>
-                <li>Einstein, A., Podolsky, B., & Rosen, N. (1935). Can Quantum-Mechanical Description of Physical Reality Be Considered Complete?. <i>Physical Review</i>, 47(10), 777.</li>
-                <li>Maillard, L. C. (1912). Action des acides aminés sur les sucres; formation des mélanoïdines par voie méthodique. <i>Comptes Rendus de l'Académie des Sciences</i>, 154, 66-68.</li>
-                 <li>Illy, A., & Viani, R. (Eds.). (2005). <i>Espresso coffee: the science of quality</i>. Elsevier academic press.</li>
+                <li>è stata utilizzata la libreria open source fft.js by @indutny <a href="https://github.com/indutny/fft.js">https://github.com/indutny/fft.js</a></li>
+                <li>alcuni campioni di esempio provengono da <a href="https://freesound.org/">https://freesound.org/</a>, altri da <a href="https://philharmonia.co.uk/resources/sound-samples/">https://philharmonia.co.uk/resources/sound-samples/</a>, altri da <a href="https://pixabay.com/it/sound-effects/">https://pixabay.com/it/sound-effects/</a></li>
+                <li>tutte le IR utilizzate per il riverbero provengono da <a href="https://samplicity.com/bricasti-m7-impulse-response-files/">https://samplicity.com/bricasti-m7-impulse-response-files/</a></li>
             </ol>
+            Penso di aver sempre rispettato i limiti di utilizzo indicati nei rispettivi siti, ma sono pronto a rimuovere i contenuti su richiesta in caso di contestazioni.
         </section>
+
+
     </div>
 </div>
