@@ -8,10 +8,10 @@
 *.s25
 
 presets/
-
-# Directory con impulse response (troppo pesanti per git)
+waves/
 ir/
-wav/
+
+
 
 # File temporanei e cache
 *.tmp

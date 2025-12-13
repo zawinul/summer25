@@ -120,11 +120,11 @@ function initCommon(fftSize, overlap, sampleRate) {
 	}
 
 	function frequencyToBand(f) {
-		return Math.round(f/freqPerBin);
+		return Math.round(f / freqPerBin);
 	}
 
 	function bandToFrequency(band) {
-		return band*freqPerBin;
+		return band * freqPerBin;
 	}
 
 	function frequencyToPhaseDelta(frequency) {
@@ -241,24 +241,24 @@ function initCommon(fftSize, overlap, sampleRate) {
 		outm.fill(0);
 		outph.fill(0);
 
-		for(let srcBand = 0; srcBand < magnitudes.length; srcBand++) {
+		for (let srcBand = 0; srcBand < magnitudes.length; srcBand++) {
 			let freq = phaseDeltaToFrequency(deltaPh[srcBand], srcBand);
 			const newFreq = freqFunction(freq, srcBand);
-			let {band, phaseDelta} = frequencyToPhaseDelta(newFreq);
+			let { band, phaseDelta } = frequencyToPhaseDelta(newFreq);
 
 			if (magnitudes[srcBand] == 0)
 				continue;
 
-			outph[band] = (phaseDelta*magnitudes[srcBand] + outph[band]*outm[band])/(outm[band] + magnitudes[srcBand]);
+			outph[band] = (phaseDelta * magnitudes[srcBand] + outph[band] * outm[band]) / (outm[band] + magnitudes[srcBand]);
 			outm[band] += magnitudes[srcBand];
 		}
-		for(let i=0;i<outm.length;i++) {		
+		for (let i = 0; i < outm.length; i++) {
 			magnitudes[i] = outm[i];
 			deltaPh[i] = outph[i];
 		}
 	}
 
-	
+
 	function spectralTransform(magnitudes, deltaPh, transpFunction, ...transpFunctionArguments) {
 
 		let outm = spectralTransform.outm;
@@ -271,18 +271,18 @@ function initCommon(fftSize, overlap, sampleRate) {
 		outm.fill(0);
 		outph.fill(0);
 
-		for(let srcBand = 0; srcBand < magnitudes.length; srcBand++) {
+		for (let srcBand = 0; srcBand < magnitudes.length; srcBand++) {
 			let freq = phaseDeltaToFrequency(deltaPh[srcBand], srcBand);
-			let { a, f} = transpFunction(freq, magnitudes[srcBand], srcBand, ...transpFunctionArguments);
-			let {band, phaseDelta} = frequencyToPhaseDelta(f);
+			let { a, f } = transpFunction(freq, magnitudes[srcBand], srcBand, ...transpFunctionArguments);
+			let { band, phaseDelta } = frequencyToPhaseDelta(f);
 
 			if (a == 0)
 				continue;
 
-			outph[band] = (phaseDelta*a + outph[band]*outm[band])/(outm[band] + a);
+			outph[band] = (phaseDelta * a + outph[band] * outm[band]) / (outm[band] + a);
 			outm[band] += a;
 		}
-		for(let i=0;i<outm.length;i++) {		
+		for (let i = 0; i < outm.length; i++) {
 			magnitudes[i] = outm[i];
 			deltaPh[i] = outph[i];
 		}
@@ -352,9 +352,49 @@ function initCommon(fftSize, overlap, sampleRate) {
 		return Math.max(-96, 20 * Math.log10(amplitude));
 	}
 
+	const G = 0.54;	// tipico della finestra di Hamming
+	const dbfsToAmplitudeFactor = (fftSize / 2) * G;
+	const amplitudeToDBFSFactor = 1 / dbfsToAmplitudeFactor;
+	const EPS = 1e-12;
+	function amplitudeToDBFS(amplitude) {
+		const a = Math.abs(amplitude) * amplitudeToDBFSFactor;
+		const dBFS = 20 * Math.log10(Math.max(a, EPS));
+		return dBFS;
+	}
+
+	function dbfsToAmplitude(dbfs) {
+		const amp = Math.pow(10, dbfs / 20);
+		return amp * amplitudeToDBFSFactor;
+	}
+
 	function dbToAmplitude(db) {
 		return Math.pow(10, db / 20);
 	}
+
+	const normalizeFreqLinMult = 2 / sampleRate;
+	const denormalizeFreqLinMult = sampleRate / 2;
+	function normalizeFreqLin(freq) {
+		return freq * normalizeFreqLinMult;
+	}
+	function denormalizeFreqLin(norm) {
+		return norm * denormalizeFreqLinMult;
+	}
+
+	const normalizeFreqLogFmin = bandToFrequency(1);
+	const normalizeFreqLogFmax = bandToFrequency(sampleRate / 2);
+	const normalizeFreqLogFactor = 1 / Math.log(normalizeFreqLogFmax / normalizeFreqLogFmin);
+	const denormalizeFreqLogFactor = normalizeFreqLogFmax / normalizeFreqLogFmin;
+
+	function normalizeFreqLog(freq) {
+		let ret = Math.log(freq / normalizeFreqLogFmin) * normalizeFreqLogFactor;
+		return ret;
+	}
+
+	function denormalizeFreqLog(norm) {
+		const ret = normalizeFreqLogFmin * Math.pow(denormalizeFreqLogFactor, norm);
+		return ret;
+	}
+
 
 	const hstep = Math.pow(2, 1 / 12);
 
@@ -382,12 +422,13 @@ function initCommon(fftSize, overlap, sampleRate) {
 		doPhaseVocoder, simplifiedPhaseVocoder,
 		simplifiedAnalysisAtPoint, simplifiedResynthesize,
 		// complexSpectrumToPhaseVocoder, phaseVocoderToComplexSpectrum,
-		simplified_complexSpectrumToPhaseVocoder, simplified_phaseVocoderToComplexSpectrum,
+		simplified_complexSpectrumToPhaseVocoder, 
+		simplified_phaseVocoderToComplexSpectrum,
 		frequencyToPhaseDelta,
+		phaseDeltaToFrequency,
 		bandToFrequency,
 		transpose,
-		
-		
+
 		spectralTransform,
 		resetPhases,
 		linearSpeedRescale,
@@ -399,9 +440,16 @@ function initCommon(fftSize, overlap, sampleRate) {
 		alphaToCutoff,
 		amplitudeToDb,
 		dbToAmplitude,
+		amplitudeToDBFS,
+		dbfsToAmplitude,
+
 		contourTable,
 		mergeModes,
-		now
+		now,
+		normalizeFreqLin,
+		denormalizeFreqLin,
+		normalizeFreqLog,
+		denormalizeFreqLog,
 	};
 	return exp;
 }

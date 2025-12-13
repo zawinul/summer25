@@ -1,10 +1,11 @@
-function spectreCanvas() {
-    const jcanvas = $('#mousepad-canvas-spectre');
-    const canvas = jcanvas[0];
-    const ctx = canvas.getContext('2d');
-    const SIZE = jcanvas.width();
+function createSpectreCanvas() {
+    let size;
     const HANDLE_RADIUS = 6;
     const CLICK_TOLERANCE = 10; // Pixel di tolleranza per selezionare linee/punti
+    let jcanvas = $('#mousepad-canvas-spectre');
+    let canvas = jcanvas[0];
+    let ctx = canvas.getContext('2d');
+
 
     let points = [
         { x: 0, y: 0 },
@@ -14,22 +15,21 @@ function spectreCanvas() {
     let draggingIndex = -1;
     let hoverIndex = -1; // Per cambiare cursore quando si è sopra un punto
 
-    // --- Funzioni di Utilità per le Coordinate ---
 
     // Converte da coordinate normalizzate (0-1) a coordinate schermo (0-700)
     // Nota: La Y dello schermo è invertita (0 è in alto)
     function toScreen(p) {
         return {
-            x: p.x * SIZE,
-            y: SIZE - (p.y * SIZE)
+            x: p.x * size,
+            y: size - (p.y * size)
         };
     }
 
     // Converte da coordinate schermo a coordinate normalizzate
     function toMath(x, y) {
         return {
-            x: Math.max(0, Math.min(1, x / SIZE)),
-            y: Math.max(0, Math.min(1, (SIZE - y) / SIZE))
+            x: Math.max(0, Math.min(1, x / size)),
+            y: Math.max(0, Math.min(1, (size - y) / size))
         };
     }
 
@@ -66,24 +66,26 @@ function spectreCanvas() {
         ctx.beginPath();
         // Disegna griglia 10x10
         for (let i = 1; i < 10; i++) {
-            let pos = i * (SIZE / 10);
+            let pos = i * (size / 10);
             // Verticali
             ctx.moveTo(pos, 0);
-            ctx.lineTo(pos, SIZE);
+            ctx.lineTo(pos, size);
             // Orizzontali
             ctx.moveTo(0, pos);
-            ctx.lineTo(SIZE, pos);
+            ctx.lineTo(size, pos);
         }
         ctx.stroke();
 
         // Assi principali
         ctx.strokeStyle = '#ccc';
         ctx.lineWidth = 2;
-        ctx.strokeRect(0, 0, SIZE, SIZE);
+        ctx.strokeRect(0, 0, size, size);
     }
 
     function draw() {
-        ctx.clearRect(0, 0, SIZE, SIZE);
+        size = jcanvas.width();
+
+        ctx.clearRect(0, 0, size, size);
 
         drawGrid();
 
@@ -125,11 +127,13 @@ function spectreCanvas() {
             ctx.strokeStyle = '#333';
             ctx.stroke();
         });
+
+        updateVocoder();
     }
 
     // --- Gestione Eventi Mouse ---
 
-    canvas.addEventListener('mousedown', (e) => {
+    jcanvas.on('mousedown', (e) => {
         console.log('spectre mousedown');
         const rect = canvas.getBoundingClientRect();
         const mouseX = e.clientX - rect.left;
@@ -145,7 +149,7 @@ function spectreCanvas() {
         }
     });
 
-    canvas.addEventListener('mousemove', (e) => {
+    jcanvas.on('mousemove', (e) => {
         console.log('spectre mousemove');
         const rect = canvas.getBoundingClientRect();
         const mouseX = e.clientX - rect.left;
@@ -207,12 +211,12 @@ function spectreCanvas() {
         draw();
     });
 
-    canvas.addEventListener('mouseup', () => {
+    jcanvas.on('mouseup', () => {
         console.log('spectre mouseup');
         draggingIndex = -1;
     });
 
-    canvas.addEventListener('mouseleave', () => {
+    jcanvas.on('mouseleave', () => {
         console.log('spectre mouseleave');
         draggingIndex = -1;
         hoverIndex = -1;
@@ -220,7 +224,7 @@ function spectreCanvas() {
     });
 
     // Doppio click per Aggiungere o Rimuovere
-    canvas.addEventListener('dblclick', (e) => {
+    jcanvas.on('dblclick', (e) => {
         console.log('spectre dblclick');
         const rect = canvas.getBoundingClientRect();
         const mouseX = e.clientX - rect.left;
@@ -258,8 +262,24 @@ function spectreCanvas() {
         }
     });
 
-    // Disegno iniziale
-    draw();
+    function updateVocoder() {
+        let parr = points.map(p=>[p.x,p.y]);
+        vocoderWorker.postMessage({ type: 'spec-points', data: parr })
+    }
+
+
+    function on() {
+        draw();
+    }
+
+    function off() {
+
+    }
+
+    return {
+        on,
+        off
+    }
 }
 
-setTimeout(x=>mousepad.setMode('spectre'), 2000);
+// setTimeout(x=>mousepad.setMode('spectre'), 2000);

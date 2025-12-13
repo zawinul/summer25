@@ -22,6 +22,8 @@ let vertical = window.innerHeight > window.innerWidth;
 let presetListPage = false;
 let recorder;
 let reverb;
+let spectralData;
+
 const blue = '#007bff', lightGray = '#c0c0c0', darkGray = '#606060';
 const wavePrefix = 'waves/';
 
@@ -110,6 +112,7 @@ const urlParams = getUrlParams();
 		// $('.btn-fullscreen.fs-close').on('click', () => setFullscreen(false));
 
 		initKeys();
+		animate.init();
 	}
 
 	async function initUI() {
@@ -504,6 +507,11 @@ const urlParams = getUrlParams();
 			//log({graphData});
 			window.graphData = graphData;
 			drawMeters(graphData);
+		}
+		if (d.type == 'spectral-data') {
+			spectralData = d.data;
+			if (Math.random()*1000<1)
+				console.log({spectralData});
 		}
 		if (d.type == 'error') {
 
@@ -1156,7 +1164,7 @@ const urlParams = getUrlParams();
 	function initKeys() {
 		let cnt = 0;
 		$(document).on('keydown', evt => {
-			// console.log({ evt: evt.key, c: cnt++ });
+			console.log({ evt, c: cnt++ });
 			let c = (evt.key || '').toLowerCase();
 			console.log(`key: [${c}]`, evt.shiftKey)
 			if (('[p][d][m][e][s][x][y][#][f1][#][tab]').indexOf(c) >= 0)
@@ -1180,6 +1188,7 @@ const urlParams = getUrlParams();
 				const nextmode = { drag: 'motion', motion: 'effects', effects: 'help', help: 'drag' };
 				mousepad.setMode(nextmode[mousepad.getMode()]);
 			}
+			else if (c == 's'  && evt.ctrlKey && evt.shiftKey) mousepad.setMode('spectre');
 			else if (c == 'r') toggleRecording();
 		});
 	}

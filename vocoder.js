@@ -17,6 +17,9 @@ let fftSize;
 let overlap;
 let hopSize;
 
+let spectralDataRequested = false;
+let transformDataRequested = false;
+let dumpData;
 
 let window;
 
@@ -51,6 +54,7 @@ let inparams = {
 	transposeY: 0,
 	transposeM: 0,
 }
+let spectralTransformPoints = [[0, 0], [1, 1]];
 
 let outparams = {
 	posx: 0,
@@ -63,7 +67,6 @@ let outparams = {
 	lfoy: 0,
 	incx: 0,
 	incy: 0,
-
 };
 
 
@@ -109,6 +112,16 @@ async function init() {
 	}
 	waveX = emptyWave;
 	waveY = emptyWave;
+
+	dumpData = {
+		ampx: new Float32Array(fftSize / 2 + 1).fill(0),
+		ampy: new Float32Array(fftSize / 2 + 1).fill(0),
+		ampm: new Float32Array(fftSize / 2 + 1).fill(0),
+		pretransAmp: new Float32Array(fftSize / 2 + 1).fill(0),
+		pretransFreq: new Float32Array(fftSize / 2 + 1).fill(0),
+		posttransAmp: new Float32Array(fftSize / 2 + 1).fill(0),
+		posttransFreq: new Float32Array(fftSize / 2 + 1).fill(0),
+	};
 }
 
 function incrementPosition() {
@@ -202,6 +215,7 @@ getGraphData.pos = [];
 
 let frameX, frameY, mergedFrame;
 function fillNextFrame(memory) {
+	let dump = {};
 	if (waveY == emptyWave && waveY == emptyWave) {
 		memory.fill(0);
 		return;
@@ -210,15 +224,22 @@ function fillNextFrame(memory) {
 	frameY = waveY.getAnalizedFrame(outparams.posy + outparams.lfoy, memory);
 
 	if (inparams.transposeX != 0) {
-		const fact = Math.pow(2, inparams.transposeX/12);
-		transpose(frameX.magnitudes, frameX.deltaPh, f=>f*fact);
+		const fact = Math.pow(2, inparams.transposeX / 12);
+		transpose(frameX.magnitudes, frameX.deltaPh, f => f * fact);
 	}
 	if (inparams.transposeY != 0) {
-		const fact = Math.pow(2, inparams.transposeY/12);
-		transpose(frameY.magnitudes, frameY.deltaPh, f=>f*fact);
+		const fact = Math.pow(2, inparams.transposeY / 12);
+		transpose(frameY.magnitudes, frameY.deltaPh, f => f * fact);
+	}
+	if (inparams.transposeM != 0) {
+		const fact = Math.pow(2, inparams.transposeM / 12);
+		transpose(mergedFrame.magnitudes, mergedFrame.deltaPh, f => f * fact);
 	}
 
-
+	if (spectralDataRequested) {
+		dumpData.ampx.set(frameX.magnitudes);
+		dumpData.ampy.set(frameY.magnitudes);
+	}
 
 	if (waveX == emptyWave)
 		mergedFrame = frameY;
@@ -233,20 +254,70 @@ function fillNextFrame(memory) {
 	if (mergedFrame.deltaPh)
 		mergedFrame.deltaPh[fftSize / 2] = 0;
 
-	// if (inparams.transposeM != 0) {
-	// 	const fact = Math.pow(2, inparams.transposeM/12);
-	// 	transpose(mergedFrame.magnitudes, mergedFrame.deltaPh, f=>f*fact);
-	// }
+	if (spectralDataRequested) {
+		dumpData.ampm.set(mergedFrame.magnitudes);
+		if (transformDataRequested) {
+			for (let i = 0; i < mergedFrame.magnitudes.length; i++) {
+				dumpData.pretransAmp[i] = mergedFrame.magnitudes[i];
+				dumpData.pretransFreq[i] = phaseDeltaToFrequency(mergedFrame.deltaPh[i], i);
+			}
+		}
+	}
 
-	spectralTransform(mergedFrame.magnitudes, mergedFrame.deltaPh, segmentSpectralTransform, {points:[[.45,.55],[.55,.45]]});
-	
+
+	spectralTransform(mergedFrame.magnitudes, mergedFrame.deltaPh, segmentSpectralTransformLog, { points: spectralTransformPoints });
+	//spectralTransform(mergedFrame.magnitudes, mergedFrame.deltaPh, segmentSpectralTransformLin, {points:spectralTransformPoints});
+
+
+	if (spectralDataRequested) {
+		let data = {
+			ampx: dumpData.ampx,
+			ampy: dumpData.ampy,
+			ampm: dumpData.ampm
+		}
+		if (transformDataRequested) {
+			for (let i = 0; i < mergedFrame.magnitudes.length; i++) {
+				dumpData.posttransAmp[i] = mergedFrame.magnitudes[i];
+				dumpData.posttransFreq[i] = phaseDeltaToFrequency(mergedFrame.deltaPh[i], i);
+			}
+			data.pretransAmp = dumpData.pretransAmp;
+			data.pretransFreq = dumpData.pretransFreq;
+			data.posttransAmp = dumpData.posttransAmp;
+			data.posttransFreq = dumpData.posttransFreq;
+		}
+		self.postMessage({
+			type: 'spectral-data',
+			data
+		});
+		spectralDataRequested = false;
+	}
+
 	simplifiedResynthesize(mergedFrame, memory);
 
 	for (let i = 0; i < memory.length; i++)
 		memory[i] *= inparams.scale;
 }
 
-function segmentSpectralTransform(freq, amp, band, params) {
+function segmentSpectralTransformLin(freq, amp, band, params) {
+	let fmin = bandToFrequency(1);
+	let fmax = bandToFrequency(sampleRate / 2);
+	let ampOut = 0, freqOut = freq;
+	let freqnorm = (freq - fmin) / (fmax - fmin);
+	const points = params.points;
+	for (let i = 0; i < points.length - 1; i++) {
+		let [x1, y1] = points[i];
+		let [x2, y2] = points[i + 1];
+		if (freqnorm >= x1 && freqnorm <= x2) {
+			let freqnormOut = y1 + (freqnorm - x1) * (y2 - y1) / (x2 - x1);
+			freqOut = fmin + freqnormOut * (fmax - fmin);
+			ampOut = amp;
+			break;
+		}
+	}
+	return { a: ampOut, f: freqOut }
+}
+
+/*function segmentSpectralTransformLog(freq, amp, band, params) {
 	let fmin = bandToFrequency(1);
 	let fmax = bandToFrequency(sampleRate/2);
 	let logf = Math.log(freq/fmin)/Math.log(fmax/fmin);
@@ -263,6 +334,24 @@ function segmentSpectralTransform(freq, amp, band, params) {
 		}
 	}
 	return {a:ampOut, f: freqOut}
+}*/
+
+
+function segmentSpectralTransformLog(freq, amp, band, params) {
+	let normf = normalizeFreqLog(freq);
+	let ampOut = 0, freqOut = freq;
+	const points = params.points;
+	for (let i = 0; i < points.length - 1; i++) {
+		let [x1, y1] = points[i];
+		let [x2, y2] = points[i + 1];
+		if (normf >= x1 && normf <= x2) {
+			let normFOut = y1 + (normf - x1) * (y2 - y1) / (x2 - x1);
+			freqOut = denormalizeFreqLog(normFOut);
+			ampOut = amp;
+			break;
+		}
+	}
+	return { a: ampOut, f: freqOut }
 }
 
 let accx;
@@ -547,12 +636,21 @@ self.onmessage = async function (event) {
 		}
 	}
 	if (type == 'new-frame-request') {
-		n_requested++; 
+		n_requested++;
 		requested = true;
 		if (!computing) {
 			requested = false;
 			processAndSendLoop();
 		}
+		return;
+	}
+	if (type == 'spec-points') {
+		spectralTransformPoints = d.data;
+		return;
+	}
+	if (type == 'req-spectral-data') {
+		spectralDataRequested = true;
+		transformDataRequested = !! event.data.transform;
 		return;
 	}
 
@@ -566,7 +664,7 @@ self.onmessage = async function (event) {
 };
 
 async function processAndSendLoop() {
-	while(true) {
+	while (true) {
 		try {
 			processing = true;
 			processAndSend();
@@ -575,11 +673,11 @@ async function processAndSendLoop() {
 		}
 		processing = false;
 		// svuoto eventualmente la coda dei messaggi
-		await new Promise(resolve=>setTimeout(resolve,0));
+		await new Promise(resolve => setTimeout(resolve, 0));
 
 		if (requested)
 			console.log('time overlap');
-		else 
+		else
 			break;
 	}
 }
@@ -591,6 +689,7 @@ function processAndSend() {
 		fillNextFrame(outBuffer);
 		//outparams.elapsed = now() - t0;
 	} catch (error) {
+		console.log(error);
 		outparams.error = error.message;
 		self.postMessage({
 			type: 'error',
@@ -614,7 +713,7 @@ function processAndSend() {
 
 
 	outparams.n_requested = n_requested;
-	outparams.n_delivered = n_delivered;	
+	outparams.n_delivered = n_delivered;
 	self.postMessage({
 		type: 'osc-out-status',
 		data: outparams

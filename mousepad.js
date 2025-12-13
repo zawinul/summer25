@@ -18,6 +18,7 @@ mousepad = (function () {
 		spectre: { class: 'spectre', zIndex: 310 }
 	};
 
+	let spectreCanvas;
 	const padStatus = {
 		mode: 'drag',
 		lum: .5,
@@ -84,8 +85,10 @@ mousepad = (function () {
 		// 	designLFOShape();
 		// }
 
-		if (mode=='spectre')
-			spectreCanvas();
+		if (mode == 'spectre') {
+
+			spectreCanvas.on();
+		}
 		checkStatusChange();
 	}
 
@@ -140,42 +143,42 @@ mousepad = (function () {
 			}
 		});
 
-		// $(document).on("mousemove mousedown mouseup click pointerdown pointermove pointercancel pointerup pointerout", function (evt) {
-		// 	// console.log(`Mouse or pointer event: ${evt.type}`);
-			
-		// 	if (player && !presetListPage && mode == 'drag') {
-		// 		evt.preventDefault();
-		// 		evt.stopPropagation();
-		// 	}
+		$(document).on("mousemove  click pointerdown pointermove pointercancel pointerup pointerout", function (evt) {
+			// console.log(`Mouse or pointer event: ${evt.type}`);
 
-		// 	let where = 'out';
-		// 	let canvas = canvases.wave.jc;
-		// 	if (!canvas)
-		// 		return;
-		// 	let x = mousex = evt.clientX - canvas.offset().left;
-		// 	let y = mousey = evt.clientY - canvas.offset().top;
-		// 	if (leftband.contains(x, y))
-		// 		where = 'left';
-		// 	else if (topband.contains(x, y))
-		// 		where = 'top';
-		// 	else if (space.contains(x, y))
-		// 		where = 'in';
+			if (player && !presetListPage && mode == 'drag') {
+				evt.preventDefault();
+				evt.stopPropagation();
+			}
 
-		// 	curstatus.left = (evt.buttons & 1) == 1;// || (evt.type == 'click') || (evt.type == 'mousedown');
-		// 	curstatus.right = (evt.buttons & 2) == 2;
-		// 	curstatus.x = x;
-		// 	curstatus.y = y;
-		// 	curstatus.where = where;
-		// 	curstatus.shift = evt.shiftKey;
-		// 	curstatus.alt = evt.altKey;
-		// 	curstatus.control = evt.ctrlKey;
-		// 	curstatus.meta = evt.metaKey;
-		// 	curstatus.pointerType = 'mouse';
-		// 	checkStatusChange();
-		// });
+			let where = 'out';
+			let canvas = canvases.wave.jc;
+			if (!canvas)
+				return;
+			let x = mousex = evt.clientX - canvas.offset().left;
+			let y = mousey = evt.clientY - canvas.offset().top;
+			if (leftband.contains(x, y))
+				where = 'left';
+			else if (topband.contains(x, y))
+				where = 'top';
+			else if (space.contains(x, y))
+				where = 'in';
+
+			curstatus.left = (evt.buttons & 1) == 1;// || (evt.type == 'click') || (evt.type == 'mousedown');
+			curstatus.right = (evt.buttons & 2) == 2;
+			curstatus.x = x;
+			curstatus.y = y;
+			curstatus.where = where;
+			curstatus.shift = evt.shiftKey;
+			curstatus.alt = evt.altKey;
+			curstatus.control = evt.ctrlKey;
+			curstatus.meta = evt.metaKey;
+			curstatus.pointerType = 'mouse';
+			checkStatusChange();
+		});
 
 		// $(document).on("pointerdown pointermove pointerup", function (evt) {
-		// 	evt.preventDefault();
+		// 	//evt.preventDefault();
 		// 	let where = 'out';
 		// 	let canvas = canvases.wave.jc;
 		// 	if (!canvas)
@@ -202,6 +205,7 @@ mousepad = (function () {
 		// 	//console.log(`Pointer event: ${evt.type}, type=${evt.pointerType}`, curstatus);
 		// 	checkStatusChange();
 		// })
+
 
 		$('.padmode').on('click', function () {
 			let mode = $(this).attr('data-mode');
@@ -377,17 +381,17 @@ mousepad = (function () {
 			}
 		}
 
-		if (curstatus.where == 'left' && curstatus.left && !oldstatus.left) { 
+		if (curstatus.where == 'left' && curstatus.left && !oldstatus.left) {
 			let targety = -(curstatus.y - space.bottom) / space.height;
-			vocoderWorker.postMessage({ type: 'set-status', data: {targety, forcey: true} })
+			vocoderWorker.postMessage({ type: 'set-status', data: { targety, forcey: true } })
 			console.log('just clicked on left');
 		}
 
 
-		if (curstatus.where == 'top' && curstatus.left && !oldstatus.left) { 
+		if (curstatus.where == 'top' && curstatus.left && !oldstatus.left) {
 			let targetx = (curstatus.x - space.left) / space.width;
-			vocoderWorker.postMessage({ type: 'set-status', data: {targetx, forcex: true} })
-			console.log('just clicked on top '+targetx);
+			vocoderWorker.postMessage({ type: 'set-status', data: { targetx, forcex: true } })
+			console.log('just clicked on top ' + targetx);
 		}
 		if (mode == 'motion_temp') {
 			if (!curstatus.shift) {
@@ -443,6 +447,26 @@ mousepad = (function () {
 		return r;
 	}
 
+	function createCanvas(name, size, container) {
+		let desc = canvases[name];
+		if (!desc.jc) {
+			let jc = $(`<canvas 
+					id="mousepad-canvas-${name}" 
+					class="mousepad hideable" 
+					width="${size}" height="${size}" 
+					style="z-index:${desc.zIndex}"></canvas>`)
+				.appendTo(container)
+				.addClass('dynamic')
+				.addClass(desc.class);
+			desc.jc = jc;
+			desc.c = jc[0];
+			desc.ctx = desc.c.getContext('2d');
+		}
+		desc.c.width = size;
+		desc.c.height = size;
+		desc.ctx.clearRect(0, 0, size, size);
+	}
+
 	function reposition() {
 		let wh = window.outerHeight, ww = window.outerWidth;
 		let left, top;
@@ -490,22 +514,12 @@ mousepad = (function () {
 		$('#left-drop-bar').css({ top: leftband.top, left: leftband.left, width: leftband.width, height: leftband.height });
 		$('.panel-controls').css({ paddingLeft: left, width: w });
 
-		for (let k in canvases) {
-			let desc = canvases[k];
-			let jc = $(`<canvas 
-				id="mousepad-canvas-${k}" 
-				class="mousepad hideable" 
-				width="${w}" height="${w}" 
-				style="z-index:${desc.zIndex}"></canvas>`)
-				.appendTo(inner)
-				.addClass('dynamic')
-				.addClass(desc.class);
-			desc.jc = jc;
-			desc.c = jc[0];
-			desc.ctx = desc.c.getContext('2d');
-			desc.ctx.clearRect(0, 0, w, w)
-		}
-		$('.subpanel').css({ paddingLeft: BANDW + 1, paddingTop: BANDW + 1 })
+		for (let k in canvases)
+			createCanvas(k, w, inner);
+
+		$('.subpanel').css({ paddingLeft: BANDW + 1, paddingTop: BANDW + 1 });
+		if (!spectreCanvas)
+			spectreCanvas = createSpectreCanvas();
 		redraw();
 		$('body').css('opacity', 1);
 	}
