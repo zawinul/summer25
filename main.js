@@ -253,6 +253,7 @@ const urlParams = getUrlParams();
 			recorder.clear();
 		});
 		$('#rec-save').on('click', function (evt) {
+			recorder.downloadBlob();
 
 		});
 		$('#rec-to-x').on('click', function (evt) {

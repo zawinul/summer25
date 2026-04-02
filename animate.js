@@ -6,8 +6,7 @@ animate = (function () {
 
     function doit(time) {
         //...
-        console.log('doit');
-
+        
         vocoderWorker.postMessage({
             type: 'req-spectral-data',
             transform: true
