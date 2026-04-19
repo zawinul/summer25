@@ -127,8 +127,8 @@ const urlParams = getUrlParams();
 
 
 
-		$par("merge-mode,merge-mix,contourResolution").on('change', onMergeModeChange);
-		$par("merge-mix,contourResolution").on('input', onMergeModeChange);
+		$par("merge-mode,merge-mix,contourResolution,customValue1,customValue2").on('change', onMergeModeChange);
+		$par("merge-mix,contourResolution,customValue1,customValue2").on('input', onMergeModeChange);
 
 		loadPresetDiv = $('#modal-load-preset').detach();
 		$('#save-preset').on('click', function (evt) {
@@ -265,6 +265,26 @@ const urlParams = getUrlParams();
 			recorder.setRecording(false);
 			$('body').toggleClass('recording', false);
 			setWaveFromRecorder('y');
+		});
+
+		$('.cs-close').on('click', function (evt) {
+			$('.custom-script-frame').addClass('hidden');
+		});
+
+		$('.cs-run').on('click', function (evt) {
+			const initScript = $('.cs-text-init textarea').val();
+			const processScript = $('.cs-text-process textarea').val();
+			$par("merge-mode").val('custom');
+			vocoderWorker.postMessage({
+				type: 'custom-merge',
+				initScript,
+				processScript
+			});
+
+		});
+
+		$('.do-custom-edit').on('click', function (evt) {
+			$('.custom-script-frame').removeClass('hidden');
 		});
 
 	}
@@ -511,8 +531,8 @@ const urlParams = getUrlParams();
 		}
 		if (d.type == 'spectral-data') {
 			spectralData = d.data;
-			if (Math.random()*1000<1)
-				console.log({spectralData});
+			if (Math.random() * 1000 < 1)
+				console.log({ spectralData });
 		}
 		if (d.type == 'error') {
 
@@ -809,13 +829,18 @@ const urlParams = getUrlParams();
 
 	function onMergeModeChange() {
 		mergeMode = $par("merge-mode").val();
+		$('body').attr('merge-mode', mergeMode);
 		let mergeMix = $par("merge-mix").val();
 		let contourResolution = $par("contourResolution").val();
-		vocoderWorker.postMessage({ type: 'set-status', data: { mergeMode, mergeMix, contourResolution } });
-		if (mergeMode == 'xcy' || mergeMode == 'cxy')
-			$('.control-group.res-group').show();
-		else
-			$('.control-group.res-group').hide();
+		let customValue1 = $par("customValue1").val();
+		let customValue2 = $par("customValue2").val();
+		vocoderWorker.postMessage({ type: 'set-status', data: { 
+			mergeMode, mergeMix, contourResolution,
+			customValue1,customValue2 
+		} });
+		
+		$('.control-group.res-group').toggleClass('hidden', mergeMode != 'xcy' && mergeMode != 'cxy');
+		$('.control-group.custom-group').toggleClass('hidden', mergeMode != 'custom');
 	}
 
 	function loadFile(acceptedExtensions = null) {
@@ -1165,7 +1190,10 @@ const urlParams = getUrlParams();
 	function initKeys() {
 		let cnt = 0;
 		$(document).on('keydown', evt => {
-			console.log({ evt, c: cnt++ });
+			//console.log({ evt, c: cnt++ });
+			let target = evt.target;
+			if (target.tagName == 'INPUT' || target.tagName == 'TEXTAREA' || $(target).is('[contenteditable]'))
+				return;
 			let c = (evt.key || '').toLowerCase();
 			console.log(`key: [${c}]`, evt.shiftKey)
 			if (('[p][d][m][e][s][x][y][#][f1][#][tab]').indexOf(c) >= 0)
@@ -1189,7 +1217,7 @@ const urlParams = getUrlParams();
 				const nextmode = { drag: 'motion', motion: 'effects', effects: 'help', help: 'drag' };
 				mousepad.setMode(nextmode[mousepad.getMode()]);
 			}
-			else if (c == 's'  && evt.ctrlKey && evt.shiftKey) mousepad.setMode('spectre');
+			else if (c == 's' && evt.ctrlKey && evt.shiftKey) mousepad.setMode('spectre');
 			else if (c == 'r') toggleRecording();
 		});
 	}

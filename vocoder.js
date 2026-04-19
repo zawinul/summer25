@@ -3,6 +3,7 @@ console.log('Vocoder Worker avviato');
 importScripts("fft.js");
 importScripts("common.js");
 importScripts("contour.js");
+importScripts("custom-merge.js");
 
 let requested = false;
 let computing = false;
@@ -46,6 +47,8 @@ let inparams = {
 	// contourBands:120, 
 	// contourSmooth: 5,
 	contourResolution: .5,
+	customValue1: 0,
+	customValue2: 0,
 
 	scale: 1,
 	steps: 0,
@@ -77,12 +80,14 @@ let emptyWave;
 let waveY, waveX;
 let outBuffer;
 
+
+
 function log() {
 	let pars = ['voc-worker'];
 	for (let i = 0; i < arguments.length; i++) {
 		pars.push(arguments[i]);
 	}
-	console.log(...pars);
+	console.log.apply(console, pars);
 }
 
 async function init() {
@@ -91,6 +96,7 @@ async function init() {
 	const lib = initCommon(fftSize, overlap, sampleRate);
 	Object.assign(self, lib);
 
+	customMerge.init(fftSize, overlap, sampleRate);
 	window = createHammingWindow(fftSize);
 
 	outBuffer = new Float32Array(fftSize);
@@ -122,6 +128,9 @@ async function init() {
 		posttransAmp: new Float32Array(fftSize / 2 + 1).fill(0),
 		posttransFreq: new Float32Array(fftSize / 2 + 1).fill(0),
 	};
+
+		
+
 }
 
 function incrementPosition() {
@@ -215,7 +224,7 @@ getGraphData.pos = [];
 
 let frameX, frameY, mergedFrame;
 function fillNextFrame(memory) {
-	let dump = {};
+
 	if (waveY == emptyWave && waveY == emptyWave) {
 		memory.fill(0);
 		return;
@@ -231,10 +240,6 @@ function fillNextFrame(memory) {
 		const fact = Math.pow(2, inparams.transposeY / 12);
 		transpose(frameY.magnitudes, frameY.deltaPh, f => f * fact);
 	}
-	if (inparams.transposeM != 0) {
-		const fact = Math.pow(2, inparams.transposeM / 12);
-		transpose(mergedFrame.magnitudes, mergedFrame.deltaPh, f => f * fact);
-	}
 
 	if (spectralDataRequested) {
 		dumpData.ampx.set(frameX.magnitudes);
@@ -247,6 +252,11 @@ function fillNextFrame(memory) {
 		mergedFrame = frameX;
 	else
 		mergedFrame = mergeFrame(frameX, frameY);
+
+	if (inparams.transposeM != 0) {
+		const fact = Math.pow(2, inparams.transposeM / 12);
+		transpose(mergedFrame.magnitudes, mergedFrame.deltaPh, f => f * fact);
+	}
 
 	// aggiustamenti per errori vari
 	if (mergedFrame.magnitudes)
@@ -317,24 +327,6 @@ function segmentSpectralTransformLin(freq, amp, band, params) {
 	return { a: ampOut, f: freqOut }
 }
 
-/*function segmentSpectralTransformLog(freq, amp, band, params) {
-	let fmin = bandToFrequency(1);
-	let fmax = bandToFrequency(sampleRate/2);
-	let logf = Math.log(freq/fmin)/Math.log(fmax/fmin);
-	let ampOut = 0, freqOut=freq;
-	const points = params.points;
-	for(let i=0;i<points.length-1;i++) {
-		let [x1,y1] = points[i];
-		let [x2,y2] = points[i+1];
-		if (logf>=x1 && logf<=x2) {
-			let logFOut = y1+(logf-x1)*(y2-y1)/(x2-x1);
-			freqOut = fmin*Math.pow(fmax/fmin, logFOut);
-			ampOut = amp;
-			break;
-		}
-	}
-	return {a:ampOut, f: freqOut}
-}*/
 
 
 function segmentSpectralTransformLog(freq, amp, band, params) {
@@ -361,9 +353,22 @@ let drawData;
 const clip = (v, min, max) => Math.min(Math.max(v, min), max);
 const PHMODEMIX = 0, PHMODEX = 1, PHMODEY = 2;
 
+
 function mergeFrame(frame1, frame2) {
-	let dcx, dcy;
+
 	let mode = inparams.mergeMode;
+	let { magnitudes, deltaPh } = mergeFrameSpace;
+	let input_m1 = frame1.magnitudes;
+	let input_m2 = frame2.magnitudes;
+
+
+	if (mode=='custom') {
+		let mousex=0, mousey=0, slider1=0, slider2=0;
+		customMerge.doIt(frame1, frame2, mergeFrameSpace, cx, cy, inparams.mergeMix, inparams.customValue1, inparams.customValue2);
+
+
+		return mergeFrameSpace;
+	}
 	let phmode = PHMODEMIX;
 	if (mode == 'cxy')
 		phmode = PHMODEY;
@@ -371,9 +376,6 @@ function mergeFrame(frame1, frame2) {
 		phmode = PHMODEX;
 
 	let len = fftSize / 2 + 1;
-	let { magnitudes, deltaPh } = mergeFrameSpace;
-	let input_m1 = frame1.magnitudes;
-	let input_m2 = frame2.magnitudes;
 
 	if (mode.includes('dx')) {
 		input_m1 = derivate(input_m1, 'x');
@@ -414,30 +416,9 @@ function mergeFrame(frame1, frame2) {
 		drawData.cy = cy;
 		drawData.cm = cm;
 
-		// accx = accx || new Float32Array(len);
-		// accy = accy || new Float32Array(len);
-		// cx = cx || new Float32Array(len);
-		// cy = cy || new Float32Array(len);
-		// accx.fill(0);
-		// accy.fill(0);
-		// for (let i = 1; i < len; i++) {
-		// 	let key = contourTable.keys[i];
-		// 	let cnt = contourTable.counts[key];
-		// 	accx[key] += frame1.magnitudes[i] / cnt;
-		// 	accy[key] += frame2.magnitudes[i] / cnt;
-		// }
-		// for (let i = 0; i < len; i++) {
-		// 	let key = contourTable.keys[i];
-		// 	cx[i] = accx[key];
-		// 	cy[i] = accy[key];
-		// }
-		// //if (mode == 'cxy')
-		// drawX = [dcx];
-		// //if (mode == 'xcy')
-		// drawY = [dcy];
+
 	}
 
-	//let mt0 = now();
 
 	for (let i = 0; i < len; i++) {
 		let m1 = input_m1[i];
@@ -465,16 +446,6 @@ function mergeFrame(frame1, frame2) {
 		else if (mode == 'cxy') {
 			magnitudes[i] = cy[i] < .00001 ? m2 : m2 * cm[i] / cy[i];
 		}
-		// else if (mode == 'xcy') {
-		// 	let fact = cy[i];
-		// 	//fact = Math.min(fact, 1);
-		// 	magnitudes[i] = m1 * Math.pow(fact, inparams.mergeMix);
-		// }
-		// else if (mode == 'cxy') {
-		// 	let fact = cx[i];
-		// 	//fact = Math.min(fact,1);
-		// 	magnitudes[i] = m2 * Math.pow(fact, 1-inparams.mergeMix);
-		// }
 
 		if (phmode == PHMODEMIX) {
 			let deltadelta = normalize(dph2 - dph1);
@@ -581,7 +552,7 @@ function initInterpolationPoints(sampleRate, fftSize) {
 self.onmessage = async function (event) {
 	const d = event.data;
 	const type = event.data.type;
-	//log('Worker ricevuto messaggio:', type );
+	// log('Worker ricevuto messaggio:', type );
 
 	if (type == 'init') {
 		log('vocoder worker init', d);
@@ -596,6 +567,14 @@ self.onmessage = async function (event) {
 		return;
 	}
 
+	if (type=='custom-merge') {
+		try {
+			customMerge.setup(d.initScript, d.processScript);
+		}
+		catch(e) {
+			log('Errore in custom merge setup:', e);
+		}
+	}
 	if (type == 'set-status') {
 		for (var k in d.data) {
 

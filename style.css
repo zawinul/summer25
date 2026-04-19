@@ -152,6 +152,26 @@ button.padmode.padmode.on {
   font-family: 'Courier New', Courier, monospace;
   font-size: 12px;
 }
+.control-group .do-custom-edit {
+  background-color: white;
+  border: 1px solid #aaa;
+  font-size: 20px;
+  cursor: pointer;
+  color: #007bff;
+  border-radius: 3px;
+  width: 21px;
+  margin: 0 2px 0 0;
+  padding: 0;
+  vertical-align: top;
+  line-height: 17px;
+  display: none;
+}
+[merge-mode="custom"] .control-group .do-custom-edit {
+  display: inline-block;
+}
+.control-group.hidden {
+  display: none;
+}
 .container select {
   width: 200px;
 }
@@ -383,7 +403,7 @@ button.padmode.padmode.on {
   flex: 1;
 }
 .file-input select[par="merge-mode"] {
-  width: 120px;
+  width: 115px;
 }
 .file-input.meter {
   padding: 0;
@@ -528,4 +548,80 @@ body#the-body.player .no-fullscreen {
 }
 .preset-list.hidden {
   display: none;
+}
+.custom-script-frame {
+  position: absolute;
+  left: 0;
+  top: 0;
+  background-color: rgba(128, 128, 128, 0.75);
+  width: 100%;
+  height: 100%;
+  z-index: 9999;
+  padding: 10px;
+}
+.custom-script-frame.hidden {
+  display: none;
+}
+.custom-script-frame .cs-text-init,
+.custom-script-frame .cs-text-process {
+  position: absolute;
+  left: 5%;
+  width: 90%;
+  font-size: 14px;
+  padding: 10px;
+  box-sizing: border-box;
+}
+.custom-script-frame .cs-text-init .watermark,
+.custom-script-frame .cs-text-process .watermark {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  /* width: 100%; */
+  /* height: 100%; */
+  font-size: 100px;
+  font-family: Arial, Helvetica, sans-serif;
+  font-weight: bold;
+  color: #ffffff;
+  vertical-align: middle;
+  text-align: center;
+  /* background-color: yellow; */
+  padding: 6px 12px;
+  line-height: 85px;
+  color: #e0e0e0;
+}
+.custom-script-frame textarea {
+  position: absolute;
+  background-color: transparent;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 14px;
+  padding: 10px;
+  box-sizing: border-box;
+}
+.custom-script-frame .cs-text-init {
+  top: 5%;
+  height: 35%;
+  border: 1px solid #aaa;
+  background-color: #f0fff0;
+}
+.custom-script-frame .cs-text-process {
+  top: 40%;
+  height: 45%;
+  border: 1px solid #aaa;
+  background-color: #fff0f0;
+}
+.custom-script-frame button {
+  position: absolute;
+  top: 85%;
+  width: 47%;
+  height: 4%;
+}
+.custom-script-frame button.cs-run {
+  left: 5%;
+}
+.custom-script-frame button.cs-close {
+  right: 5%;
 }

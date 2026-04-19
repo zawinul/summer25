@@ -1,0 +1,7 @@
+function(inFreqX, inAmpX, inFreqY, inAmpY, outFreq, outAmp, mousex, mousey, slider1, slider2) {
+
+	for(let i=0;i<inFreqX.length;i++) {
+		outFreq[i] = inFreqX[i];
+		outAmp[i] = inAmpX[i];
+	}
+}

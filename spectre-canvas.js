@@ -150,7 +150,7 @@ function createSpectreCanvas() {
     });
 
     jcanvas.on('mousemove', (e) => {
-        console.log('spectre mousemove');
+        //console.log('spectre mousemove');
         const rect = canvas.getBoundingClientRect();
         const mouseX = e.clientX - rect.left;
         const mouseY = e.clientY - rect.top;
@@ -188,7 +188,7 @@ function createSpectreCanvas() {
             const sPoint = toScreen(points[i]);
             if (dist({ x: mouseX, y: mouseY }, sPoint) <= HANDLE_RADIUS + 2) {
                 hoverIndex = i;
-                console.log('spectre hoverIndex', hoverIndex);
+                //console.log('spectre hoverIndex', hoverIndex);
                 cursor = 'pointer';
                 break;
             }

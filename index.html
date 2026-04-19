@@ -84,6 +84,7 @@
 
 				<div class="control-group">
 					<label>Combine mode</label>
+					<button class="do-custom-edit">✎</button>
 					<select id="merge-mode" par="merge-mode" isString>
 						<!-- <option selected value="mix">mix(X, Y)</option>
 						<option value="min">min(X, Y)</option>
@@ -124,6 +125,20 @@
 					<input type="range" par="contourResolution" min="0" max="1" value=".5" step=".01"
 						list="merge-mix-ticks">
 					<div class="side-label">hi</div>
+				</div>
+				<div class="control-group custom-group">
+					<label style="font-weight: normal;">value 1</label>
+					<div class="side-label">0</div>
+					<input type="range" par="customValue1" min="0" max="1" value=".5" step=".01"
+						list="merge-mix-ticks">
+					<div class="side-label">1</div>
+				</div>
+				<div class="control-group custom-group">
+					<label style="font-weight: normal;">value 2</label>
+					<div class="side-label">0</div>
+					<input type="range" par="customValue2" min="0" max="1" value=".5" step=".01"
+						list="merge-mix-ticks">
+					<div class="side-label">1</div>
 				</div>
 			</div>
 		</div>
@@ -468,6 +483,29 @@
 	<div class="preset-list hidden">
 		<h3 style="padding-left:20px">Summer25 preset list</h3>
 		<ul></ul>
+	</div>
+
+	<div class="custom-script-frame hid-den">
+		<div class="cs-text-init">
+			<div class="watermark">INIT</div>
+			<textarea></textarea>
+		</div>
+
+		<div class="cs-text-process">
+			<div class="watermark">PROCESS</div>
+			<textarea>
+var i;
+for(i=0; i<fx.length; i++) {
+	f[i] = fx[i];
+	a[i] = ax[i];
+}				
+			</textarea>
+		</div>
+
+
+		<button class="cs-run">Run</button>
+		<button class="cs-close">Close</button>
+		
 	</div>
 
 	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>

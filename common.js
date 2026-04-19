@@ -25,7 +25,8 @@ const mergeModes = [
 	["dymix", "X + ΔY", "X", "ΔY", "X+ΔY"],
 	["dxdymix", "ΔX + ΔY", "ΔX", "ΔY", "ΔX+ΔY"],
 	["xcy", "X * contour[Y]", "X", "contour(Y)", "X*contour(Y)"],
-	["cxy", "Y * contour[X]", "contour(X)", "Y", "contour(X)*Y"]
+	["cxy", "Y * contour[X]", "contour(X)", "Y", "contour(X)*Y"],
+	["custom", "custom", "X", "Y", "custom(X,Y)"]
 ];
 
 function lfowave(shape, rad, deltaph) { // -PI < rad <PI
@@ -77,12 +78,11 @@ function initCommon(fftSize, overlap, sampleRate) {
 	let lastPhases = new Float32Array(fftSize / 2 + 1).fill(0);
 	const resetPhases = () => lastPhases.fill(0);
 
-	const binCenterFreqHz = [];
+	const binCenterFreqHz = i => i * freqPerBin;
 	let hopSizeSec = hopSize / sampleRate;
 	let hopSizeHz = sampleRate / hopSize;
 	let freqPerBin = sampleRate / fftSize; // Frequenza di ogni bin in Hz
-	for (let i = 0; i < fftSize / 2 + 1; i++)
-		binCenterFreqHz[i] = i * freqPerBin;
+
 	let fft = new FFT(fftSize);
 
 	const window = createHammingWindow(windowSize);
@@ -99,6 +99,10 @@ function initCommon(fftSize, overlap, sampleRate) {
 	}
 
 	function phaseDeltaToFrequency(phaseDelta, band) {
+		if (typeof phaseDelta == 'object') {
+			band = phaseDelta.band;
+			phaseDelta = phaseDelta.phaseDelta;
+		}
 		// Questa è la variazione di fase che ci aspetteremmo se la frequenza
 		// del segnale fosse esattamente al centro del bin della FFT.
 		let expectedPhaseDelta = twoPi * hopSize * band / fftSize;
@@ -108,6 +112,7 @@ function initCommon(fftSize, overlap, sampleRate) {
 		// per trovare la deviazione reale dalla frequenza del bin.
 		let phaseDeviation = phaseDelta - expectedPhaseDelta;
 		phaseDeviation = phaseDeviation - twoPi * Math.round(phaseDeviation / twoPi);
+		phaseDeviation = normalize(phaseDeviation);
 
 		// Calcola la frequenza reale
 		// La frequenza reale è la frequenza del bin più la deviazione,
@@ -115,7 +120,7 @@ function initCommon(fftSize, overlap, sampleRate) {
 		// const freqDeviationHz = (phaseDeviation * sampleRate) / (twoPi * hopSize);
 		const freqDeviationHz = (phaseDeviation / twoPi) * hopSizeHz;
 
-		let freq = binCenterFreqHz[band] + freqDeviationHz;
+		let freq = binCenterFreqHz(band) + freqDeviationHz;
 		return freq;
 	}
 
@@ -129,10 +134,10 @@ function initCommon(fftSize, overlap, sampleRate) {
 
 	function frequencyToPhaseDelta(frequency) {
 		const band = frequencyToBand(frequency);
-		let freqDeviationHz = frequency - binCenterFreqHz[band];
+		let freqDeviationHz = frequency - binCenterFreqHz(band);
 		let phaseDeviation = twoPi * freqDeviationHz / hopSizeHz;
 		let expectedPhaseDelta = twoPi * hopSize * band / fftSize;
-		let phaseDelta = expectedPhaseDelta + phaseDeviation;
+		let phaseDelta = normalize(expectedPhaseDelta + phaseDeviation);
 		return { band, phaseDelta };
 	}
 
@@ -415,6 +420,103 @@ function initCommon(fftSize, overlap, sampleRate) {
 	let contourTable = getContourTable();
 
 
+
+
+
+
+
+
+
+
+	//------------------------------------------------------------------
+	/**
+	 * PARAMETRI DI SISTEMA
+	 * Precalcolati per evitare ricalcoli inutili durante il loop audio.
+	 */
+	const SAMPLE_RATE = sampleRate;          // Frequenza di campionamento in Hz
+	const FFT_SIZE = fftSize;              // Dimensione della FFT (numero di punti)
+	const OVERLAP = overlap;                  // Fattore di overlap
+	const HOP_SIZE = FFT_SIZE / OVERLAP;               // 1024 campioni
+	const FREQ_PER_BIN = SAMPLE_RATE / FFT_SIZE;           // ~11.71875 Hz
+	const PHASE_TO_FREQ = SAMPLE_RATE / (2 * Math.PI * HOP_SIZE); // ~7.45719 Hz/rad
+
+	const freqCentrale = new Float32Array(FFT_SIZE / 2 + 1).map((e,i)=> i * FREQ_PER_BIN); // Frequenza centrale di un bin k
+	const faseAttesa = new Float32Array(FFT_SIZE / 2 + 1).map((e,i)=> normalize(2 * Math.PI * i * HOP_SIZE / FFT_SIZE));
+
+	/**
+	 * Normalizza un angolo in radianti nell'intervallo [-π, π].
+	 */
+	function normalizzaFase(rad, center = 0) {
+		//return Math.atan2(Math.sin(rad), Math.cos(rad));
+		while((rad-center)>=Math.PI) rad -= twoPi;
+		while((rad-center)<-Math.PI) rad += twoPi;	
+		return rad;
+	}
+
+	/**
+	 * Stima la frequenza istantanea (Hz) partendo dall'indice del bin FFT
+	 * e dalla differenza di fase misurata tra due frame consecutivi.
+	 *
+	 * @param {number} indiceBanda - Indice del bin (0 <= k <= N/2)
+	 * @param {number} diffFase    - Differenza di fase grezza normalizzata in [-π, π]
+	 * @returns {number} Frequenza istantanea in Hz
+	 */
+	function calcolaFrequenzaDaDifferenzaFase(indiceBanda, diffFase) {
+
+		// Deviazione di fase rispetto al centro del bin (unwrapping locale)
+		const deviazioneFase = normalizzaFase(diffFase - faseAttesa[indiceBanda], 0);
+		// Conversione della deviazione angolare in spostamento di frequenza
+		return freqCentrale[indiceBanda] + deviazioneFase * PHASE_TO_FREQ;
+	}
+
+	/**
+	 * Data una frequenza, restituisce il bin FFT più vicino e la differenza di fase
+	 * normalizzata che la rappresenta esattamente nel contesto del Phase Vocoder.
+	 *
+	 * @param {number} frequenzaHz - Frequenza target in Hz
+	 * @returns {{indiceBanda: number, diffFase: number}}
+	 */
+	function calcolaIndiceEDifferenzaFaseDaFrequenza(frequenzaHz) {
+		// Quantizzazione al bin più vicino.
+		// NOTA: se la frequenza cade oltre ±π/2 dal centro del bin originale,
+		// l'indice cambierà. Questo è CORRETTO e desiderato nel PV.
+		let indiceBanda = Math.round(frequenzaHz / FREQ_PER_BIN);
+		indiceBanda = Math.max(0, Math.min(indiceBanda, FFT_SIZE / 2));
+
+
+		// Quanto deve spostarsi la fase rispetto a questo nuovo centro bin
+		// per rappresentare esattamente frequenzaHz?
+		const deviazioneNecessaria = (frequenzaHz - freqCentrale[indiceBanda]) / PHASE_TO_FREQ;
+
+		// Ricompone la differenza di fase che, passata alla funzione inversa,
+		// restituirà ESATTAMENTE frequenzaHz.
+		const diffFase = normalizzaFase(faseAttesa[indiceBanda] + deviazioneNecessaria, faseAttesa[indiceBanda]);
+
+		return  [indiceBanda, diffFase];
+	}
+
+
+
+	function testCalcoliFaseFrequenza() {
+		let f1 = Math.random()*100* Math.random()*100;
+		let [ indiceBanda, diffFase ] = calcolaIndiceEDifferenzaFaseDaFrequenza(f1);
+		let f2 = calcolaFrequenzaDaDifferenzaFase(indiceBanda, diffFase);
+		console.log(`Freq: [${f1.toFixed(2)}, ${f2.toFixed(2)}], Indice banda: ${indiceBanda}, Diff fase: ${diffFase.toFixed(4)}`);
+
+		let band = Math.floor(Math.random() * (FFT_SIZE / 2 + 1));
+		let diff = faseAttesa[band];
+		diff +=  diff * (Math.random()*2-1)*.1; 
+		let f3 = calcolaFrequenzaDaDifferenzaFase(band, diff);
+		let [ b2, d2 ] = calcolaIndiceEDifferenzaFaseDaFrequenza(f3);
+		console.log(`Banda: [${band}=>${b2}], Diff fase: [${diff.toFixed(4)}=>${d2.toFixed(4)}] freq: ${f3.toFixed(2)}`);
+	}
+
+	//------------------------------------------------------------------
+
+
+
+
+
 	const now = () => new Date().getTime();
 	let exp = {
 		createHammingWindow, normalize,
@@ -422,7 +524,7 @@ function initCommon(fftSize, overlap, sampleRate) {
 		doPhaseVocoder, simplifiedPhaseVocoder,
 		simplifiedAnalysisAtPoint, simplifiedResynthesize,
 		// complexSpectrumToPhaseVocoder, phaseVocoderToComplexSpectrum,
-		simplified_complexSpectrumToPhaseVocoder, 
+		simplified_complexSpectrumToPhaseVocoder,
 		simplified_phaseVocoderToComplexSpectrum,
 		frequencyToPhaseDelta,
 		phaseDeltaToFrequency,
@@ -450,6 +552,12 @@ function initCommon(fftSize, overlap, sampleRate) {
 		denormalizeFreqLin,
 		normalizeFreqLog,
 		denormalizeFreqLog,
+
+		freqCentrale,
+		faseAttesa,
+		calcolaFrequenzaDaDifferenzaFase,
+		calcolaIndiceEDifferenzaFaseDaFrequenza,
+		testCalcoliFaseFrequenza
 	};
 	return exp;
 }

@@ -1,14 +1,21 @@
+// mousepad — interactive XY pad controller for the vocoder.
+// Manages canvas layers, pointer/keyboard input, mode switching,
+// waveform display, cursor rendering, and communication with the audio worker.
 mousepad = (function () {
 
-
-
+	// Width of the side bands (top and left) used as waveform rulers
 	let BANDW = 50;
+	// Rectangular regions for the top ruler, left ruler, and main pad area
 	let topband, leftband, space;
+	// Waveform data for the X and Y axes
 	let waves = { x: {}, y: {} };
 	let xrange, yrange;
+	// Current size of the (square) pad canvas
 	let w;
 	let mousex, mousey;
+	// True while the user is actively dragging the cursor
 	let dragging = false;
+	// Descriptor map for each canvas layer (CSS class and z-index)
 	let canvases = {
 		wave: { class: 'wave', zIndex: 100 },
 		wavebar: { class: 'wavebar', zIndex: 100 },
@@ -19,6 +26,7 @@ mousepad = (function () {
 	};
 
 	let spectreCanvas;
+	// Public pad state exposed via getStatus/setStatus
 	const padStatus = {
 		mode: 'drag',
 		lum: .5,
@@ -33,8 +41,11 @@ mousepad = (function () {
 		amp: 0, //dB
 		mix: .5,
 	}
+	// Last status snapshot received from the oscillator worker
 	let curOscStatus = {};
 
+	// Maps each mode name to its background colour and the CSS selectors
+	// of the elements that should be visible in that mode.
 	const modes = {
 		drag: { bgcolor: '#ffffff', show: '.wave, .wavebar, .cursor, .cursorpoint' },
 		help: { bgcolor: '#fffff0', show: '.wave, .wavebar, .cursor, .cursorpoint, .help-on-line' },
@@ -47,11 +58,14 @@ mousepad = (function () {
 	};
 
 	let mode = null;
+	// Hint text shown the first few times the user enters drag mode
 	let dragInfo =
 		`- click and drag to move the cursor
 	- ctrl+click to move cursor instantly
 	- hold <shift> to set motion parameters`;
 	let showInfoCount = 0;
+
+	// Switch the pad to a new interaction mode, updating the UI accordingly.
 	function setMode(_mode) {
 		if (!_mode)
 			return;
@@ -92,13 +106,14 @@ mousepad = (function () {
 		checkStatusChange();
 	}
 
+	// Snapshot of the current pointer and keyboard state
 	let curstatus = {
 		x: 0,
 		y: 0,
-		left: false,
-		right: false,
-		center: false,
-		where: 'out',
+		left: false,     // left mouse button held
+		right: false,    // right mouse button held
+		center: false,   // center mouse button held
+		where: 'out',    // 'in' | 'left' | 'top' | 'out'
 		shift: false,
 		control: false,
 		alt: false,
@@ -106,9 +121,12 @@ mousepad = (function () {
 		inputType: 'mouse'
 	}
 
+	// Copy curstatus into oldstatus so the next event can detect changes
 	const savestatus = () => Object.assign(oldstatus, curstatus);
+	// Previous status snapshot, used to detect what actually changed
 	let oldstatus = {};
 
+	// Entry point: set up the UI and paint the initial layout.
 	function init() {
 		initUI();
 		reposition();
@@ -116,9 +134,11 @@ mousepad = (function () {
 	}
 
 
+	// Wire up all DOM event listeners and populate dynamic UI controls.
 	function initUI() {
 		initIrSelector();
 
+		// Track modifier key state (Shift, Control, Alt, Meta) on keydown/keyup
 		$(document).on("keydown keyup", function (e) {
 			switch (e.key) {
 				case "Shift":
@@ -143,6 +163,7 @@ mousepad = (function () {
 			}
 		});
 
+		// Handle all mouse/pointer events to update curstatus and drive update()
 		$(document).on("mousemove  click pointerdown pointermove pointercancel pointerup pointerout", function (evt) {
 			// console.log(`Mouse or pointer event: ${evt.type}`);
 
@@ -177,42 +198,16 @@ mousepad = (function () {
 			checkStatusChange();
 		});
 
-		// $(document).on("pointerdown pointermove pointerup", function (evt) {
-		// 	//evt.preventDefault();
-		// 	let where = 'out';
-		// 	let canvas = canvases.wave.jc;
-		// 	if (!canvas)
-		// 		return;
-		// 	let x = mousex = evt.clientX - canvas.offset().left;
-		// 	let y = mousey = evt.clientY - canvas.offset().top;
-		// 	if (leftband.contains(x, y))
-		// 		where = 'left';
-		// 	else if (topband.contains(x, y))
-		// 		where = 'top';
-		// 	else if (space.contains(x, y))
-		// 		where = 'in';
-
-		// 	// curstatus.left = (evt.buttons & 1) == 1;// || (evt.type == 'click') || (evt.type == 'mousedown');
-		// 	// curstatus.right = (evt.buttons & 2) == 2;
-		// 	curstatus.x = x;
-		// 	curstatus.y = y;
-		// 	curstatus.where = where;
-		// 	curstatus.shift = evt.shiftKey;
-		// 	curstatus.alt = evt.altKey;
-		// 	curstatus.control = evt.ctrlKey;
-		// 	curstatus.meta = evt.metaKey;
-		// 	curstatus.pointerType = evt.pointerType;
-		// 	//console.log(`Pointer event: ${evt.type}, type=${evt.pointerType}`, curstatus);
-		// 	checkStatusChange();
-		// })
 
 
+		// Switch mode when the user clicks a mode button
 		$('.padmode').on('click', function () {
 			let mode = $(this).attr('data-mode');
 
 			setMode(mode);
 		});
 
+		// Populate the speed-multiplier dropdowns for X and Y axes
 		for (let axis of ['x', 'y']) {
 			let parname = 'speedmult' + axis;
 			let sel = $(`[par="${parname}"]`);
@@ -222,21 +217,8 @@ mousepad = (function () {
 			sel.val(1);
 		}
 
-		// $('#traction').on('input', function () {
-		// 	const traction = parseFloat($(this).val());
-		// 	vocoderWorker.postMessage({ type: 'set-status', data: { traction } })
-		// });
 
-		// $('#luminosity').on('change', evt => {
-		// 	padStatus.lum = 1 - $('#luminosity').val();
-		// 	redrawCenterWaves();
-		// })
-
-		// $('#contrast').on('change', evt => {
-		// 	padStatus.cont = $('#contrast').val() - 0;
-		// 	redrawCenterWaves();
-		// });
-
+		// Forward motion control changes to the audio worker
 		$('.motion-controls [par]').on('input change', function (evt) {
 			let par = $(this).attr('par');
 			//let val = $(this).val();
@@ -272,6 +254,7 @@ mousepad = (function () {
 	}
 
 
+	// Compare curstatus against oldstatus and call update() only when something changed.
 	function checkStatusChange() {
 		let needsUpdate = false;
 		for (var k in curstatus) {
@@ -287,6 +270,7 @@ mousepad = (function () {
 		}
 	}
 
+	// Read all motion-control [par] inputs and send them to the audio worker.
 	function updateMotionParams() {
 		let params = $('.motion-controls [par]').toArray().map(x => $(x).attr('par'));
 		let data = {};
@@ -297,6 +281,7 @@ mousepad = (function () {
 		vocoderWorker.postMessage({ type: 'set-status', data })
 	}
 
+	// Refresh the human-readable labels next to each motion control.
 	function updateMotionUI() {
 		let p = $par("speedx");
 		let x = linearSpeedRescale(p.val() - 0);
@@ -331,12 +316,15 @@ mousepad = (function () {
 	}
 
 
+	// Programmatically move the cursor to a normalised (0-1) XY position.
 	function setTarget(targetX, targetY) {
 		curstatus.x = space.left + targetX * space.width;
 		curstatus.y = space.bottom - targetY * space.height;
 		forcePosition();
 	}
 
+	// Main interaction handler: interprets the current curstatus and decides
+	// what to send to the audio worker (drag target, force-move, etc.).
 	function update(force) {
 		let mode = curstatus.mode;
 
@@ -405,12 +393,14 @@ mousepad = (function () {
 		// }
 	}
 
+	// Instantly snap the oscillator to the position stored in the targetx/targety params.
 	function forcePosition() {
 		let targetx = $parval('targetx');
 		let targety = $parval('targety');
 		vocoderWorker.postMessage({ type: 'set-status', data: { targetx, targety, dragging: false, forcex: true, forcey: true } });
 	}
 
+	// Returns a debounced version of func that fires only after `timeout` ms of inactivity.
 	function debounce(func, timeout = 300) {
 		let timer;
 		return (...args) => {
@@ -419,14 +409,17 @@ mousepad = (function () {
 		};
 	}
 
+	// Redraws both the X and Y centre waveforms (unbounced).
 	function _redrawCenterWaves() {
 		canvases.wave.ctx.clearRect(BANDW, BANDW, w - BANDW, w - BANDW);
 		redrawCenterWave('x');
 		redrawCenterWave('y');
 	}
 
+	// Throttled version — avoids excessive redraws while parameters are being tweaked.
 	const redrawCenterWaves = debounce(_redrawCenterWaves, 100);
 
+	// Store new waveform data for the given axis ('x' or 'y') and trigger a redraw.
 	function setWave(index, wave) {
 		index = (index.toLowerCase() == 'y') ? 'y' : 'x';
 		waves[index] = {
@@ -437,6 +430,8 @@ mousepad = (function () {
 		redraw();
 	}
 
+	// Convenience helper: creates a rectangle object with derived geometry
+	// (bottom, right, centre, and a contains() hit-test method).
 	function rect(left, top, width, height) {
 		let r = { left, top, width, height };
 		r.bottom = top + height;
@@ -447,6 +442,7 @@ mousepad = (function () {
 		return r;
 	}
 
+	// Creates (or resizes) a named canvas layer and appends it to the container.
 	function createCanvas(name, size, container) {
 		let desc = canvases[name];
 		if (!desc.jc) {
@@ -467,6 +463,8 @@ mousepad = (function () {
 		desc.ctx.clearRect(0, 0, size, size);
 	}
 
+	// Recalculate layout geometry, recreate all canvases, and repaint everything.
+	// Called on startup and on window resize.
 	function reposition() {
 		let wh = window.outerHeight, ww = window.outerWidth;
 		let left, top;
@@ -524,6 +522,7 @@ mousepad = (function () {
 		$('body').css('opacity', 1);
 	}
 
+	// Full repaint: clears all canvas layers and redraws band and centre waveforms.
 	function redraw() {
 		// clearWave();
 		canvases.wave.ctx.clearRect(0, 0, w, w);
@@ -536,11 +535,7 @@ mousepad = (function () {
 		redrawInfo();
 	}
 
-	// function clearWave() {
-	// 	let c = ctx123[WAVECANVAS];
-	// 	c.clearRect(0, 0, w, w);
-	// }
-
+	// Downsample `data` into `n` buckets, returning per-bucket min/max and global extremes.
 	function getMinMax(data, n) {
 
 		let min = [], max = [], globalmin = 999999, globalmax = -999999;
@@ -570,6 +565,7 @@ mousepad = (function () {
 		return { min, max, globalmin, globalmax, globalrange }
 	}
 
+	// Draw the waveform for `index` axis in the corresponding side ruler band.
 	function redrawBandWave(index) {
 		let c = canvases.wavebar.ctx;
 		let data = waves[index].data;
@@ -629,6 +625,7 @@ mousepad = (function () {
 
 	}
 
+	// Draw the waveform for `index` axis as a translucent heatmap across the main pad area.
 	function redrawCenterWave(index) {
 		let c = canvases.wave.ctx;
 		if (!waves[index].data)
@@ -668,6 +665,7 @@ mousepad = (function () {
 
 	}
 
+	// Shorthand to draw a line segment on canvas context `c`.
 	function line(c, x1, y1, x2, y2) {
 		c.beginPath();
 		c.moveTo(x1, y1);
@@ -675,6 +673,8 @@ mousepad = (function () {
 		c.stroke();
 	}
 
+	// Read all effects controls and apply their values to the reverb and delay nodes,
+	// then inform the audio worker of transpose settings.
 	function updateEffectsParams() {
 
 		const revDryWet = $parval("revsend") - 0;
@@ -733,11 +733,15 @@ mousepad = (function () {
 	}
 
 
+	// Placeholder for drawing text overlays on the info canvas (currently unused).
 	function redrawInfo() {
 
 	}
 
+	// Size of the small preview diagram drawn for LFO and linear motion shapes.
 	const DSIZE = 130;
+
+	// Render a preview of the current LFO shape inside the motion panel.
 	function designLFOShape() {
 		const NPERCYCLE = 1000;
 		const NCYCLES = 1;
@@ -805,6 +809,7 @@ mousepad = (function () {
 		//ctx.strokeRect(bb.left, bb.top, bb.width, bb.height);
 	}
 
+	// Render a preview arrow showing the current linear-motion direction.
 	function designLinShape() {
 		const GW = .85;
 		let canvas = $('#lin-shape-canvas');
@@ -846,6 +851,8 @@ mousepad = (function () {
 		}
 	}
 
+	// Update the cursor canvas with the latest oscillator position and LFO offset.
+	// `s` is the status object received from the oscillator worklet.
 	function showOscStatus(s) {
 		curOscStatus = s;
 		let x, y, lx, ly;
@@ -958,11 +965,13 @@ mousepad = (function () {
 		debugStatus();
 	}
 
+	// Return the two points where a line through (px, py) at `angle` crosses the rectangle.
+	// Used to draw the motion-direction guideline across the pad.
 	function lineSquareIntersections(rect, px, py, angle) { // thanks to GPT
 		const m = Math.tan(angle);
 		const points = [];
 
-		// lati verticali
+		// Check vertical sides
 		[rect.left, rect.left + rect.width].forEach(xSide => {
 			const y = py + m * (xSide - px);
 			if (y >= rect.top && y <= rect.top + rect.height) {
@@ -970,7 +979,7 @@ mousepad = (function () {
 			}
 		});
 
-		// lati orizzontali (evitare divisione per 0)
+		// Check horizontal sides (skip when slope is near-zero to avoid division by zero)
 		if (Math.abs(m) > 1e-10) {
 			[rect.top, rect.top + rect.height].forEach(ySide => {
 				const x = px + (ySide - py) / m;
@@ -980,10 +989,11 @@ mousepad = (function () {
 			});
 		}
 
-		// alla fine points conterrà 2 intersezioni
+		// At this point `points` contains exactly 2 intersection coordinates
 		return points;
 	}
 
+	// Draw an arrow from (x1,y1) to (x2,y2) on the given canvas context.
 	function drawArrow(ctx, x1, y1, x2, y2, opts = {}) { // thanks to GPT
 		const {
 			color = '#111',
@@ -994,7 +1004,7 @@ mousepad = (function () {
 			cap = 'round'
 		} = opts;
 
-		// Direzione linea
+		// Compute the direction angle of the arrow shaft
 		const dx = x2 - x1;
 		const dy = y2 - y1;
 		const angle = Math.atan2(dy, dx);
@@ -1007,13 +1017,13 @@ mousepad = (function () {
 		ctx.lineCap = cap;
 		ctx.lineJoin = 'round';
 
-		// Corpo della freccia
+		// Draw the arrow shaft
 		ctx.beginPath();
 		ctx.moveTo(x1, y1);
 		ctx.lineTo(x2, y2);
 		ctx.stroke();
 
-		// Punta della freccia (triangolo isoscele)
+		// Draw the filled isosceles arrowhead
 		const x3 = x2 - headLength * Math.cos(angle - headAngle);
 		const y3 = y2 - headLength * Math.sin(angle - headAngle);
 		const x4 = x2 - headLength * Math.cos(angle + headAngle);
@@ -1029,6 +1039,7 @@ mousepad = (function () {
 		ctx.restore();
 	}
 
+	// Dump oscillator input/output state into the debug monitor element.
 	function debugStatus() {
 		let d = {}
 		for (let k in oscInStatus)
@@ -1045,6 +1056,8 @@ mousepad = (function () {
 
 	}
 
+	// Render a text message on the info canvas overlay.
+	// Skips redundant redraws unless `forced` is true.
 	function showInfo(txt, forced) {
 		if (txt == showInfo.lastTxt && !forced)
 			return;
@@ -1063,10 +1076,12 @@ mousepad = (function () {
 		}
 	}
 
+	// Fade out the info canvas overlay.
 	function clearInfo() {
 		canvases.info.jc.fadeOut(3000, () => canvases.info.jc.stop());
 	}
 
+	// Fetch the list of impulse-response files and populate the reverb-type selector.
 	async function initIrSelector() {
 		let irs = await fetch('rev-ir-lr.json').then(r => r.json());
 		let sel = $('[par="revtype"]');
@@ -1077,6 +1092,7 @@ mousepad = (function () {
 	}
 
 
+	// Handle fullscreen toggle by recalculating the pad layout.
 	function setFullscreen(value) {
 		reposition();
 	}
@@ -1100,6 +1116,7 @@ mousepad = (function () {
 
 
 
+	// Debounce the resize event so reposition() is only called once resizing stops.
 	let resizeTimeout = null;
 	window.addEventListener("resize", function () {
 		clearTimeout(resizeTimeout);
@@ -1109,6 +1126,7 @@ mousepad = (function () {
 		}, 200);
 	});
 
+	// Public API exposed to the rest of the application.
 	return {
 		init, reposition, redraw,
 		redrawInfo,
